@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Field extends Model
+{
+    
+    protected $fillable = ['field_name',  'created_by', 'updated_by'];
+
+    /**
+     * Get all of the modules for the Field
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function modules(): HasMany
+    {
+        return $this->hasMany(Module::class);
+    }
+
+}
