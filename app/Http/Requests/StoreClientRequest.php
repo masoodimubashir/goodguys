@@ -22,12 +22,15 @@ class StoreClientRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_name' => ['required','string','max:100'],
-            'client_email' => ['required','string','max:100','unique:clients,client_email'],
-            'site_name' => ['required','string','max:100'],
-            'client_address' => ['required','string','max:100'],
-            'client_phone' => ['required','string','digits:10'],
-            'service_charge' => ['required','string','max:100', 'min:0'],
+            'client_name'     => ['required', 'string', 'max:100'],
+            'client_email'    => ['required', 'string', 'email', 'max:100', 'unique:clients,client_email'],
+            'site_name'       => ['required', 'string', 'max:100'],
+            'client_address'  => ['required', 'string', 'max:100'],
+            'client_phone'    => ['required', 'string', 'digits:10'],
+            'service_charge'  => ['required', 'numeric', 'min:0', 'max:100'],
+            'tax'             => ['required', 'numeric', 'min:0', 'max:100'],
+            'profit'          => ['required', 'numeric', 'min:0', 'max:100'],
         ];
     }
+    
 }

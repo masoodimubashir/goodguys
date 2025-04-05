@@ -13,13 +13,15 @@ export default function CreateClient() {
         client_phone: '',
         client_address: '',
         service_charge: '',
-        site_name : '',
+        site_name: '',
+        tax: '',
+        profit: '',
     });
 
     const submit = (e) => {
         e.preventDefault();
         post(route('clients.store'), {
-            preserveState: true,
+            preserveScroll: true,
         });
     };
 
@@ -32,9 +34,7 @@ export default function CreateClient() {
                     <ul className="app-line-breadcrumbs mb-3">
                         <li>
                             <Link href={route('clients.index')} className="f-s-14 f-w-500">
-                                <span>
-                                    <i className="iconoir-home-alt"></i>
-                                </span>
+                                <i className="iconoir-home-alt"></i>
                             </Link>
                         </li>
                         <li className="active">
@@ -51,100 +51,121 @@ export default function CreateClient() {
                             <form className="app-form" onSubmit={submit}>
                                 <div className="row">
 
-                                    <div className="col-md-6">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="client_name" value="Client Name" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter Client Name"
-                                                id="client_name"
-                                                onChange={(e) => setData('client_name', e.target.value)}
-                                                value={data.client_name}
-                                            />
-                                            {errors.client_name && <InputError message={errors.client_name} />}
-                                        </div>
+                                    {/* Client Name */}
+                                    <div className="col-md-6 mb-4">
+                                        <InputLabel htmlFor="client_name" value="Client Name" />
+                                        <TextInput
+                                            className="form-control"
+                                            id="client_name"
+                                            placeholder="Enter Client Name"
+                                            value={data.client_name}
+                                            onChange={(e) => setData('client_name', e.target.value)}
+                                        />
+                                        <InputError message={errors.client_name} />
                                     </div>
 
-                                    <div className="col-md-6">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="client_email" value="Client Email" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter Client Email"
-                                                id="client_email"
-                                                type="email"
-                                                onChange={(e) => setData('client_email', e.target.value)}
-                                                value={data.client_email}
-                                            />
-                                            {errors.client_email && <InputError message={errors.client_email} />}
-                                        </div>
+                                    {/* Client Email */}
+                                    <div className="col-md-6 mb-4">
+                                        <InputLabel htmlFor="client_email" value="Client Email" />
+                                        <TextInput
+                                            className="form-control"
+                                            type="email"
+                                            id="client_email"
+                                            placeholder="Enter Client Email"
+                                            value={data.client_email}
+                                            onChange={(e) => setData('client_email', e.target.value)}
+                                        />
+                                        <InputError message={errors.client_email} />
                                     </div>
 
-                                    <div className="col-md-6">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="client_phone" value="Client Phone" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter Client Phone"
-                                                id="client_phone"
-                                                onChange={(e) => setData('client_phone', e.target.value)}
-                                                value={data.client_phone}
-                                            />
-                                            {errors.client_phone && <InputError message={errors.client_phone} />}
-                                        </div>
+                                    {/* Client Phone */}
+                                    <div className="col-md-6 mb-4">
+                                        <InputLabel htmlFor="client_phone" value="Client Phone" />
+                                        <TextInput
+                                            className="form-control"
+                                            id="client_phone"
+                                            placeholder="Enter Client Phone"
+                                            value={data.client_phone}
+                                            onChange={(e) => setData('client_phone', e.target.value)}
+                                        />
+                                        <InputError message={errors.client_phone} />
                                     </div>
 
-                                    <div className="col-md-6">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="client_address" value="Client Address" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter Client Address"
-                                                id="client_address"
-                                                onChange={(e) => setData('client_address', e.target.value)}
-                                                value={data.client_address}
-                                            />
-                                            {errors.client_address && <InputError message={errors.client_address} />}
-                                        </div>
+                                    {/* Client Address */}
+                                    <div className="col-md-6 mb-4">
+                                        <InputLabel htmlFor="client_address" value="Client Address" />
+                                        <TextInput
+                                            className="form-control"
+                                            id="client_address"
+                                            placeholder="Enter Client Address"
+                                            value={data.client_address}
+                                            onChange={(e) => setData('client_address', e.target.value)}
+                                        />
+                                        <InputError message={errors.client_address} />
                                     </div>
 
-                                    <div className="col-md-6">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="service_charge" value="Service Charge (%)" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter Service Charge"
-                                                id="service_charge"
-                                                type="number"
-                                                onChange={(e) => setData('service_charge', e.target.value)}
-                                                value={data.service_charge}
-                                            />
-                                            {errors.service_charge && <InputError message={errors.service_charge} />}
-                                        </div>
+                                    {/* Site Name */}
+                                    <div className="col-md-6 mb-4">
+                                        <InputLabel htmlFor="site_name" value="Site Name" />
+                                        <TextInput
+                                            className="form-control"
+                                            id="site_name"
+                                            placeholder="Enter Site Name"
+                                            value={data.site_name}
+                                            onChange={(e) => setData('site_name', e.target.value)}
+                                        />
+                                        <InputError message={errors.site_name} />
                                     </div>
 
-
-                                    <div className="col-md-6">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="site_name" value="Site Name" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter Site Name"
-                                                id="site_name"
-                                                type="text"
-                                                onChange={(e) => setData('site_name', e.target.value)}
-                                                value={data.site_name}
-                                            />
-                                            {errors.site_name && <InputError message={errors.site_name} />}
-                                        </div>
+                                    {/* Service Charge */}
+                                    <div className="col-md-6 mb-4">
+                                        <InputLabel htmlFor="service_charge" value="Service Charge (%)" />
+                                        <TextInput
+                                            className="form-control"
+                                            id="service_charge"
+                                            type="number"
+                                            placeholder="Enter Service Charge"
+                                            value={data.service_charge}
+                                            onChange={(e) => setData('service_charge', e.target.value)}
+                                        />
+                                        <InputError message={errors.service_charge} />
                                     </div>
 
-                                    <div className="col-12">
-                                        <div className="text-end">
-                                            <Button className="btn btn-primary">
-                                                {processing ? 'Submitting' : 'Submit'}
-                                            </Button>
-                                        </div>
+                                    {/* Tax */}
+                                    <div className="col-md-6 mb-4">
+                                        <InputLabel htmlFor="tax" value="Tax (%)" />
+                                        <TextInput
+                                            className="form-control"
+                                            id="tax"
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="Enter Tax Percentage"
+                                            value={data.tax}
+                                            onChange={(e) => setData('tax', e.target.value)}
+                                        />
+                                        <InputError message={errors.tax} />
+                                    </div>
+
+                                    {/* Profit */}
+                                    <div className="col-md-6 mb-4">
+                                        <InputLabel htmlFor="profit" value="Profit (%)" />
+                                        <TextInput
+                                            className="form-control"
+                                            id="profit"
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="Enter Profit Percentage"
+                                            value={data.profit}
+                                            onChange={(e) => setData('profit', e.target.value)}
+                                        />
+                                        <InputError message={errors.profit} />
+                                    </div>
+
+                                    {/* Submit Button */}
+                                    <div className="col-12 text-end">
+                                        <Button className="btn btn-primary" disabled={processing}>
+                                            {processing ? 'Submitting...' : 'Submit'}
+                                        </Button>
                                     </div>
 
                                 </div>

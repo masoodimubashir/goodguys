@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use App\Models\Client;
+use App\Models\Inventory;
+use App\Models\Module;
 use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -28,23 +29,29 @@ class AdminClientsController extends Controller
     public function store(StoreClientRequest $request)
     {
         try {
+            
             Client::create(array_merge($request->validated(), [
                 'created_by' => auth()->id(),
             ]));
+
+            return redirect()->route('clients.index')->with('message', 'Client Created');
         
-            return redirect()->route('clients.index')
-                ->with('message', 'Client Created');
         } catch (Exception $e) {
             Log::error($e->getMessage());
             return redirect()->route('clients.index')
                 ->with('error', 'Failed to create client');
         }
-        
     }
 
-    public function show(Client $client){
+    public function show(Client $client)
+    {
+
+        $client->load(['proformas', 'invoices', 'accounts']);
+
         return Inertia::render('Clients/ShowClient', [
-            'client' => $client
+            'client' => $client,
+            'modules' => Module::latest()->get(),
+            'inventoryOptions' => Inventory::latest()->get(),
         ]);
     }
 

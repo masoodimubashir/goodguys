@@ -17,9 +17,10 @@ return new class extends Migration
             $table->decimal('selling_price', 10, 2);
             $table->decimal('buying_price', 10, 2);
             $table->string('item_type');
-            $table->json('item_dimension');
-            $table->json('item_size');
             $table->integer('count');
+            $table->json('item_dimensions');
+            $table->string('item_sub_type')->nullable();
+            $table->string('description');
             $table->tinyInteger('created_by')->nullable();
             $table->tinyInteger('updated_by')->nullable();
             $table->timestamps();

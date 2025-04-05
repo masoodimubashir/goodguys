@@ -1,11 +1,11 @@
 import { Link } from "@inertiajs/react";
-import React, { useEffect, useRef, useState } from 'react';
-import { Head, useForm, usePage } from '@inertiajs/react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { ShowMessage } from '@/Components/ShowMessage';
-import $ from 'jquery';
-import 'datatables.net';
-import 'datatables.net-responsive';
+import React, { useEffect, useRef, useState } from "react";
+import { Head, useForm, usePage } from "@inertiajs/react";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { ShowMessage } from "@/Components/ShowMessage";
+import $ from "jquery";
+import "datatables.net";
+import "datatables.net-responsive";
 
 export default function Module({ modules: initialModules }) {
     const [modules, setModules] = useState(initialModules);
@@ -13,29 +13,29 @@ export default function Module({ modules: initialModules }) {
     const { flash, auth } = usePage().props;
     const { delete: destroy } = useForm();
 
-    
+    const tableHead = ["Module Name", "Buying Price", "Selling Price", "Total Price", "Count", "Fields", "Actions"];
 
-    const tableHead = ['Module Name', 'Count', 'Field Names', 'Actions'];
-
+    /** Show success/error messages on load */
     useEffect(() => {
-        if (flash.message) ShowMessage('success', flash.message);
-        if (flash.error) ShowMessage('error', flash.error);
+        if (flash.message) ShowMessage("success", flash.message);
+        if (flash.error) ShowMessage("error", flash.error);
     }, [flash]);
 
+    /** Initialize or reinitialize DataTable */
     const initializeDataTable = () => {
-        if (tableRef.current) {
-            if ($.fn.DataTable.isDataTable(tableRef.current)) {
-                $(tableRef.current).DataTable().destroy();
-            }
+        if (!tableRef.current) return;
 
-            if (modules.length > 0) {
-                $(tableRef.current).DataTable({
-                    responsive: true,
-                    pageLength: 10,
-                    lengthMenu: [[10, 20, 40, -1], [10, 20, 40, "All"]],
-                    columnDefs: [{ targets: -1, responsivePriority: 1 }],
-                });
-            }
+        if ($.fn.DataTable.isDataTable(tableRef.current)) {
+            $(tableRef.current).DataTable().destroy();
+        }
+
+        if (modules.length > 0) {
+            $(tableRef.current).DataTable({
+                responsive: true,
+                pageLength: 10,
+                lengthMenu: [[10, 20, 40, -1], [10, 20, 40, "All"]],
+                columnDefs: [{ targets: -1, responsivePriority: 1 }],
+            });
         }
     };
 
@@ -48,20 +48,16 @@ export default function Module({ modules: initialModules }) {
         };
     }, [modules]);
 
+    /** Delete module */
     const handleDelete = (id) => {
-        if (confirm("Are you sure you want to delete this module?")) {
-            destroy(route("module.destroy", id), {
-                preserveScroll: true,
-                onSuccess: () => {
-                    if ($.fn.DataTable.isDataTable(tableRef.current)) {
-                        $(tableRef.current).DataTable().destroy();
-                    }
-                    setModules(modules.filter(module => module.id !== id));
-                    ShowMessage("success", flash.message);
-                },
-                onError: () => ShowMessage("error", flash.error),
-            });
-        }
+        destroy(route("module.destroy", id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setModules((prev) => prev.filter((module) => module.id !== id));
+                ShowMessage("success", "Module deleted successfully.");
+            },
+            onError: () => ShowMessage("error", "Failed to delete module."),
+        });
     };
 
     return (
@@ -69,8 +65,8 @@ export default function Module({ modules: initialModules }) {
             <Head title="Modules" />
             <div className="row g-4 mt-4">
                 <div className="d-flex justify-content-end align-items-center mb-3">
-                    {auth.user.role === 'admin' && (
-                        <Link href={route('module.create')} className="btn btn-primary">
+                    {auth.user.role === "admin" && (
+                        <Link href={route("module.create")} className="btn btn-primary">
                             <i className="ti ti-plus me-1"></i> Add Module
                         </Link>
                     )}
@@ -89,50 +85,55 @@ export default function Module({ modules: initialModules }) {
                                     </thead>
                                     <tbody>
                                         {modules.length > 0 ? (
-                                            modules.map((module) => (
-                                                <tr key={module.id}>
-                                                    <td>
-                                                        {module.module_name}
-                                                    </td>
-                                                    <td>{module.count}</td>
-                                                    <td>
-                                                        {Array.isArray(module.attributes) && module.attributes.length > 0 ? (
-                                                            module.attributes.map((attr, i) => (
+                                            modules.map((module) => {
+                                                const totalPrice = module.selling_price * module.count;
+                                                return (
+                                                    <tr key={module.id}>
+                                                        <td>{module.module_name}</td>
+                                                        <td>{module.buying_price}</td>
+                                                        <td>{module.selling_price}</td>
+                                                        <td>{module.selling_price} * {module.count} =  {totalPrice}</td>
+                                                        <td>{module.count}</td>
+                                                        <td>
+                                                            {module.fields.map((field, i) => (
                                                                 <div key={i}>
-                                                                    <span className="badge bg-light text-dark border mb-1">
-                                                                        {attr}
+                                                                    <span className="badge bg-light text-dark border mb-1 d-block">
+                                                                        {field}
                                                                     </span>
                                                                 </div>
-                                                            ))
-                                                        ) : (
-                                                            <span className="text-muted">N/A</span>
-                                                        )}
-                                                    </td>
-                                                    {auth.user.role === 'admin' && (
-                                                        <td>
-                                                            <div className="btn-group dropdown-icon-none">
-                                                                <button className="btn border-0 icon-btn b-r-4 dropdown-toggle active"
-                                                                    type="button" data-bs-toggle="dropdown"
-                                                                    data-bs-auto-close="true" aria-expanded="false">
-                                                                    <i className="ti ti-dots-vertical"></i>
-                                                                </button>
-                                                                <ul className="dropdown-menu">
-                                                                    <li>
-                                                                        <Link className="dropdown-item" href={route('module.edit', module.id)}>
-                                                                            <i className="ti ti-edit me-2"></i> Edit
-                                                                        </Link>
-                                                                    </li>
-                                                                    <li>
-                                                                        <button className="dropdown-item text-danger" onClick={() => handleDelete(module.id)}>
-                                                                            <i className="ti ti-trash me-2"></i> Delete
-                                                                        </button>
-                                                                    </li>
-                                                                </ul>
-                                                            </div>
+                                                            ))}
                                                         </td>
-                                                    )}
-                                                </tr>
-                                            ))
+
+                                                        {auth.user.role === "admin" && (
+                                                            <td>
+                                                                <div className="btn-group dropdown-icon-none">
+                                                                    <button
+                                                                        className="btn border-0 icon-btn b-r-4 dropdown-toggle active"
+                                                                        type="button"
+                                                                        data-bs-toggle="dropdown"
+                                                                        data-bs-auto-close="true"
+                                                                        aria-expanded="false"
+                                                                    >
+                                                                        <i className="ti ti-dots-vertical"></i>
+                                                                    </button>
+                                                                    <ul className="dropdown-menu">
+                                                                        <li>
+                                                                            <Link className="dropdown-item" href={route("module.edit", module.id)}>
+                                                                                <i className="ti ti-edit me-2"></i> Edit
+                                                                            </Link>
+                                                                        </li>
+                                                                        <li>
+                                                                            <button className="dropdown-item text-danger" onClick={() => handleDelete(module.id)}>
+                                                                                <i className="ti ti-trash me-2"></i> Delete
+                                                                            </button>
+                                                                        </li>
+                                                                    </ul>
+                                                                </div>
+                                                            </td>
+                                                        )}
+                                                    </tr>
+                                                );
+                                            })
                                         ) : (
                                             <tr>
                                                 <td colSpan={tableHead.length} className="text-center text-muted py-4">

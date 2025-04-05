@@ -13,14 +13,18 @@ return new class extends Migration
     {
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
-            $table->string('client_name');
-            $table->string('client_email')->unique();
-            $table->string('client_phone');
-            $table->string('client_address');
-            $table->string('site_name');
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
+
+            $table->string('client_name', 100);
+            $table->string('client_email', 150)->unique();
+            $table->string('client_phone', 10);
+            $table->text('client_address');
+            $table->string('site_name', 100);
+            $table->decimal('tax', 8, 2)->default(0.00);     
+            $table->decimal('profit', 12, 2)->default(0.00);
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
             $table->unsignedTinyInteger('service_charge')->default(0);
+
             $table->timestamps();
         });
     }

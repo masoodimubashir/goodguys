@@ -20,20 +20,25 @@ class UpdateClientRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
+
     public function rules(): array
     {
         return [
             'client_name' => ['required', 'string', 'max:100'],
-            'site_name' => ['required','string','max:100'],
+            'site_name' => ['required', 'string', 'max:100'],
             'client_email' => [
                 'required',
                 'string',
+                'email',
                 'max:100',
-                Rule::unique('clients', 'client_email')->ignore($this->route('client')), 
+                Rule::unique('clients', 'client_email')->ignore($this->route('client')),
             ],
             'client_address' => ['required', 'string', 'max:100'],
             'client_phone' => ['required', 'string', 'digits:10'],
-            'service_charge' => ['required',  'max:100', 'min:0'],
+            'service_charge' => ['required', 'numeric', 'min:0'],
+            'tax' => ['required', 'numeric', 'min:0'],
+            'profit' => ['required', 'numeric', 'min:0'],
         ];
     }
+    
 }

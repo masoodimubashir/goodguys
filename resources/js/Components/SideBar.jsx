@@ -81,20 +81,12 @@ export const SideBar = () => {
 
                         </li>
 
-                        <li>
-
-                            <NavLink active={url === '/fieldunit' ? true : false} href='/fieldunit'>
-                                <i className="iconoir-user-plus"></i>
-                                Field Unit
-                            </NavLink>
-
-                        </li>
 
                         <li>
 
-                            <NavLink active={url === '/sale' ? true : false} href='/sale'>
+                            <NavLink active={url === '/accounts' ? true : false} href='/accounts'>
                                 <i className="iconoir-user-plus"></i>
-                                Sales
+                                Ledger
                             </NavLink>
 
                         </li>

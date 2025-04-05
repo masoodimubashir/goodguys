@@ -10,18 +10,14 @@ import 'datatables.net-responsive';
 export default function Field({ fields: initialFields }) {
 
     const [fields, setFields] = useState(initialFields);
-    const tableHead = ['Field Name', 'Field Unit Name', 'Actions'];
+    const tableHead = ['Field Name', 'SI Unit', 'Dimension Value', 'Actions'];
     const tableRef = useRef(null);
     const { flash, auth } = usePage().props;
     const { delete: destroy } = useForm();
 
     useEffect(() => {
-        if (flash.message) {
-            ShowMessage('success', flash.message);
-        }
-        if (flash.error) {
-            ShowMessage('error', flash.error);
-        }
+        if (flash.message) ShowMessage('success', flash.message);
+        if (flash.error) ShowMessage('error', flash.error);
     }, [flash]);
 
     const initializeDataTable = () => {
@@ -35,13 +31,6 @@ export default function Field({ fields: initialFields }) {
                     responsive: true,
                     pageLength: 10,
                     lengthMenu: [[10, 20, 40, -1], [10, 20, 40, "All"]],
-                    responsive: {
-                        details: {
-                            display: $.fn.dataTable.Responsive.display.childRow,
-                            type: 'column',
-                            target: 'tr'
-                        }
-                    },
                     columnDefs: [
                         {
                             targets: -1,
@@ -69,10 +58,7 @@ export default function Field({ fields: initialFields }) {
                 if ($.fn.DataTable.isDataTable(tableRef.current)) {
                     $(tableRef.current).DataTable().destroy();
                 }
-
-                const updatedFields = fields.filter(item => item.id !== id);
-                setFields(updatedFields);
-
+                setFields(fields.filter(item => item.id !== id));
                 ShowMessage('success', flash.message);
             },
             onError: () => ShowMessage('error', flash.error),
@@ -84,12 +70,11 @@ export default function Field({ fields: initialFields }) {
             <Head title="Field Management" />
             <div className="row g-4 mt-4">
                 <div className="d-flex justify-content-end align-items-center">
-                    {
-                        auth.user.role === 'admin' &&
+                    {auth.user.role === 'admin' && (
                         <Link href={route('field.create')} className="btn btn-primary me-2">
                             Add Field
                         </Link>
-                    }
+                    )}
                 </div>
                 <div className="col-12">
                     <div className="card">
@@ -108,7 +93,8 @@ export default function Field({ fields: initialFields }) {
                                             fields.map((item) => (
                                                 <tr key={item.id}>
                                                     <td>{item.field_name}</td>
-                                                    <td>{item.field_unit_name}</td>
+                                                    <td>{item.dimension_value}</td>
+                                                    <td>{item.si_unit}</td>
                                                     {auth.user.role === 'admin' && (
                                                         <td>
                                                             <div className="btn-group dropdown-icon-none">

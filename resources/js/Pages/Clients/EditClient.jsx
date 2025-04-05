@@ -7,11 +7,14 @@ import InputError from '@/Components/InputError';
 
 export default function EditClient({ client }) {
   const { data, setData, put, processing, errors } = useForm({
-    client_name: client.client_name,
-    client_email: client.client_email,
-    client_phone: client.client_phone,
-    client_address: client.client_address,
-    service_charge: client.service_charge,
+    client_name: client.client_name ,
+    site_name: client.site_name ,
+    client_email: client.client_email ,
+    client_phone: client.client_phone ,
+    client_address: client.client_address ,
+    service_charge: client.service_charge ,
+    tax: client.tax ,
+    profit: client.profit ,
   });
 
   const handleSubmit = (e) => {
@@ -42,6 +45,18 @@ export default function EditClient({ client }) {
                     onChange={e => setData('client_name', e.target.value)}
                   />
                   <InputError message={errors.client_name} />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Site Name</label>
+                  <TextInput
+                    type="text"
+                    className="form-control"
+                    placeholder="Enter Site Name"
+                    value={data.site_name}
+                    onChange={e => setData('site_name', e.target.value)}
+                  />
+                  <InputError message={errors.site_name} />
                 </div>
 
                 <div className="mb-3">
@@ -90,6 +105,30 @@ export default function EditClient({ client }) {
                     onChange={e => setData('service_charge', e.target.value)}
                   />
                   <InputError message={errors.service_charge} />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Tax (%)</label>
+                  <TextInput
+                    type="number"
+                    className="form-control"
+                    placeholder="Enter Tax"
+                    value={data.tax}
+                    onChange={e => setData('tax', e.target.value)}
+                  />
+                  <InputError message={errors.tax} />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Profit (%)</label>
+                  <TextInput
+                    type="number"
+                    className="form-control"
+                    placeholder="Enter Profit"
+                    value={data.profit}
+                    onChange={e => setData('profit', e.target.value)}
+                  />
+                  <InputError message={errors.profit} />
                 </div>
 
                 <div className="d-flex justify-content-end gap-2">

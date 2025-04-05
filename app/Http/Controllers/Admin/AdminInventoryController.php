@@ -7,6 +7,7 @@ use App\Http\Requests\StoreInventoryRequest;
 use App\Http\Requests\UpdateInventoryRequest;
 use App\Models\Inventory;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -29,13 +30,13 @@ class AdminInventoryController extends Controller
     public function store(StoreInventoryRequest $request)
     {
         try {
-
             $request->merge([
                 'created_by' => auth()->user()->id,
             ]);
 
-            $dimensions = collect($request->input('attributes'))->pluck('dimension')->filter()->values()->toArray();
-            $sizes = collect($request->input('attributes'))->pluck('size')->filter()->values()->toArray();
+            $dimensions = collect($request->item_dimensions)
+                ->map(fn($dim) => implode(',', [$dim['type'], $dim['value'], $dim['unit']]))
+                ->toArray();
 
 
             Inventory::create([
@@ -43,8 +44,9 @@ class AdminInventoryController extends Controller
                 'selling_price' => $request->selling_price,
                 'buying_price' => $request->buying_price,
                 'item_type' => $request->item_type,
-                'item_dimension' => $dimensions,
-                'item_size' => $sizes,
+                'item_dimensions' => $dimensions,
+                'item_sub_type' => $request->item_sub_type,
+                'description' => $request->description,
                 'count' => $request->count,
                 'created_by' => $request->created_by,
             ]);
@@ -52,6 +54,7 @@ class AdminInventoryController extends Controller
             return redirect()->route('inventory.index')
                 ->with('message', 'Inventory Created');
         } catch (Exception $e) {
+            Log::error($e->getMessage());
             return redirect()->route('inventory.index')
                 ->with('error', 'Failed to create inventory');
         }
@@ -66,29 +69,39 @@ class AdminInventoryController extends Controller
         ]);
     }
 
-    public function update(UpdateInventoryRequest $request, Inventory $inventory)
+    public function update(StoreInventoryRequest $request, Inventory $inventory)
     {
         try {
-            $dimensions = collect($request->input('attributes'))->pluck('dimension')->toArray();
-            $sizes = collect($request->input('attributes'))->pluck('size')->toArray();
-    
-            $inventory->update([
-                'item_name'       => $request->item_name,
-                'selling_price'   => $request->selling_price,
-                'buying_price'    => $request->buying_price,
-                'item_type'       => $request->item_type,
-                'item_dimension'  => $dimensions,
-                'item_size'       => $sizes,
-                'count'           => $request->count,
-                'updated_by'      => auth()->id(),
+            $request->merge([
+                'updated_by' => auth()->user()->id,
             ]);
-    
-            return redirect()->route('inventory.index')->with('message', 'Inventory Updated');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to update inventory');
+
+            $dimensions = collect($request->item_dimensions)
+                ->map(fn($dim) => implode(',', [$dim['type'], $dim['value'], $dim['unit']]))
+                ->toArray();
+
+            $inventory->update([
+                'item_name' => $request->item_name,
+                'selling_price' => $request->selling_price,
+                'buying_price' => $request->buying_price,
+                'item_type' => $request->item_type,
+                'item_dimensions' => $dimensions,
+                'item_sub_type' => $request->item_sub_type,
+                'description' => $request->description,
+                'count' => $request->count,
+                'updated_by' => $request->updated_by,
+            ]);
+
+            return redirect()->route('inventory.index')
+                ->with('message', 'Inventory Updated');
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
+            return redirect()->route('inventory.index')
+                ->with('error', 'Failed to update inventory');
         }
     }
-    
+
+
 
     public function destroy(Inventory $inventory)
     {

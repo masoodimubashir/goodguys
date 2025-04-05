@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateFieldRequest extends FormRequest
 {
@@ -19,11 +20,19 @@ class UpdateFieldRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-    public function rules(): array
-    {
-        return [
-            'field_name' => ['required', 'string', 'max:255'],
-            'field_unit_name' => ['required', 'string', 'max:255'],
-        ];
-    }
+     public function rules(): array
+     {
+         return [
+             'field_name' => [
+                 'required',
+                 'string',
+                 'max:255',
+                 Rule::unique('fields', 'field_name')->ignore($this->route('field')),
+             ],
+             'si_unit' => ['required','string','max:255',],
+             'dimension_value' => ['required','string','max:255',],
+
+         ];
+     }
+     
 }

@@ -8,7 +8,8 @@ import { Head, Link, useForm } from "@inertiajs/react";
 export default function EditField({ field }) {
     const { data, setData, put, processing, errors } = useForm({
         field_name: field.field_name,
-        field_unit_name: field.field_unit_name,
+        si_unit: field.si_unit,
+        dimension_value: field.dimension_value, 
     });
 
     const submit = (e) => {
@@ -22,13 +23,11 @@ export default function EditField({ field }) {
         <AuthenticatedLayout>
             <Head title="Edit Field" />
             <div className="row m-1">
-                <div className="col-12 ">
+                <div className="col-12">
                     <ul className="app-line-breadcrumbs mb-3">
-                        <li className="">
+                        <li>
                             <Link href={route('field.index')} className="f-s-14 f-w-500">
-                                <span>
-                                    <i className="iconoir-home-alt"></i>
-                                </span>
+                                <i className="iconoir-home-alt"></i>
                             </Link>
                         </li>
                         <li className="active">
@@ -44,43 +43,50 @@ export default function EditField({ field }) {
                         <div className="card-body">
                             <form className="app-form" onSubmit={submit}>
                                 <div className="row">
-                                    <div className="col-md-6">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="field_name" value="Field Name" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter Field Name"
-                                                id="field_name"
-                                                onChange={(e) => setData('field_name', e.target.value)}
-                                                value={data.field_name}
-                                            />
-                                            {errors.field_name && <InputError message={errors.field_name} />}
-                                        </div>
+                                    {/* Field Name */}
+                                    <div className="col-md-4 mb-4">
+                                        <InputLabel htmlFor="field_name" value="Field Name" />
+                                        <TextInput
+                                            className="form-control"
+                                            placeholder="Enter Field Name"
+                                            id="field_name"
+                                            onChange={(e) => setData('field_name', e.target.value)}
+                                            value={data.field_name}
+                                        />
+                                        <InputError message={errors.field_name} />
                                     </div>
 
-                                    <div className="col-md-6">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="field_type" value="Field Unit Name" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter Field Unit Name"
-                                                id="field_unit_name"
-                                                onChange={(e) => setData('field_unit_name', e.target.value)}
-                                                value={data.field_unit_name}
-                                            />
-                                            {errors.field_unit_name && <InputError message={errors.field_unit_name} />}
-                                        </div>
+                                    {/* SI Unit */}
+                                    <div className="col-md-4 mb-4">
+                                        <InputLabel htmlFor="si_unit" value="SI Unit" />
+                                        <TextInput
+                                            className="form-control"
+                                            placeholder="Enter SI Unit (e.g., cm, kg)"
+                                            id="si_unit"
+                                            onChange={(e) => setData('si_unit', e.target.value)}
+                                            value={data.si_unit}
+                                        />
+                                        <InputError message={errors.si_unit} />
                                     </div>
 
+                                    {/* Dimension Value */}
+                                    <div className="col-md-4 mb-4">
+                                        <InputLabel htmlFor="dimension_value" value="Dimension Value" />
+                                        <TextInput
+                                            type="number"
+                                            className="form-control"
+                                            placeholder="Enter Dimension Value"
+                                            id="dimension_value"
+                                            onChange={(e) => setData('dimension_value', e.target.value)}
+                                            value={data.dimension_value}
+                                        />
+                                        <InputError message={errors.dimension_value} />
+                                    </div>
 
-                                  
-
-                                    <div className="col-12">
-                                        <div className="text-end">
-                                            <Button className="btn btn-primary" disabled={processing}>
-                                                {processing ? 'Updating' : 'Update Field'}
-                                            </Button>
-                                        </div>
+                                    <div className="col-12 text-end">
+                                        <Button className="btn btn-primary" disabled={processing}>
+                                            {processing ? 'Updating' : 'Update Field'}
+                                        </Button>
                                     </div>
                                 </div>
                             </form>

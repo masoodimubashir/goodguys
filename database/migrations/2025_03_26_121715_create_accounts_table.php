@@ -11,16 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sales', function (Blueprint $table) {
+        Schema::create('accounts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('inventory_id')->constrained();
+            $table->foreignId('client_id')->constrained('clients')->cascadeOnDelete();
             $table->string('item_name');
             $table->decimal('selling_price', 10, 2);
             $table->decimal('buying_price', 10, 2);
             $table->integer('count');
-            $table->integer('profit');
+            $table->integer('service_charge')->default(0);
             $table->unsignedTinyInteger('created_by')->nullable();
             $table->unsignedTinyInteger('updated_by')->nullable();
+            $table->json('description');
             $table->timestamps();
         });
     }
@@ -30,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sales');
+        Schema::dropIfExists('accounts');
     }
 };

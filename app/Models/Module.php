@@ -9,8 +9,10 @@ class Module extends Model
 {
     protected $fillable = [
         'module_name',
+        'selling_price',
+        'buying_price',
         'count',
-        'field_ids',
+        'fields',
         'created_by',
         'updated_by',
         'description'
@@ -18,7 +20,9 @@ class Module extends Model
 
     protected $casts = [
         'count' => 'integer',
-        'field_ids' => 'array',
+        'fields' => 'array',
+        'selling_price' => 'integer',
+        'buying_price' => 'integer',
     ];
 
 }

@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateFieldUnitRequest extends FormRequest
+class StoreAccountRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,15 @@ class UpdateFieldUnitRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'field_id' => 'required|exists:fields,id',
-            'unit_size' => 'required|string',
-            'unit_count' => 'required|integer|min:1',
+            
+            'client_id' => ['required', 'exists:clients,id'],
+            'item_name' => ['required', 'string', 'max:255'],
+            'selling_price' => ['required', 'integer', 'min:1'],
+            'buying_price' => ['required', 'integer', 'min:1'],
+            'count' => ['required', 'integer', 'min:1'],
+            'service_charge' => ['required', 'integer', 'min:1', 'max:100'],
+            'description' => ['required'],
+
         ];
     }
 }

@@ -20,9 +20,12 @@ export default function Inventory({ inventories: initialInventories }) {
         'Selling Price',
         'Buying Price',
         'Item Type',
-        'Dimensions & Sizes',
+        'Item Subtype',
+        'Description',
+        'Dimensions',
         'Actions'
     ];
+
 
     useEffect(() => {
         if (flash.message) ShowMessage('success', flash.message);
@@ -96,32 +99,31 @@ export default function Inventory({ inventories: initialInventories }) {
                                         {inventories.length > 0 ? (
                                             inventories.map((item) => (
                                                 <tr key={item.id}>
-                                                    <td>
-                                                        <span className="badge bg-secondary px-3 py-2">
-                                                            {item.item_name}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                            {item.count}
-                                                    </td>
+                                                    <td><span className="badge bg-secondary px-3 py-2">{item.item_name}</span></td>
+                                                    <td>{item.count}</td>
                                                     <td>₹{parseFloat(item.selling_price).toFixed(2)}</td>
                                                     <td>₹{parseFloat(item.buying_price).toFixed(2)}</td>
+                                                    <td>{item.item_type}</td>
+                                                    <td>{item.item_sub_type || <span className="text-muted">N/A</span>}</td>
+                                                    <td>{item.description || <span className="text-muted">N/A</span>}</td>
                                                     <td>
-                                                            {item.item_type}
-                                                    </td>
-                                                    <td>
-                                                        {Array.isArray(item.item_dimension) && Array.isArray(item.item_size) ? (
-                                                            item.item_dimension.map((dimension, index) => (
-                                                                <div key={index}>
-                                                                    <span className="badge bg-light text-dark border me-1 mb-1">
-                                                                        {dimension} = {item.item_size[index]}
-                                                                    </span>
-                                                                </div>
-                                                            ))
+                                                        {Array.isArray(item.item_dimensions)  ? (
+                                                            item.item_dimensions.map((dimension, index) => {
+                                                                const [name, value, unit] = dimension.split(',');
+                                                                return (
+                                                                    <div key={index}>
+                                                                        <span className="badge bg-light text-dark border me-1 mb-1">
+                                                                            {name}: {value} {unit}
+                                                                        </span>
+                                                                    </div>
+                                                                );
+                                                            })
                                                         ) : (
                                                             <span className="text-muted">N/A</span>
                                                         )}
                                                     </td>
+
+
                                                     {auth.user.role === 'admin' && (
                                                         <td>
                                                             <div className="btn-group dropdown-icon-none">
@@ -156,6 +158,7 @@ export default function Inventory({ inventories: initialInventories }) {
                                             </tr>
                                         )}
                                     </tbody>
+
                                 </table>
                             </div>
                         </div>

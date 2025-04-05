@@ -11,8 +11,10 @@ export default function CreateInventory() {
         selling_price: '',
         buying_price: '',
         item_type: '',
+        item_sub_type: '',
+        description: '',
         count: '',
-        attributes: [{ dimension: '', size: '' }],
+        item_dimensions: [{ type: '', value: '', unit: '' }],
     });
 
     const submit = (e) => {
@@ -23,21 +25,21 @@ export default function CreateInventory() {
     };
 
     const handleAddRow = () => {
-        if (data.attributes.length < 3) {
-            setData("attributes", [...data.attributes, { dimension: "", size: "" }]);
+        if (data.item_dimensions.length < 3) {
+            setData("item_dimensions", [...data.item_dimensions, { type: "", value: "", unit: "" }]);
         }
     };
 
     const handleRemoveRow = (index) => {
-        const updated = [...data.attributes];
+        const updated = [...data.item_dimensions];
         updated.splice(index, 1);
-        setData("attributes", updated.length ? updated : [{ dimension: "", size: "" }]);
+        setData("item_dimensions", updated.length ? updated : [{ type: "", value: "", unit: "" }]);
     };
 
     const handleItemChange = (index, field, value) => {
-        const updated = [...data.attributes];
+        const updated = [...data.item_dimensions];
         updated[index][field] = value;
-        setData("attributes", updated);
+        setData("item_dimensions", updated);
     };
 
     return (
@@ -66,7 +68,7 @@ export default function CreateInventory() {
                             <form className="app-form" onSubmit={submit}>
                                 <div className="row">
                                     {/* Item Name */}
-                                    <div className="col-md-6">
+                                    <div className="col-md-4">
                                         <div className="mb-4">
                                             <InputLabel htmlFor="item_name" value="Item Name" />
                                             <TextInput
@@ -81,7 +83,7 @@ export default function CreateInventory() {
                                     </div>
 
                                     {/* Selling Price */}
-                                    <div className="col-md-6">
+                                    <div className="col-md-4">
                                         <div className="mb-4">
                                             <InputLabel htmlFor="selling_price" value="Selling Price" />
                                             <TextInput
@@ -93,6 +95,22 @@ export default function CreateInventory() {
                                                 value={data.selling_price}
                                             />
                                             <InputError message={errors.selling_price} />
+                                        </div>
+                                    </div>
+
+                                      {/* Item Count */}
+                                      <div className="col-md-4">
+                                        <div className="mb-4">
+                                            <InputLabel htmlFor="count" value="Item Count" />
+                                            <TextInput
+                                                className="form-control"
+                                                placeholder="Enter Item Count"
+                                                id="count"
+                                                type="number"
+                                                onChange={(e) => setData('count', e.target.value)}
+                                                value={data.count}
+                                            />
+                                            <InputError message={errors.count} />
                                         </div>
                                     </div>
 
@@ -127,67 +145,83 @@ export default function CreateInventory() {
                                         </div>
                                     </div>
 
-                                    {/* Item Count */}
+                                    {/* Item Sub-Type */}
                                     <div className="col-md-4">
                                         <div className="mb-4">
-                                            <InputLabel htmlFor="count" value="Item Count" />
+                                            <InputLabel htmlFor="item_sub_type" value="Item Sub-Type" />
                                             <TextInput
                                                 className="form-control"
-                                                placeholder="Enter Item Count"
-                                                id="count"
-                                                type="number"
-                                                onChange={(e) => setData('count', e.target.value)}
-                                                value={data.count}
+                                                placeholder="Enter Item Sub-Type"
+                                                id="item_sub_type"
+                                                onChange={(e) => setData('item_sub_type', e.target.value)}
+                                                value={data.item_sub_type}
                                             />
-                                            <InputError message={errors.count} />
+                                            <InputError message={errors.item_sub_type} />
                                         </div>
-                                    </div>
+                                    </div>                 
 
-                                    {/* Dimensions & Sizes */}
+                                    {/* Item Dimensions */}
                                     <div className="col-12">
                                         <div className="mb-4">
-                                            <InputLabel value="Dimensions & Sizes (Max 3 rows)" />
-                                            <InputError message={errors.attributes} />
+                                            <InputLabel value="Item Dimensions (Max 3)" />
+                                            <InputError message={errors.item_dimensions} />
 
                                             <div className="list-group rounded">
-                                                {data.attributes.map((attr, index) => (
+                                                {data.item_dimensions.map((dim, index) => (
                                                     <div className="list-group-item mb-3 border-0 px-0 py-0" key={index}>
                                                         <div className="row align-attributes-center">
-                                                            {/* Dimension */}
-                                                            <div className="col-md-5 mb-2 mb-md-0 pe-md-1">
+                                                            {/* Type */}
+                                                            <div className="col-md-4 mb-2">
                                                                 <div className="input-group">
                                                                     <span className="input-group-text">📏</span>
                                                                     <TextInput
                                                                         className="form-control"
-                                                                        placeholder="Dimension"
-                                                                        value={attr.dimension}
+                                                                        placeholder="Type (e.g., length)"
+                                                                        value={dim.type}
                                                                         onChange={(e) =>
-                                                                            handleItemChange(index, 'dimension', e.target.value)
+                                                                            handleItemChange(index, 'type', e.target.value)
                                                                         }
                                                                     />
                                                                 </div>
-                                                                <InputError message={errors[`attributes.${index}.dimension`]} />
+                                                                <InputError message={errors[`item_dimensions.${index}.type`]} />
                                                             </div>
 
-                                                            {/* Size */}
-                                                            <div className="col-md-5 mb-2 mb-md-0 ps-md-1 pe-md-1">
+                                                            {/* Value */}
+                                                            <div className="col-md-3 mb-2">
+                                                                <div className="input-group">
+                                                                    <span className="input-group-text">🔢</span>
+                                                                    <TextInput
+                                                                        className="form-control"
+                                                                        placeholder="Value (e.g., 10)"
+                                                                        type="number"
+                                                                        value={dim.value}
+                                                                        onChange={(e) =>
+                                                                            handleItemChange(index, 'value', e.target.value)
+                                                                        }
+                                                                    />
+                                                                </div>
+                                                                <InputError message={errors[`item_dimensions.${index}.value`]} />
+                                                            </div>
+
+                                                            {/* Unit */}
+                                                            <div className="col-md-3 mb-2">
                                                                 <div className="input-group">
                                                                     <span className="input-group-text">📐</span>
                                                                     <TextInput
                                                                         className="form-control"
-                                                                        placeholder="Size"
-                                                                        value={attr.size}
+                                                                        placeholder="Unit (e.g., cm)"
+                                                                        value={dim.unit}
                                                                         onChange={(e) =>
-                                                                            handleItemChange(index, 'size', e.target.value)
+                                                                            handleItemChange(index, 'unit', e.target.value)
                                                                         }
                                                                     />
                                                                 </div>
-                                                                <InputError message={errors[`attributes.${index}.size`]} />
+                                                                <InputError message={errors[`item_dimensions.${index}.unit`]} />
                                                             </div>
 
-                                                            {/* Add/Remove Buttons */}
+                                                            {/* Add / Remove */}
                                                             <div className="col-md-2 text-md-end text-start mt-1">
-                                                                {index === 0 && data.attributes.length < 3 ? (
+                                                                {index === 0 && data.item_dimensions.length < 3 ? (
                                                                     <button
                                                                         type="button"
                                                                         className="btn btn-outline-success w-100"
@@ -213,6 +247,23 @@ export default function CreateInventory() {
                                             </div>
                                         </div>
                                     </div>
+
+                                     {/* Description */}
+                                     <div className="col-md-12">
+                                        <div className="mb-4">
+                                            <InputLabel htmlFor="description" value="Description" />
+                                            <textarea
+                                                id="description"
+                                                className="form-control"
+                                                placeholder="Enter item description"
+                                                rows="3"
+                                                value={data.description}
+                                                onChange={(e) => setData('description', e.target.value)}
+                                            ></textarea>
+                                            <InputError message={errors.description} />
+                                        </div>
+                                    </div>
+
 
                                     {/* Submit */}
                                     <div className="col-12">

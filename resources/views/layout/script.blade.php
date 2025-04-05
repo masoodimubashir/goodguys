@@ -22,7 +22,9 @@
 
 
  <!--customizer-->
- <div id="customizer"></div>
+ {{-- <div id="customizer"></div> --}}
+
+
 
  <!-- datatable js-->
  {{-- <script src="{{asset('assets/vendor/datatable/jquery.dataTables.min.js')}}"></script> --}}

@@ -49,7 +49,7 @@ export default function Sale({ sales: initialSales }) {
     }, [sales]);
 
     const handleDelete = (id) => {
-        destroy(route('sale.destroy', id), {
+        destroy(route('accounts.destroy', id), {
             preserveScroll: true,
             onSuccess: () => {
                 if ($.fn.DataTable.isDataTable(tableRef.current)) {
@@ -68,8 +68,8 @@ export default function Sale({ sales: initialSales }) {
             <div className="row g-4 mt-4">
                 <div className="d-flex justify-content-end align-items-center">
                     {auth.user.role === 'admin' && (
-                        <Link href={route('sale.create')} className="btn btn-primary me-2">
-                            Add Sale
+                        <Link href={route('accounts.create')} className="btn btn-primary me-2">
+                            Add Account
                         </Link>
                     )}
                 </div>
@@ -104,7 +104,7 @@ export default function Sale({ sales: initialSales }) {
                                                                 </button>
                                                                 <ul className="dropdown-menu">
                                                                     <li>
-                                                                        <Link className="dropdown-item" href={route('sale.edit', sale.id)}>
+                                                                        <Link className="dropdown-item" href={route('accounts.edit', sale.id)}>
                                                                             <i className="ti ti-edit"></i> Edit
                                                                         </Link>
                                                                     </li>

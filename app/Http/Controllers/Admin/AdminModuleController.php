@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateModuleRequest;
 use App\Models\Field;
 use App\Models\FieldUnit;
 use App\Models\Module;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
@@ -21,15 +22,7 @@ class AdminModuleController extends Controller
     {
 
         return Inertia::render('Modules/Module', [
-            'modules' => Module::latest()->get()->map(function ($module) {
-                return [
-                    'id' => $module->id,
-                    'module_name' => $module->module_name,
-                    'count' => $module->count,
-                    'attributes' => Field::whereIn('id', $module->field_ids)->pluck('field_name'),
-                    'created_by' => $module->created_by,
-                ];
-            }),
+            'modules' => Module::latest()->get(),
         ]);
     }
 
@@ -47,45 +40,52 @@ class AdminModuleController extends Controller
      * Store a newly created resource in storage.
      */
 
-     public function store(StoreModuleRequest $request)
-     {
-         try {
-             DB::beginTransaction();             dd($request->input('attributes'));
+    public function store(StoreModuleRequest $request)
+    {
+        try {
+            DB::beginTransaction();
 
-     
-             $fieldIds = [];
+            $fields = [];
 
-     
-             foreach ($request->input('attributes', []) as $attribute) {
-                 if (!empty($attribute['field_id'])) {
-                     $fieldIds[] = $attribute['field_id'];
-                 } elseif (!empty($attribute['field_name'])) {
-                     $field = Field::create([
-                         'field_name' => $attribute['field_name'],
-                         'created_by' => auth()->user()->id,
-                     ]);
-     
-                     $fieldIds[] = $field->id;
-                 }
-             }
-     
-             Module::create([
-                 'module_name' => $request->module_name,
-                 'count'       => $request->count,
-                 'description' => $request->description,
-                 'created_by'  => auth()->user()->id,
-                 'field_ids'   => $fieldIds,
-             ]);
-     
-             DB::commit();
-             return redirect()->route('module.index')->with('message', 'Module created.');
-         } catch (\Exception $e) {
-             DB::rollback();
-             Log::error($e->getMessage());
-             return redirect()->route('module.index')->with('error', 'Failed to create: ' . $e->getMessage());
-         }
-     }
-     
+            foreach ($request->input('attributes', []) as $attribute) {
+
+                $fieldName = $attribute['field_name'];
+                $siUnit = $attribute['si_unit'];
+                $dimensionValue = $attribute['dimension_value'];
+
+                $field = Field::create([
+                    'field_name' => $fieldName,
+                    'si_unit'    => $siUnit,
+                    'dimension_value' => $dimensionValue,
+                    'created_by' => auth()->id(),
+                ]);
+                $fieldName = $field->field_name;
+                $siUnit = $field->si_unit;
+                $dimensionValue = $field->dimension_value;
+
+                $formatted = trim("{$fieldName} {$dimensionValue} {$siUnit}");
+                $fields[] = $formatted;
+            }
+
+            Module::create([
+                'module_name' => $request->module_name,
+                'count'       => $request->count,
+                'description' => $request->description,
+                'selling_price' => $request->selling_price,
+                'buying_price' => $request->buying_price,
+                'created_by'  => auth()->id(),
+                'fields'      => $fields,
+            ]);
+
+            DB::commit();
+            return redirect()->route('module.index')->with('message', 'Module created.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error($e->getMessage());
+            return redirect()->route('module.index')->with('error', 'Failed to create: ' . $e->getMessage());
+        }
+    }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -106,37 +106,40 @@ class AdminModuleController extends Controller
         try {
 
             DB::beginTransaction();
-    
-            $fieldIds = [];
-    
-            foreach ($request->input('attributes', []) as $attribute) {
-                if (!empty($attribute['field_id'])) {
-                    $fieldIds[] = $attribute['field_id'];
-                } elseif (!empty($attribute['field_name'])) {
-                    $field = Field::create([
-                        'field_name' => $attribute['field_name'],
-                        'updated_by' => auth()->user()->id,
-                    ]);
-                    $fieldIds[] = $field->id;
-                }
+
+            $formattedFields = [];
+
+            foreach ($request->input('fields', []) as $fieldData) {
+                $field = Field::create([
+                    'field_name' => $fieldData['field_name'],
+                    'si_unit' => $fieldData['si_unit'],
+                    'dimension_value' => $fieldData['dimension_value'],
+                    'created_by' => auth()->id(),
+                ]);
+
+                $formatted = trim("{$field->field_name} {$field->dimension_value} {$field->si_unit}");
+                $formattedFields[] = $formatted;
             }
-    
+
             $module->update([
                 'module_name' => $request->module_name,
-                'count'       => $request->count,
+                'count' => $request->count,
                 'description' => $request->description,
-                'field_ids'   => $fieldIds,
+                'fields' => $formattedFields,
+                'selling_price' => $request->selling_price,
+                'buying_price' => $request->buying_price,
+                'updated_by' => auth()->id(),
             ]);
-    
+
             DB::commit();
             return redirect()->route('module.index')->with('message', 'Module updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error($e->getMessage());
             return redirect()->route('module.index')->with('error', 'Failed to update: ' . $e->getMessage());
         }
     }
-    
+
+
 
     /**
      * Remove the specified resource from storage.
@@ -152,6 +155,3 @@ class AdminModuleController extends Controller
         }
     }
 }
-
-
-

@@ -7,9 +7,11 @@ import 'datatables.net';
 import 'datatables.net-responsive';
 
 export default function Client({ clients: initialClients }) {
-
     const [clients, setClients] = useState(initialClients);
-    const tableHead = ['Name', 'Site Name', 'Email', 'Phone', 'Address', 'Service Charge', 'Actions'];
+    const tableHead = [
+        'Name', 'Site Name', 'Email', 'Phone', 'Address',
+        'Service Charge (%)', 'Tax (%)', 'Profit (%)', 'Actions'
+    ];
     const tableRef = useRef(null);
     const { flash, auth } = usePage().props;
     const { delete: destroy } = useForm();
@@ -64,7 +66,8 @@ export default function Client({ clients: initialClients }) {
     return (
         <AuthenticatedLayout>
             <Head title="Clients" />
-            <div className="row g-4 mt-4">
+
+            <div className="row g-4 mb-3 mt-3">
                 <div className="d-flex justify-content-end align-items-center">
                     {auth.user.role === 'admin' && (
                         <Link href={route('clients.create')} className="btn btn-primary me-2">
@@ -88,7 +91,6 @@ export default function Client({ clients: initialClients }) {
                                         {clients.length > 0 ? (
                                             clients.map((client) => (
                                                 <tr key={client.id}>
-                                                    
                                                     <td>
                                                         <Link href={route('clients.show', client.id)} className="text-decoration-underline text-primary">
                                                             {client.client_name}
@@ -99,6 +101,8 @@ export default function Client({ clients: initialClients }) {
                                                     <td>{client.client_phone}</td>
                                                     <td>{client.client_address}</td>
                                                     <td>{client.service_charge}%</td>
+                                                    <td>{client.tax}%</td>
+                                                    <td>{client.profit}%</td>
                                                     {auth.user.role === 'admin' && (
                                                         <td>
                                                             <div className="btn-group dropdown-icon-none">

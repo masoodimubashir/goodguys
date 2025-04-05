@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('modules', function (Blueprint $table) {
+        Schema::create('proformas', function (Blueprint $table) {
             $table->id();
-            $table->string('module_name');
-            $table->unsignedBigInteger('count');
-            $table->decimal('selling_price', 10, 2);
-            $table->decimal('buying_price', 10, 2);
-            $table->json('fields');
+            $table->foreignId('client_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('module_id')->constrained()->cascadeOnDelete();
+            $table->string('item_name');
             $table->string('description');
+            $table->unsignedBigInteger('count');
+            $table->unsignedBigInteger('price');
+            $table->unsignedBigInteger('tax');
+            $table->unsignedBigInteger('service_charge');
             $table->unsignedTinyInteger('created_by')->nullable();
             $table->unsignedTinyInteger('updated_by')->nullable();
             $table->timestamps();
@@ -30,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('modules');
+        Schema::dropIfExists('proformas');
     }
 };

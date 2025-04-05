@@ -32,6 +32,5 @@
 @yield('css')
 
 
-
 <!-- Data Table css-->
 {{-- <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/datatable/jquery.dataTables.min.css') }}"> --}}

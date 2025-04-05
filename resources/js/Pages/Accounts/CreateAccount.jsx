@@ -6,14 +6,14 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
 import Select from "react-select";
 
-export default function CreateSale({ inventories }) {
+export default function CreateAccount({ inventories }) {
     const { data, setData, post, processing, errors } = useForm({
         inventory_id: '',
         item_name: '',
         selling_price: '',
         buying_price: '',
         count: '',
-        profit: 0,
+        service_charge: '',
     });
 
     const inventoryOptions = inventories.map(item => ({
@@ -21,25 +21,19 @@ export default function CreateSale({ inventories }) {
         label: item.item_name,
     }));
 
-
-
     const handleInputChange = (e) => {
         setData(e.target.name, e.target.value);
-
-        if (e.target.name === "selling_price" || e.target.name === "buying_price") {
-            setData("profit", (data.selling_price - data.buying_price).toFixed(2));
-        }
     };
 
     const submit = (e) => {
         e.preventDefault();
-        post(route('acoounts.store'), { preserveState: true });
+        post(route('accounts.store'), { preserveState: true });
     };
 
     return (
-
         <AuthenticatedLayout>
-            <Head title="Create Sale" />
+            <Head title="Create Account" />
+
             <div className="row m-1">
                 <div className="col-12">
                     <ul className="app-line-breadcrumbs mb-3">
@@ -62,7 +56,6 @@ export default function CreateSale({ inventories }) {
                             <form className="app-form" onSubmit={submit}>
                                 <div className="row">
 
-
                                     {/* Item Name */}
                                     <div className="col-md-6">
                                         <div className="mb-4">
@@ -80,10 +73,10 @@ export default function CreateSale({ inventories }) {
                                         </div>
                                     </div>
 
-                                    {/* Select2 Dropdown for Items */}
+                                    {/* Inventory Dropdown */}
                                     <div className="col-md-6">
                                         <div className="mb-4">
-                                            <InputLabel htmlFor="inventory_id" value="Select Item" />
+                                            <InputLabel htmlFor="inventory_id" value="Select Item from Inventory" />
                                             <Select
                                                 id="inventory_id"
                                                 options={inventoryOptions}
@@ -141,28 +134,30 @@ export default function CreateSale({ inventories }) {
                                                 placeholder="Enter Count"
                                                 id="count"
                                                 name="count"
-                                                onChange={(e) => setData("count", e.target.value)}
+                                                onChange={handleInputChange}
                                                 value={data.count}
                                             />
                                             {errors.count && <InputError message={errors.count} />}
                                         </div>
                                     </div>
 
-                                    {/* Profit (Read-only) */}
                                     <div className="col-md-6">
                                         <div className="mb-4">
-                                            <InputLabel htmlFor="profit" value="Profit (Auto-calculated)" />
+                                            <InputLabel htmlFor="service_charge" value="Service Charge(%)" />
                                             <TextInput
-                                                type="text"
+                                                type="number"
                                                 className="form-control"
-                                                id="profit"
-                                                name="profit"
-                                                value={data.profit}
-                                                readOnly
+                                                placeholder="Enter Service Charge"
+                                                id="service_charge"
+                                                name="service_charge"
+                                                onChange={handleInputChange}
+                                                value={data.service_charge}
                                             />
+                                            {errors.service_charge && <InputError message={errors.service_charge} />}
                                         </div>
                                     </div>
 
+                                    {/* Submit Button */}
                                     <div className="col-12">
                                         <div className="text-end">
                                             <Button className="btn btn-primary" disabled={processing}>

@@ -27,6 +27,7 @@ class AdminFieldController extends Controller
     {
         try {
 
+
             Field::create(array_merge($request->validated(), [
                 'created_by' => auth()->id(),
             ]));

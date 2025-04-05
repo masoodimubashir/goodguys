@@ -6,50 +6,41 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
 import Select from "react-select";
 
-export default function CreateSale({ inventories }) {
-    const { data, setData, post, processing, errors } = useForm({
-        inventory_id: '',
-        item_name: '',
-        selling_price: '',
-        buying_price: '',
-        count: '',
-        profit: 0,
-    });
-
-    const inventoryOptions = inventories.map(item => ({
-        value: item.id,
-        label: item.item_name,
+export default function Edit({ account, inventories }) {
+    const inventoryOptions = inventories.map(inventory => ({
+        value: inventory.id,
+        label: inventory.item_name,
     }));
 
+    const selectedInventory = inventoryOptions.find(option => option.value === account.inventory_id);
 
-
-    const handleInputChange = (e) => {
-        setData(e.target.name, e.target.value);
-
-        if (e.target.name === "selling_price" || e.target.name === "buying_price") {
-            setData("profit", (data.selling_price - data.buying_price).toFixed(2));
-        }
-    };
+    const { data, setData, put, processing, errors } = useForm({
+        item_name: account.item_name,
+        selling_price: account.selling_price,
+        buying_price: account.buying_price,
+        inventory_id: selectedInventory ? selectedInventory.value : "",
+        count: account.count,
+        service_charge: account.service_charge ?? '', // ✅ added field
+    });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route('acoounts.store'), { preserveState: true });
+        put(route("accounts.update", account.id), { preserveState: true });
     };
 
     return (
-
         <AuthenticatedLayout>
-            <Head title="Create Sale" />
+            <Head title="Edit account" />
             <div className="row m-1">
                 <div className="col-12">
                     <ul className="app-line-breadcrumbs mb-3">
                         <li>
-                            <Link href={route('accounts.index')} className="f-s-14 f-w-500">
+                            <Link href={route("accounts.index")} className="f-s-14 f-w-500">
                                 <span><i className="iconoir-home-alt"></i></span>
                             </Link>
                         </li>
                         <li className="active">
-                            <Link href={route('accounts.index')} className="f-s-14 f-w-500">Back</Link>
+                            <Link href={route("accounts.index")} className="f-s-14 f-w-500">Back</Link>
                         </li>
                     </ul>
                 </div>
@@ -61,39 +52,18 @@ export default function CreateSale({ inventories }) {
                         <div className="card-body">
                             <form className="app-form" onSubmit={submit}>
                                 <div className="row">
-
-
                                     {/* Item Name */}
                                     <div className="col-md-6">
                                         <div className="mb-4">
                                             <InputLabel htmlFor="item_name" value="Item Name" />
                                             <TextInput
-                                                type="text"
                                                 className="form-control"
                                                 placeholder="Enter Item Name"
                                                 id="item_name"
-                                                name="item_name"
-                                                onChange={handleInputChange}
+                                                onChange={(e) => setData("item_name", e.target.value)}
                                                 value={data.item_name}
                                             />
                                             {errors.item_name && <InputError message={errors.item_name} />}
-                                        </div>
-                                    </div>
-
-                                    {/* Select2 Dropdown for Items */}
-                                    <div className="col-md-6">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="inventory_id" value="Select Item" />
-                                            <Select
-                                                id="inventory_id"
-                                                options={inventoryOptions}
-                                                isClearable={true}
-                                                isSearchable={true}
-                                                onChange={(selectedOption) =>
-                                                    setData('inventory_id', selectedOption ? selectedOption.value : '')
-                                                }
-                                            />
-                                            {errors.inventory_id && <InputError message={errors.inventory_id} />}
                                         </div>
                                     </div>
 
@@ -102,12 +72,11 @@ export default function CreateSale({ inventories }) {
                                         <div className="mb-4">
                                             <InputLabel htmlFor="selling_price" value="Selling Price" />
                                             <TextInput
-                                                type="number"
                                                 className="form-control"
                                                 placeholder="Enter Selling Price"
                                                 id="selling_price"
-                                                name="selling_price"
-                                                onChange={handleInputChange}
+                                                type="number"
+                                                onChange={(e) => setData("selling_price", e.target.value)}
                                                 value={data.selling_price}
                                             />
                                             {errors.selling_price && <InputError message={errors.selling_price} />}
@@ -119,28 +88,42 @@ export default function CreateSale({ inventories }) {
                                         <div className="mb-4">
                                             <InputLabel htmlFor="buying_price" value="Buying Price" />
                                             <TextInput
-                                                type="number"
                                                 className="form-control"
                                                 placeholder="Enter Buying Price"
                                                 id="buying_price"
-                                                name="buying_price"
-                                                onChange={handleInputChange}
+                                                type="number"
+                                                onChange={(e) => setData("buying_price", e.target.value)}
                                                 value={data.buying_price}
                                             />
                                             {errors.buying_price && <InputError message={errors.buying_price} />}
                                         </div>
                                     </div>
 
+                                    {/* Inventory Selection */}
+                                    <div className="col-md-6">
+                                        <div className="mb-4">
+                                            <InputLabel htmlFor="inventory_id" value="Select Item" />
+                                            <Select
+                                                id="inventory_id"
+                                                isClearable={true}
+                                                isSearchable={true}
+                                                options={inventoryOptions}
+                                                value={inventoryOptions.find(option => option.value === data.inventory_id)}
+                                                onChange={(selected) => setData("inventory_id", selected ? selected.value : "")}
+                                            />
+                                            {errors.inventory_id && <InputError message={errors.inventory_id} />}
+                                        </div>
+                                    </div>
+
                                     {/* Count */}
                                     <div className="col-md-6">
                                         <div className="mb-4">
-                                            <InputLabel htmlFor="count" value="Count" />
+                                            <InputLabel htmlFor="count" value="Item Count" />
                                             <TextInput
-                                                type="number"
                                                 className="form-control"
-                                                placeholder="Enter Count"
+                                                placeholder="Enter Item Count"
                                                 id="count"
-                                                name="count"
+                                                type="number"
                                                 onChange={(e) => setData("count", e.target.value)}
                                                 value={data.count}
                                             />
@@ -148,29 +131,30 @@ export default function CreateSale({ inventories }) {
                                         </div>
                                     </div>
 
-                                    {/* Profit (Read-only) */}
+                                    {/* Service Charge */}
                                     <div className="col-md-6">
                                         <div className="mb-4">
-                                            <InputLabel htmlFor="profit" value="Profit (Auto-calculated)" />
+                                            <InputLabel htmlFor="service_charge" value="Service Charge" />
                                             <TextInput
-                                                type="text"
                                                 className="form-control"
-                                                id="profit"
-                                                name="profit"
-                                                value={data.profit}
-                                                readOnly
+                                                placeholder="Enter Service Charge"
+                                                id="service_charge"
+                                                type="number"
+                                                onChange={(e) => setData("service_charge", e.target.value)}
+                                                value={data.service_charge}
                                             />
+                                            {errors.service_charge && <InputError message={errors.service_charge} />}
                                         </div>
                                     </div>
 
+                                    {/* Submit */}
                                     <div className="col-12">
                                         <div className="text-end">
                                             <Button className="btn btn-primary" disabled={processing}>
-                                                {processing ? 'Submitting...' : 'Submit'}
+                                                {processing ? "Updating..." : "Update"}
                                             </Button>
                                         </div>
                                     </div>
-
                                 </div>
                             </form>
                         </div>

@@ -1,0 +1,8 @@
+.dt-paging nav {
+    width: auto !important;
+    position: relative !important;
+    height: auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    margin-top: 10px !important;
+}
