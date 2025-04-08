@@ -17,30 +17,8 @@ class Client extends Model
         'updated_by',
         'site_name',
         'tax',
-        'profit',
     ];
 
-
-    /**
-     * Get all of the proformas for the Client
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function proformas(): HasMany
-    {
-        return $this->hasMany(Proforma::class);
-    }
-
-
-    /**
-     * Get all of the invoices for the Client
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function invoices(): HasMany
-    {
-        return $this->hasMany(Invoice::class);
-    }
 
 
     /**
@@ -53,6 +31,15 @@ class Client extends Model
         return $this->hasMany(Account::class);
     }
 
+    public function invoiceRefrences(): HasMany
+    {
+        return $this->hasMany(InvoiceRefrence::class);
+    }
+
+    public function proformaRefrences(): HasMany
+    {
+        return $this->hasMany(ProformaRefrence::class);
+    }
 
     protected function casts(): array
     {

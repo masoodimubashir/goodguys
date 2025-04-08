@@ -93,10 +93,10 @@ export default function Account({ accounts: initialAccounts }) {
                                                     {auth.user.role === 'admin' && (
                                                         <td>
                                                             <div className="btn-group dropdown-icon-none">
-                                                                <button className="btn border-0 icon-btn b-r-4 dropdown-toggle active"
+                                                                <button className="border-0 icon-btn b-r-4 dropdown-toggle active"
                                                                     type="button" data-bs-toggle="dropdown"
                                                                     data-bs-auto-close="true" aria-expanded="false">
-                                                                    <i className="ti ti-dots-vertical"></i>
+                                                                    <i className="ti ti-dots"></i>
                                                                 </button>
                                                                 <ul className="dropdown-menu">
                                                                     <li>

@@ -43,6 +43,7 @@ class AdminModuleController extends Controller
     public function store(StoreModuleRequest $request)
     {
         try {
+            
             DB::beginTransaction();
 
             $fields = [];
@@ -63,7 +64,7 @@ class AdminModuleController extends Controller
                 $siUnit = $field->si_unit;
                 $dimensionValue = $field->dimension_value;
 
-                $formatted = trim("{$fieldName} {$dimensionValue} {$siUnit}");
+                $formatted = trim("{$fieldName},{$dimensionValue},{$siUnit}");
                 $fields[] = $formatted;
             }
 
@@ -110,6 +111,7 @@ class AdminModuleController extends Controller
             $formattedFields = [];
 
             foreach ($request->input('fields', []) as $fieldData) {
+
                 $field = Field::create([
                     'field_name' => $fieldData['field_name'],
                     'si_unit' => $fieldData['si_unit'],
@@ -117,7 +119,7 @@ class AdminModuleController extends Controller
                     'created_by' => auth()->id(),
                 ]);
 
-                $formatted = trim("{$field->field_name} {$field->dimension_value} {$field->si_unit}");
+                $formatted = trim("{$field->field_name},{$field->dimension_value},{$field->si_unit}");
                 $formattedFields[] = $formatted;
             }
 

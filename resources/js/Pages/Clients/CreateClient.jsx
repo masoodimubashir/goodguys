@@ -15,7 +15,6 @@ export default function CreateClient() {
         service_charge: '',
         site_name: '',
         tax: '',
-        profit: '',
     });
 
     const submit = (e) => {
@@ -146,20 +145,7 @@ export default function CreateClient() {
                                         <InputError message={errors.tax} />
                                     </div>
 
-                                    {/* Profit */}
-                                    <div className="col-md-6 mb-4">
-                                        <InputLabel htmlFor="profit" value="Profit (%)" />
-                                        <TextInput
-                                            className="form-control"
-                                            id="profit"
-                                            type="number"
-                                            step="0.01"
-                                            placeholder="Enter Profit Percentage"
-                                            value={data.profit}
-                                            onChange={(e) => setData('profit', e.target.value)}
-                                        />
-                                        <InputError message={errors.profit} />
-                                    </div>
+                                  
 
                                     {/* Submit Button */}
                                     <div className="col-12 text-end">

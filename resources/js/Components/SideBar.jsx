@@ -1,12 +1,10 @@
 import React from 'react'
 
 import { usePage } from '@inertiajs/react';
-import MenuTitle from './MenuTitle';
 import NavLink from './NavLink';
 
 
 export const SideBar = () => {
-
 
     const { url } = usePage();
 
@@ -27,77 +25,58 @@ export const SideBar = () => {
 
                 <div className="app-nav" id="app-simple-bar">
 
-
                     <ul className="main-nav p-0 mt-2">
 
-                        <MenuTitle>
-                            Dashboard
-                        </MenuTitle>
-
                         <li>
-
                             <NavLink active={url === '/dashboard' ? true : false} href={route('dashboard')}>
                                 <i className="iconoir-home-alt"></i>
                                 dashboard
                             </NavLink>
-
                         </li>
 
 
                         <li>
-
                             <NavLink active={url === '/inventory' ? true : false} href='/inventory'>
                                 <i className="iconoir-box"></i>
                                 Inventory
                             </NavLink>
-
                         </li>
 
 
                         <li>
-
                             <NavLink active={url === '/users' ? true : false} href='/users'>
                                 <i className="iconoir-user"></i>
                                 Users
                             </NavLink>
-
                         </li>
 
                         <li>
-
                             <NavLink active={url === '/clients' ? true : false} href='/clients'>
                                 <i className="iconoir-user-plus"></i>
                                 Clients
                             </NavLink>
-
-                        </li>
-
-                        <li>
-
-                            <NavLink active={url === '/field' ? true : false} href='/field'>
-                                <i className="iconoir-user-plus"></i>
-                                Field
-                            </NavLink>
-
                         </li>
 
 
                         <li>
-
                             <NavLink active={url === '/accounts' ? true : false} href='/accounts'>
                                 <i className="iconoir-user-plus"></i>
                                 Ledger
                             </NavLink>
-
                         </li>
 
                         <li>
-
                             <NavLink active={url === '/module' ? true : false} href='/module'>
                                 <i className="iconoir-user-plus"></i>
                                 Module
                             </NavLink>
+                        </li>
 
+                        <li>
+                            <NavLink active={url === '/invoice' ? true : false} href='/invoice'>
+                                <i className="iconoir-user-plus"></i>
+                                Invoice
+                            </NavLink>
                         </li>
 
 

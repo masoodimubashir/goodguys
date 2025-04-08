@@ -6,14 +6,27 @@ import { ShowMessage } from '@/Components/ShowMessage';
 import $ from 'jquery';
 import 'datatables.net';
 import 'datatables.net-responsive';
+import Swal from 'sweetalert2';
 
-export default function Field({ fields: initialFields }) {
-
-    const [fields, setFields] = useState(initialFields);
-    const tableHead = ['Field Name', 'SI Unit', 'Dimension Value', 'Actions'];
+export default function Invoice({ invoices: initialInvoices }) {
+    const [invoices, setInvoices] = useState(initialInvoices);
     const tableRef = useRef(null);
     const { flash, auth } = usePage().props;
     const { delete: destroy } = useForm();
+
+    const tableHead = [
+        'Invoice No.',
+        'Client',
+        'Module',
+        'Item',
+        'Description',
+        'Count',
+        'Price',
+        'Tax (%)',
+        'Service Charge',
+        'Created By',
+        'Actions'
+    ];
 
     useEffect(() => {
         if (flash.message) ShowMessage('success', flash.message);
@@ -26,17 +39,12 @@ export default function Field({ fields: initialFields }) {
                 $(tableRef.current).DataTable().destroy();
             }
 
-            if (fields.length > 0) {
+            if (invoices.length > 0) {
                 $(tableRef.current).DataTable({
                     responsive: true,
                     pageLength: 10,
                     lengthMenu: [[10, 20, 40, -1], [10, 20, 40, "All"]],
-                    columnDefs: [
-                        {
-                            targets: -1,
-                            responsivePriority: 1
-                        }
-                    ]
+                    columnDefs: [{ targets: -1, responsivePriority: 1 }],
                 });
             }
         }
@@ -49,16 +57,16 @@ export default function Field({ fields: initialFields }) {
                 $(tableRef.current).DataTable().destroy();
             }
         };
-    }, [fields]);
+    }, [invoices]);
 
     const handleDelete = (id) => {
-        destroy(route('field.destroy', id), {
+        destroy(route('invoice.destroy', id), {
             preserveScroll: true,
             onSuccess: () => {
                 if ($.fn.DataTable.isDataTable(tableRef.current)) {
                     $(tableRef.current).DataTable().destroy();
                 }
-                setFields(fields.filter(item => item.id !== id));
+                setInvoices(invoices.filter(invoice => invoice.id !== id));
                 ShowMessage('success', flash.message);
             },
             onError: () => ShowMessage('error', flash.error),
@@ -67,54 +75,59 @@ export default function Field({ fields: initialFields }) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="Field Management" />
+            <Head title="Invoices" />
             <div className="row g-4 mt-4">
-                <div className="d-flex justify-content-between align-items-center">
-                    <Link href={route('module.index')} className="btn btn-sm btn-outline-secondary">
-                        <i className="ti ti-arrow-left me-1"></i> Back
-                    </Link>
+                <div className="d-flex justify-content-end align-items-center mb-3">
                     {auth.user.role === 'admin' && (
-                        <Link href={route('field.create')} className="btn btn-sm btn-primary">
-                            <i className="ti ti-plus me-1"></i> Add Field
+                        <Link href={route('invoice.create')} className="btn btn-primary">
+                            <i className="ti ti-plus me-1"></i> Add Invoice
                         </Link>
                     )}
                 </div>
                 <div className="col-12">
-                    <div className="card">
+                    <div className="card shadow-sm">
                         <div className="card-body p-3">
-                            <div className="app-scroll table-responsive">
-                                <table ref={tableRef} className="table mb-0">
-                                    <thead>
+                            <div className="table-responsive">
+                                <table ref={tableRef} className="table table-hover align-middle mb-0 text-left">
+                                    <thead className="table-light">
                                         <tr>
                                             {tableHead.map((head, index) => (
-                                                <th key={index}>{head}</th>
+                                                <th key={index} className="text-nowrap">{head}</th>
                                             ))}
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {fields.length > 0 ? (
-                                            fields.map((item) => (
-                                                <tr key={item.id}>
-                                                    <td>{item.field_name}</td>
-                                                    <td>{item.dimension_value}</td>
-                                                    <td>{item.si_unit}</td>
+                                        {invoices.length > 0 ? (
+                                            invoices.map((invoice) => (
+                                                <tr key={invoice.id}>
+                                                    <td>{invoice.invoice_number}</td>
+                                                    <td>{invoice.client?.name || 'N/A'}</td>
+                                                    <td>{invoice.module?.name || 'N/A'}</td>
+                                                    <td><span className="badge bg-secondary px-3 py-2">{invoice.item_name}</span></td>
+                                                    <td>{invoice.description || <span className="text-muted">N/A</span>}</td>
+                                                    <td>{invoice.count}</td>
+                                                    <td>₹{invoice.price}</td>
+                                                    <td>{invoice.tax}%</td>
+                                                    <td>₹{invoice.service_charge}</td>
+                                                    <td>{invoice.created_by || 'N/A'}</td>
+
                                                     {auth.user.role === 'admin' && (
                                                         <td>
                                                             <div className="btn-group dropdown-icon-none">
                                                                 <button className="border-0 icon-btn b-r-4 dropdown-toggle active"
                                                                     type="button" data-bs-toggle="dropdown"
-                                                                    data-bs-auto-close="true" aria-expanded="false">
+                                                                    aria-expanded="false">
                                                                     <i className="ti ti-dots"></i>
                                                                 </button>
                                                                 <ul className="dropdown-menu">
                                                                     <li>
-                                                                        <Link className="dropdown-item" href={route('field.edit', item.id)}>
-                                                                            <i className="ti ti-edit"></i> Edit
+                                                                        <Link className="dropdown-item" href={route('invoice.edit', invoice.id)}>
+                                                                            <i className="ti ti-edit me-2"></i> Edit
                                                                         </Link>
                                                                     </li>
                                                                     <li>
-                                                                        <button className="dropdown-item" onClick={() => handleDelete(item.id)}>
-                                                                            <i className="ti ti-trash"></i> Delete
+                                                                        <button className="dropdown-item text-danger" onClick={() => handleDelete(invoice.id)}>
+                                                                            <i className="ti ti-trash me-2"></i> Delete
                                                                         </button>
                                                                     </li>
                                                                 </ul>
@@ -125,7 +138,10 @@ export default function Field({ fields: initialFields }) {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={tableHead.length} className="text-center">No fields found</td>
+                                                <td colSpan={tableHead.length} className="text-center text-muted py-4">
+                                                    <i className="ti ti-file-invoice fs-4 d-block mb-2"></i>
+                                                    No invoices found.
+                                                </td>
                                             </tr>
                                         )}
                                     </tbody>

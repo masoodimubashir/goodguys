@@ -1,6 +1,9 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import GuestLayout from '@/Layouts/GuestLayout';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import InputLabel from "@/Components/InputLabel";
+import InputError from "@/Components/InputError";
+import TextInput from "@/Components/TextInput";
+
 
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -19,86 +22,128 @@ export default function Register() {
 
     return (
 
-            <AuthenticatedLayout>
-                <Head title="Register" />
+        <AuthenticatedLayout>
 
-                <form className="app-form p-3" onSubmit={submit}>
-                    <div className="mb-3 text-center">
-                        <h3>Create Account</h3>
+
+            <Head title="Register" />
+
+            <div className="row m-1">
+                <div className="col-12">
+                    <ul className="app-line-breadcrumbs mb-3">
+                        <li>
+                            <Link href={route('inventory.index')} className="f-s-14 f-w-500">
+                                <span><i className="iconoir-home-alt"></i></span>
+                            </Link>
+                        </li>
+                        <li className="active">
+                            <Link href={route('inventory.index')} className="f-s-14 f-w-500">Back</Link>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div className="row">
+                <div className="col-12">
+                    <div className="card">
+                        <div className="card-body">
+                            <form className="app-form" onSubmit={submit}>
+                                
+                                <div className="row">
+                                    {/* Username */}
+                                    <div className="col-md-6">
+                                        <div className="mb-4">
+                                            <InputLabel htmlFor="name" value="Username" />
+                                            <TextInput
+                                                id="name"
+                                                className="form-control"
+                                                placeholder="Enter Your Username"
+                                                value={data.name}
+                                                onChange={(e) => setData('name', e.target.value)}
+                                            />
+                                            <InputError message={errors.name} />
+                                        </div>
+                                    </div>
+
+                                    {/* Email */}
+                                    <div className="col-md-6">
+                                        <div className="mb-4">
+                                            <InputLabel htmlFor="email" value="Email" />
+                                            <TextInput
+                                                id="email"
+                                                type="email"
+                                                className="form-control"
+                                                placeholder="Enter Your Email"
+                                                value={data.email}
+                                                onChange={(e) => setData('email', e.target.value)}
+                                            />
+                                            <InputError message={errors.email} />
+                                        </div>
+                                    </div>
+
+                                    {/* Password */}
+                                    <div className="col-md-6">
+                                        <div className="mb-4">
+                                            <InputLabel htmlFor="password" value="Password" />
+                                            <TextInput
+                                                id="password"
+                                                type="password"
+                                                className="form-control"
+                                                placeholder="Enter Your Password"
+                                                value={data.password}
+                                                onChange={(e) => setData('password', e.target.value)}
+                                            />
+                                            <InputError message={errors.password} />
+                                        </div>
+                                    </div>
+
+                                    {/* Confirm Password */}
+                                    <div className="col-md-6">
+                                        <div className="mb-4">
+                                            <InputLabel htmlFor="password_confirmation" value="Confirm Password" />
+                                            <TextInput
+                                                id="password_confirmation"
+                                                type="password"
+                                                className="form-control"
+                                                placeholder="Confirm Your Password"
+                                                value={data.password_confirmation}
+                                                onChange={(e) => setData('password_confirmation', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Remember Me */}
+                                    <div className="col-md-12">
+                                        <div className="form-check mb-4">
+                                            <input
+                                                type="checkbox"
+                                                className="form-check-input"
+                                                id="rememberMe"
+                                            />
+                                            <label className="form-check-label" htmlFor="rememberMe">
+                                                Remember me
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {/* Submit */}
+                                    <div className="col-12">
+                                        <div className="text-end">
+                                            <button className="btn btn-primary" disabled={processing}>
+                                                {processing ? 'Submitting...' : 'Submit'}
+                                            </button>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                            </form>
+                        </div>
                     </div>
+                </div>
+            </div>
 
-                    <div className="mb-3">
-                        <label className="form-label">Username</label>
-                        <input
-                            type="text"
-                            className={`form-control ${errors.name ? 'is-invalid' : ''}`}
-                            placeholder="Enter Your Username"
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                        />
-                        {errors.name && <div className="invalid-feedback">{errors.name}</div>}
-                    </div>
 
-                    <div className="mb-3">
-                        <label className="form-label">Email</label>
-                        <input
-                            type="email"
-                            className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                            placeholder="Enter Your Email"
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
-                        />
-                        {errors.email && <div className="invalid-feedback">{errors.email}</div>}
-                    </div>
-
-                    <div className="mb-3">
-                        <label className="form-label">Password</label>
-                        <input
-                            type="password"
-                            className={`form-control ${errors.password ? 'is-invalid' : ''}`}
-                            placeholder="Enter Your Password"
-                            value={data.password}
-                            onChange={(e) => setData('password', e.target.value)}
-                        />
-                        {errors.password && <div className="invalid-feedback">{errors.password}</div>}
-                    </div>
-
-                    <div className="mb-3">
-                        <label className="form-label">Confirm Password</label>
-                        <input
-                            type="password"
-                            className="form-control"
-                            placeholder="Confirm Your Password"
-                            value={data.password_confirmation}
-                            onChange={(e) => setData('password_confirmation', e.target.value)}
-                        />
-                    </div>
-
-                    <div className="mb-3 form-check">
-                        <input
-                            type="checkbox"
-                            className="form-check-input"
-                            id="formCheck1"
-                        />
-                        <label className="form-check-label" htmlFor="formCheck1">
-                            remember me
-                        </label>
-                    </div>
-
-                    <div>
-                        <button
-                            type="submit"
-                            className="btn btn-primary w-100"
-                            disabled={processing}
-                        >
-                            {processing ? 'Registering...' : 'Submit'}
-                        </button>
-                    </div>
-
-                    
-
-                </form>
-            </AuthenticatedLayout>
+        </AuthenticatedLayout>
     );
 }
 

@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Proforma extends Model
 {
     protected $fillable = [
-        'client_id',
-        'module_id',
         'item_name',
+        'proforma_refrence_id',
         'description',
+        'additional_description',
         'count',
         'price',
         'tax',
@@ -20,11 +20,13 @@ class Proforma extends Model
         'updated_by'
     ];
 
-    public function client(): BelongsTo{
-        return $this->belongsTo(Client::class);
-    }
+   
 
     public function module(): BelongsTo{
         return $this->belongsTo(Module::class);
+    }
+
+    public function proformaRefrence(): BelongsTo{
+        return $this->belongsTo(ProformaRefrence::class);
     }
 }

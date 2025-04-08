@@ -62,13 +62,27 @@ export default function Module({ modules: initialModules }) {
 
     return (
         <AuthenticatedLayout>
+
+
             <Head title="Modules" />
+
             <div className="row g-4 mt-4">
-                <div className="d-flex justify-content-end align-items-center mb-3">
+                <div className="d-flex justify-content-end align-items-center mb-3 gap-2">
+
+                    
+
                     {auth.user.role === "admin" && (
-                        <Link href={route("module.create")} className="btn btn-primary">
-                            <i className="ti ti-plus me-1"></i> Add Module
-                        </Link>
+
+                        <>
+                            <Link href={route("module.create")} className="btn btn-primary">
+                                <i className="ti ti-plus me-1"></i> Add Module
+                            </Link>
+
+                            <Link href={route('field.index')} className="btn btn-primary">
+                                View Fields
+                            </Link>
+                        </>
+
                     )}
                 </div>
                 <div className="col-12">
@@ -108,13 +122,13 @@ export default function Module({ modules: initialModules }) {
                                                             <td>
                                                                 <div className="btn-group dropdown-icon-none">
                                                                     <button
-                                                                        className="btn border-0 icon-btn b-r-4 dropdown-toggle active"
+                                                                        className="border-0 icon-btn b-r-4 dropdown-toggle active"
                                                                         type="button"
                                                                         data-bs-toggle="dropdown"
                                                                         data-bs-auto-close="true"
                                                                         aria-expanded="false"
                                                                     >
-                                                                        <i className="ti ti-dots-vertical"></i>
+                                                                        <i className="ti ti-dots"></i>
                                                                     </button>
                                                                     <ul className="dropdown-menu">
                                                                         <li>

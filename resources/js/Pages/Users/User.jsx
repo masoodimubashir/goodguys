@@ -65,11 +65,13 @@ export default function User({ users: initialUsers }) {
             <Head title="Users" />
             <div className="row g-4 mt-4">
                 <div className="d-flex justify-content-end align-items-center">
+
                     {auth.user.role === 'admin' && (
                         <Link href={route('register')} className="btn btn-primary me-2">
                             Add User
                         </Link>
                     )}
+                    
                 </div>
                 <div className="col-12">
                     <div className="card">
@@ -79,7 +81,9 @@ export default function User({ users: initialUsers }) {
                                     <thead>
                                         <tr>
                                             {tableHead.map((head, index) => (
-                                                <th key={index}>{head}</th>
+                                                <th key={index} className={index === tableHead.length - 1 ? "text-end" : ""}>
+                                                    {head}
+                                                </th>
                                             ))}
                                         </tr>
                                     </thead>
@@ -90,14 +94,19 @@ export default function User({ users: initialUsers }) {
                                                     <td>{user.name}</td>
                                                     <td>{user.email}</td>
                                                     {auth.user.role === 'admin' && (
-                                                        <td>
+                                                        <td className="text-end">
                                                             <div className="btn-group dropdown-icon-none">
-                                                                <button className="btn border-0 icon-btn dropdown-toggle active"
-                                                                    type="button" data-bs-toggle="dropdown"
-                                                                    data-bs-auto-close="true" aria-expanded="false">
-                                                                    <i className="ti ti-dots-vertical"></i>
+                                                                <button
+                                                                    className="border-0 icon-btn dropdown-toggle active"
+                                                                    type="button"
+                                                                    data-bs-toggle="dropdown"
+                                                                    data-bs-auto-close="true"
+                                                                    aria-expanded="false"
+                                                                >
+                                                                
+                                                                    <i class="ti ti-dots"></i>
                                                                 </button>
-                                                                <ul className="dropdown-menu">
+                                                                <ul className="dropdown-menu dropdown-menu-end">
                                                                     <li>
                                                                         <Link className="dropdown-item" href={route('users.edit', user.id)}>
                                                                             <i className="ti ti-edit"></i> Edit
@@ -112,6 +121,7 @@ export default function User({ users: initialUsers }) {
                                                             </div>
                                                         </td>
                                                     )}
+                                                    {auth.user.role !== 'admin' && <td></td>}
                                                 </tr>
                                             ))
                                         ) : (

@@ -101,13 +101,13 @@ export default function Inventory({ inventories: initialInventories }) {
                                                 <tr key={item.id}>
                                                     <td><span className="badge bg-secondary px-3 py-2">{item.item_name}</span></td>
                                                     <td>{item.count}</td>
-                                                    <td>₹{parseFloat(item.selling_price).toFixed(2)}</td>
-                                                    <td>₹{parseFloat(item.buying_price).toFixed(2)}</td>
+                                                    <td>₹{(item.selling_price)}</td>
+                                                    <td>₹{(item.buying_price)}</td>
                                                     <td>{item.item_type}</td>
                                                     <td>{item.item_sub_type || <span className="text-muted">N/A</span>}</td>
                                                     <td>{item.description || <span className="text-muted">N/A</span>}</td>
                                                     <td>
-                                                        {Array.isArray(item.item_dimensions)  ? (
+                                                        {Array.isArray(item.item_dimensions) ? (
                                                             item.item_dimensions.map((dimension, index) => {
                                                                 const [name, value, unit] = dimension.split(',');
                                                                 return (
@@ -127,10 +127,10 @@ export default function Inventory({ inventories: initialInventories }) {
                                                     {auth.user.role === 'admin' && (
                                                         <td>
                                                             <div className="btn-group dropdown-icon-none">
-                                                                <button className="btn border-0 icon-btn b-r-4 dropdown-toggle active"
+                                                                <button className=" border-0 icon-btn b-r-4 dropdown-toggle active"
                                                                     type="button" data-bs-toggle="dropdown"
                                                                     data-bs-auto-close="true" aria-expanded="false">
-                                                                    <i className="ti ti-dots-vertical"></i>
+                                                                    <i className="ti ti-dots"></i>
                                                                 </button>
                                                                 <ul className="dropdown-menu">
                                                                     <li>

@@ -6,15 +6,15 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 
 export default function EditClient({ client }) {
+
   const { data, setData, put, processing, errors } = useForm({
-    client_name: client.client_name ,
-    site_name: client.site_name ,
-    client_email: client.client_email ,
-    client_phone: client.client_phone ,
-    client_address: client.client_address ,
-    service_charge: client.service_charge ,
-    tax: client.tax ,
-    profit: client.profit ,
+    client_name: client.client_name,
+    site_name: client.site_name,
+    client_email: client.client_email,
+    client_phone: client.client_phone,
+    client_address: client.client_address,
+    service_charge: client.service_charge,
+    tax: client.tax,
   });
 
   const handleSubmit = (e) => {
@@ -117,18 +117,6 @@ export default function EditClient({ client }) {
                     onChange={e => setData('tax', e.target.value)}
                   />
                   <InputError message={errors.tax} />
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Profit (%)</label>
-                  <TextInput
-                    type="number"
-                    className="form-control"
-                    placeholder="Enter Profit"
-                    value={data.profit}
-                    onChange={e => setData('profit', e.target.value)}
-                  />
-                  <InputError message={errors.profit} />
                 </div>
 
                 <div className="d-flex justify-content-end gap-2">

@@ -279,6 +279,8 @@ export default function CreateInventory() {
                     </div>
                 </div>
             </div>
+
+            
         </AuthenticatedLayout>
     );
 }

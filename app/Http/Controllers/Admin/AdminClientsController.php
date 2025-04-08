@@ -29,13 +29,12 @@ class AdminClientsController extends Controller
     public function store(StoreClientRequest $request)
     {
         try {
-            
+
             Client::create(array_merge($request->validated(), [
                 'created_by' => auth()->id(),
             ]));
 
             return redirect()->route('clients.index')->with('message', 'Client Created');
-        
         } catch (Exception $e) {
             Log::error($e->getMessage());
             return redirect()->route('clients.index')
@@ -46,7 +45,11 @@ class AdminClientsController extends Controller
     public function show(Client $client)
     {
 
-        $client->load(['proformas', 'invoices', 'accounts']);
+        $client->load([
+            'invoiceRefrences' => fn($query) => $query->with('invoices'),
+            'proformaRefrences' => fn($query) => $query->with('proformas'),
+            'accounts'
+        ]);
 
         return Inertia::render('Clients/ShowClient', [
             'client' => $client,

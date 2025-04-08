@@ -20,8 +20,6 @@ Route::get('/', function () {
 });
 
 
-
-
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
 

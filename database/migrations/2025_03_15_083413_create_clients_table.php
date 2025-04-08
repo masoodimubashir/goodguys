@@ -20,7 +20,6 @@ return new class extends Migration
             $table->text('client_address');
             $table->string('site_name', 100);
             $table->decimal('tax', 8, 2)->default(0.00);     
-            $table->decimal('profit', 12, 2)->default(0.00);
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->unsignedTinyInteger('service_charge')->default(0);

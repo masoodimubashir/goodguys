@@ -37,7 +37,6 @@ class UpdateClientRequest extends FormRequest
             'client_phone' => ['required', 'string', 'digits:10'],
             'service_charge' => ['required', 'numeric', 'min:0'],
             'tax' => ['required', 'numeric', 'min:0'],
-            'profit' => ['required', 'numeric', 'min:0'],
         ];
     }
     

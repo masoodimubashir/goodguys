@@ -3,22 +3,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Invoice extends Model
 {
 
     protected $fillable = [
-        'invoice_number',
-        'client_id',
-        'module_id',
+        'invoice_refrence_id',
         'item_name',
-        'description',
         'count',
         'price',
         'tax',
         'service_charge',
         'created_by',
-        'updated_by'
+        'updated_by',
+        'additional_description',
+        'description',
+
     ];
 
     protected $casts = [
@@ -30,4 +31,15 @@ class Invoice extends Model
     ];
 
 
+  
+
+    public function module()
+    {
+        return $this->belongsTo(Module::class);
+    }
+
+    public function invoiceRefrence(): BelongsTo
+    {
+        return $this->belongsTo(InvoiceRefrence::class);
+    }
 }

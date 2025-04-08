@@ -6,3 +6,15 @@
     justify-content: center !important;
     margin-top: 10px !important;
 }
+
+
+.dt-length {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+}
+
+.menu-navs{
+    display: none;
+}

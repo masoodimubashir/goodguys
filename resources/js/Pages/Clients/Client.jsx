@@ -10,7 +10,7 @@ export default function Client({ clients: initialClients }) {
     const [clients, setClients] = useState(initialClients);
     const tableHead = [
         'Name', 'Site Name', 'Email', 'Phone', 'Address',
-        'Service Charge (%)', 'Tax (%)', 'Profit (%)', 'Actions'
+        'Service Charge (%)', 'Tax (%)', 'Actions'
     ];
     const tableRef = useRef(null);
     const { flash, auth } = usePage().props;
@@ -102,14 +102,13 @@ export default function Client({ clients: initialClients }) {
                                                     <td>{client.client_address}</td>
                                                     <td>{client.service_charge}%</td>
                                                     <td>{client.tax}%</td>
-                                                    <td>{client.profit}%</td>
                                                     {auth.user.role === 'admin' && (
                                                         <td>
                                                             <div className="btn-group dropdown-icon-none">
-                                                                <button className="btn border-0 icon-btn dropdown-toggle active"
+                                                                <button className="border-0 icon-btn dropdown-toggle active"
                                                                     type="button" data-bs-toggle="dropdown"
                                                                     data-bs-auto-close="true" aria-expanded="false">
-                                                                    <i className="ti ti-dots-vertical"></i>
+                                                                    <i className="ti ti-dots"></i>
                                                                 </button>
                                                                 <ul className="dropdown-menu">
                                                                     <li>

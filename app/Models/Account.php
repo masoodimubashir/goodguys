@@ -30,7 +30,7 @@ class Account extends Model
         ];
     }
 
-    protected $appends = ['service_charge_amount'];
+    protected $appends = ['service_charge_amount', 'total_amount'];
 
 
     public function inventory(): BelongsTo
@@ -38,9 +38,14 @@ class Account extends Model
         return $this->belongsTo(Inventory::class);
     }
 
-    // Get The Service Charge Amount
     public function getServiceChargeAmountAttribute()
     {
         return ($this->selling_price * $this->service_charge) / 100;
     }
+
+    public function getTotalAmountAttribute()
+    {
+        return (($this->selling_price * $this->service_charge) / 100 * $this->count) + $this->selling_price * $this->count;
+    }
+    
 }

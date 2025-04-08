@@ -10,14 +10,4 @@ class Field extends Model
     
     protected $fillable = ['field_name', 'si_unit', 'dimension_value',  'created_by', 'updated_by'];
 
-    /**
-     * Get all of the modules for the Field
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function modules(): HasMany
-    {
-        return $this->hasMany(Module::class);
-    }
-
 }

@@ -29,7 +29,6 @@ class StoreClientRequest extends FormRequest
             'client_phone'    => ['required', 'string', 'digits:10'],
             'service_charge'  => ['required', 'numeric', 'min:0', 'max:100'],
             'tax'             => ['required', 'numeric', 'min:0', 'max:100'],
-            'profit'          => ['required', 'numeric', 'min:0', 'max:100'],
         ];
     }
     

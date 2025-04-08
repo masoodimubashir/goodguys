@@ -16,35 +16,32 @@ export default function ClientDetails({ client }) {
                     <div className="row">
                         {/* Left - Client Info */}
                         <div className="col-md-8">
-                            <ul className="list-group list-group-flush">
-                                <li className="list-group-item px-0 py-2">
+                            <ul className="list-group-flush">
+                                <li className="d-flex align-items-between px-0 py-2">
                                     <i className="fas fa-envelope text-primary me-2"></i>
                                     <strong>Email:</strong> <span className="text-muted ms-1">{client.client_email}</span>
                                 </li>
-                                <li className="list-group-item px-0 py-2">
+                                <li className="d-flex align-items-between px-0 py-2">
                                     <i className="fas fa-phone text-success me-2"></i>
                                     <strong>Phone:</strong> <span className="text-muted ms-1">{client.client_phone}</span>
                                 </li>
-                                <li className="list-group-item px-0 py-2">
+                                <li className="d-flex align-items-between px-0 py-2">
                                     <i className="fas fa-map-marker-alt text-danger me-2"></i>
                                     <strong>Address:</strong> <span className="text-muted ms-1">{client.client_address}</span>
                                 </li>
-                                <li className="list-group-item px-0 py-2">
+                                <li className="d-flex align-items-between px-0 py-2">
                                     <i className="fas fa-globe text-info me-2"></i>
-                                    <strong>Site:</strong> <span className="text-muted ms-1">{client.site_name}</span>
+                                    <strong>Tax:</strong> <span className="text-muted ms-1">{client.tax}%</span>
+                                </li>
+                              
+                                <li className="d-flex align-items-between px-0 py-2">
+                                    <i className="fas fa-globe text-info me-2"></i>
+                                    <strong>Service Charge:</strong> <span className="text-muted ms-1">{client.service_charge}%</span>
                                 </li>
                             </ul>
                         </div>
 
-                        {/* Right - Assets */}
-                        <div className="col-md-4 d-flex flex-column align-items-md-end align-items-start mt-4 mt-md-0">
-                            <h5 className="fw-bold text-secondary mb-2">
-                                <i className="fas fa-box-open me-2"></i>Assets
-                            </h5>
-                            <div className="badge bg-success fs-5 px-4 py-2">
-                                {1234 || "N/A"}
-                            </div>
-                        </div>
+                       
                     </div>
                 </div>
 
