@@ -225,7 +225,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
 
 
     return (
-        
+
         <AuthenticatedLayout>
 
             <Head title={`Client`} />

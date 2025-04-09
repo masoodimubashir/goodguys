@@ -30,7 +30,6 @@ class StoreInvoiceRequest extends FormRequest
             'service_charge' => 'required|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.source' => 'required|string|in:inventory,module,custom',
-            // 'items.*.source_id' => 'required_if:items.*.source,inventory,module|integer|min:1',
             'items.*.name' => 'required|string|max:255',
             'items.*.description' => 'required|string|max:255',
             'items.*.price' => 'required|numeric|min:0',

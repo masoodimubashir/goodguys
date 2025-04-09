@@ -22,16 +22,21 @@ class UpdateInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
+
             'client_id' => 'required|exists:clients,id',
-            'module_id' => 'required|exists:modules,id',
-            'item_name' => 'required|string|max:255',
-            'description' => 'required|string|max:255',
-            'count' => 'required|integer|min:1',
-            'price' => 'required|integer|min:0',
-            'tax' => 'required|integer|min:0',
-            'service_charge' => 'required|integer|min:0',
-            'created_by' => 'nullable|integer|exists:users,id',
-            'updated_by' => 'nullable|integer|exists:users,id',
+            'client_name' => 'required|string|max:255',
+            'client_address' => 'required|string|max:255',
+            'tax' => 'required|numeric|min:0',
+            'service_charge' => 'required|numeric|min:0',
+            'items' => 'required|array|min:1',
+            'items.*.source' => 'required|string|in:inventory,module,custom',
+            'items.*.id' => 'sometimes|integer',
+            'items.*.name' => 'required|string|max:255',
+            'items.*.description' => 'required|string|max:255',
+            'items.*.price' => 'required|numeric|min:0',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.item_dimensions' => 'nullable|array',
+
         ];
     }
 }

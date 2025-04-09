@@ -22,14 +22,24 @@ class UpdateProformaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_id' => 'required|exists:clients,id',
-            'module_id' => 'required|exists:modules,id',
-            'item_name' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
-            'count' => 'required|integer|min:1',
-            'price' => 'required|integer|min:1',
-            'tax' => 'required|integer|min:0|max:100',
-            'service_charge' => 'required|integer|min:0|max:100',
+            'client_id' => ['required', 'exists:clients,id'],
+            'client_name' => ['required', 'string'],
+            'client_address' => ['required', 'string'],
+            'tax' => ['required', 'numeric'],
+            'service_charge' => ['required', 'numeric'],
+
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.source' => ['required', 'in:custom,module,inventory'],
+            'items.*.id' => ['sometimes', 'integer'],
+            'items.*.name' => ['required', 'string'],
+            'items.*.description' => ['required', 'string'],
+            'items.*.price' => ['required', 'numeric', 'min:0'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+
+            'items.*.item_dimensions' => ['required', 'array', 'min:1'],
+            'items.*.item_dimensions.*.type' => ['required', 'string'],
+            'items.*.item_dimensions.*.value' => ['required', 'numeric'],
+            'items.*.item_dimensions.*.si' => ['required', 'string'],
         ];
     }
 }

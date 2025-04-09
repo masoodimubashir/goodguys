@@ -72,15 +72,7 @@ export const SideBar = () => {
                             </NavLink>
                         </li>
 
-                        <li>
-                            <NavLink active={url === '/invoice' ? true : false} href='/invoice'>
-                                <i className="iconoir-user-plus"></i>
-                                Invoice
-                            </NavLink>
-                        </li>
-
-
-
+            
 
                     </ul>
 

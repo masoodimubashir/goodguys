@@ -1,13 +1,13 @@
 import React from 'react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { InvoicePdf } from '@/Pages/PDF/InvoicePdf';
 import { ProformaPdf } from '@/Pages/PDF/ProformaPdf';
 
-export default function PdfTable({ client, pdfRef, handleEditItem, handleDeleteItem }) {
+export default function PdfTable({ client, pdfRef }) {
 
 
-    
+
     const mergedData = React.useMemo(() => {
 
         const entries = [];
@@ -39,7 +39,22 @@ export default function PdfTable({ client, pdfRef, handleEditItem, handleDeleteI
         return entries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }, [client]);
 
-    
+
+
+    const handleDeleteItem = (id, type) => {
+
+        const routeName = type === 'Invoice' ? 'invoice.destroy' : 'proforma.destroy';
+        router.delete(route(routeName, { id }), {
+            onSuccess: () => {
+                Swal.fire('Deleted!', `${type} has been deleted.`, 'success');
+            },
+            onError: () => {
+                Swal.fire('Failed!', `Failed to delete the ${type.toLowerCase()}.`, 'error');
+            }
+        });
+    };
+
+
 
     return (
         <div className="table-responsive">
@@ -88,7 +103,14 @@ export default function PdfTable({ client, pdfRef, handleEditItem, handleDeleteI
                                             <li>
                                                 <Link
                                                     className="dropdown-item d-flex align-items-center"
-                                                    href={route(`${entry.type.toLowerCase()}.edit`, { id: entry.id })}
+                                                    href={
+                                                        entry.type === 'Invoice' ? (
+                                                            route(`invoice.edit`, { id: entry.id })
+
+                                                        ) : (
+                                                            route(`proforma.edit`, { id: entry.id })
+                                                        )
+                                                    }
                                                 >
                                                     <i className="ti ti-edit me-2 text-primary"></i> Edit
                                                 </Link>

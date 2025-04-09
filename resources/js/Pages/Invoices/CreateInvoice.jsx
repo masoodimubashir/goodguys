@@ -3,6 +3,8 @@ import { useForm, Link } from "@inertiajs/react";
 import { Container, Card, Row, Col, Form, Button } from "react-bootstrap";
 
 export default function CreateInvoice({ client, modules, inventories }) {
+
+    
     const { data, setData, post, processing, errors } = useForm({
         client_id: client.id,
         client_name: client.client_name,

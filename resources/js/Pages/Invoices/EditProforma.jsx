@@ -318,13 +318,13 @@ const InvoiceSummary = ({ subtotal, taxRate, serviceChargeRate, taxAmount, servi
 );
 
 // Main component
-export default function EditInvoice({ invoice_ref, modules, inventories }) {
+export default function EditInvoice({ proforma_ref, modules, inventories }) {
 
   const mapInvoiceItemsToFormData = () => {
 
-    return invoice_ref.invoices.map(invoice => {
-      const parsedDimensions = invoice.additional_description ?
-        JSON.parse(invoice.additional_description) : [];
+    return proforma_ref.proformas.map(proforma => {
+      const parsedDimensions = proforma.additional_description ?
+        JSON.parse(proforma.additional_description) : [];
 
       // Determine source (inventory, module, or custom)
       let source = itemSourceTypes.CUSTOM;
@@ -332,8 +332,8 @@ export default function EditInvoice({ invoice_ref, modules, inventories }) {
 
       // Check if this item matches an inventory item
       const matchingInventory = inventories.find(inv =>
-        inv.item_name === invoice.item_name &&
-        inv.selling_price === invoice.price
+        inv.item_name === proforma.item_name &&
+        inv.selling_price === proforma.price
       );
 
       if (matchingInventory) {
@@ -342,8 +342,8 @@ export default function EditInvoice({ invoice_ref, modules, inventories }) {
       } else {
         // Check if this item matches a module
         const matchingModule = modules.find(mod =>
-          mod.module_name === invoice.item_name &&
-          mod.selling_price === invoice.price
+          mod.module_name === proforma.item_name &&
+          mod.selling_price === proforma.price
         );
 
         if (matchingModule) {
@@ -353,13 +353,13 @@ export default function EditInvoice({ invoice_ref, modules, inventories }) {
       }
 
       return {
-        id: invoice.id,
+        id: proforma.id,
         source: source,
         source_id: source_id,
-        name: invoice.item_name,
-        description: invoice.description,
-        price: invoice.price,
-        quantity: invoice.count,
+        name: proforma.item_name,
+        description: proforma.description,
+        price: proforma.price,
+        quantity: proforma.count,
         item_dimensions: parsedDimensions.map(dim => ({
           type: dim.type,
           value: dim.value,
@@ -369,15 +369,15 @@ export default function EditInvoice({ invoice_ref, modules, inventories }) {
     });
   };
 
-  // Initialize form with existing invoice_ref data
+  // Initialize form with existing proforma_ref data
   const { data, setData, put, processing, errors } = useForm({
-    id: invoice_ref.id,
-    client_id: invoice_ref.client_id,
-    client_name: invoice_ref.client?.client_name || "",
-    client_address: invoice_ref.client?.client_address || "",
-    invoice_number: invoice_ref.invoice_number,
-    tax: invoice_ref.client?.tax || 0,
-    service_charge: invoice_ref.client?.service_charge || 0,
+    id: proforma_ref.id,
+    client_id: proforma_ref.client_id,
+    client_name: proforma_ref.client?.client_name || "",
+    client_address: proforma_ref.client?.client_address || "",
+    invoice_number: proforma_ref.invoice_number,
+    tax: proforma_ref.client?.tax || 0,
+    service_charge: proforma_ref.client?.service_charge || 0,
     items: mapInvoiceItemsToFormData(),
   });
 
@@ -494,9 +494,9 @@ export default function EditInvoice({ invoice_ref, modules, inventories }) {
 
   // Form submission
   const handleSubmit = (e) => {
+
     e.preventDefault();
 
-    // Prepare the payload
     const payload = {
       id: data.id,
       client_id: data.client_id,
@@ -516,7 +516,7 @@ export default function EditInvoice({ invoice_ref, modules, inventories }) {
     };
 
     // Send the update request
-    put(route("invoice.update", invoice_ref.id), payload, {
+    put(route("proforma.update", proforma_ref.id), payload, {
       preserveScroll: true
     });
   };
@@ -529,7 +529,7 @@ export default function EditInvoice({ invoice_ref, modules, inventories }) {
       </Link>
 
       <Card className="p-4 shadow">
-        <h2 className="text-center text-primary mb-4">Edit Invoice</h2>
+        <h2 className="text-center text-primary mb-4">Edit Proforma</h2>
 
         <Form onSubmit={handleSubmit}>
           <InvoiceClientDetails

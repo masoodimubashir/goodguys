@@ -36,7 +36,6 @@ class AdminClientsController extends Controller
 
             return redirect()->route('clients.index')->with('message', 'Client Created');
         } catch (Exception $e) {
-            Log::error($e->getMessage());
             return redirect()->route('clients.index')
                 ->with('error', 'Failed to create client');
         }

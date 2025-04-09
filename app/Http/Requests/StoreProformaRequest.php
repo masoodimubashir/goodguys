@@ -27,7 +27,6 @@ class StoreProformaRequest extends FormRequest
             'client_address' => ['required', 'string'],
             'tax' => ['required', 'numeric'],
             'service_charge' => ['required', 'numeric'],
-
             'items' => ['required', 'array', 'min:1'],
             'items.*.source' => ['required', 'in:custom,module,inventory'],
             'items.*.source_id' => ['nullable', 'integer'],
@@ -35,7 +34,6 @@ class StoreProformaRequest extends FormRequest
             'items.*.description' => ['required', 'string'],
             'items.*.price' => ['required', 'numeric', 'min:0'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
-
             'items.*.item_dimensions' => ['required', 'array', 'min:1'],
             'items.*.item_dimensions.*.type' => ['required', 'string'],
             'items.*.item_dimensions.*.value' => ['required', 'numeric'],

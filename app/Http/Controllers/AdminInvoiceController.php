@@ -58,7 +58,6 @@ class AdminInvoiceController extends Controller
 
             ]);
 
-
             foreach ($data['items'] as $index => $item) {
 
 
@@ -91,9 +90,8 @@ class AdminInvoiceController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('message', 'Invoice Created Successfully');
+            return redirect()->route('clients.show', [$invoice_refrence->client_id])->with('message', 'Invoice Created Successfully');
         } catch (Exception $e) {
-            Log::error($e->getMessage());
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to Create Invoice: ' . $e->getMessage());
         }
@@ -115,13 +113,16 @@ class AdminInvoiceController extends Controller
 
         try {
 
-            $invoice = Invoice::findOrFail($id);
-
-            $invoice->load('client');
+            $invoice_ref = InvoiceRefrence::with('invoices', 'client')->findOrFail($id);
+            $modules = Module::all();
+            $inventories = Inventory::all();
 
             return Inertia::render('Invoices/EditInvoice', [
-                'invoice' => $invoice,
+                'invoice_ref' => $invoice_ref,
+                'modules' => $modules,
+                'inventories' => $inventories,
             ]);
+
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'Invoice not found');
         } catch (Exception $e) {
@@ -132,41 +133,72 @@ class AdminInvoiceController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateInvoiceRequest $request, Invoice $invoice)
+    public function update(UpdateInvoiceRequest $request, $id)
     {
         try {
-            $validatedData = $request->validated();
 
-            // Calculate service charge
-            $basePrice = $validatedData['price'];
-            $serviceChargePercentage = $validatedData['service_charge'] ?? 0;
-            $serviceChargeAmount = $basePrice * ($serviceChargePercentage / 100);
+            DB::beginTransaction();
 
-            // Calculate price after service charge
-            $priceAfterServiceCharge = $basePrice + $serviceChargeAmount;
+            $data = $request->validated();
 
-            // Calculate tax
-            $taxPercentage = $validatedData['tax'] ?? 0;
-            $taxAmount = $priceAfterServiceCharge * ($taxPercentage / 100);
+            $invoiceReference = InvoiceRefrence::findOrFail($id);
 
-            // Calculate final total price
-            $totalPrice = $priceAfterServiceCharge + $taxAmount;
+            $incomingItemIds = collect($data['items'])->pluck('id')->filter()->all();
 
-            // Update Invoice
-            $invoice->update([
-                'client_id' => $validatedData['client_id'],
-                'module_id' => $validatedData['module_id'],
-                'item_name' => $validatedData['item_name'],
-                'description' => $validatedData['description'],
-                'count' => $validatedData['count'],
-                'price' => $totalPrice,
-                'tax' => $validatedData['tax'],
-                'service_charge' => $validatedData['service_charge'],
-                'updated_by' => auth()->id(),
-            ]);
+            Invoice::where('invoice_refrence_id', $invoiceReference->id)
+                ->whereNotIn('id', $incomingItemIds)
+                ->delete();
 
-            return redirect()->back()->with('message', 'Invoice Updated Successfully');
-        } catch (\Exception $e) {
+            foreach ($data['items'] as $item) {
+
+
+
+                $itemDimensions = [];
+
+                if (!empty($item['item_dimensions']) && is_array($item['item_dimensions'])) {
+                    foreach ($item['item_dimensions'] as $dimension) {
+                        $itemDimensions[] = [
+                            'type' => $dimension['type'] ?? '',
+                            'value' => $dimension['value'] ?? '',
+                            'si' => $dimension['si'] ?? '',
+                        ];
+                    }
+                }
+
+
+                if (!empty($item['id'])) {
+                    // Update existing invoice item
+                    Invoice::where('id', $item['id'])
+                        ->update([
+                            'item_name' => $item['name'],
+                            'description' => $item['description'],
+                            'additional_description' => json_encode($itemDimensions),
+                            'count' => $item['quantity'],
+                            'price' => $item['price'],
+                            'tax' => $data['tax'] ?? 0,
+                            'service_charge' => $data['service_charge'] ?? 0,
+                            'updated_by' => auth()->id(),
+                        ]);
+                } else {
+                    // Create new invoice item
+                    Invoice::create([
+                        'item_name' => $item['name'],
+                        'description' => $item['description'],
+                        'additional_description' => json_encode($itemDimensions),
+                        'invoice_refrence_id' => $invoiceReference->id,
+                        'count' => $item['quantity'],
+                        'price' => $item['price'],
+                        'tax' => $data['tax'] ?? 0,
+                        'service_charge' => $data['service_charge'] ?? 0,
+                        'created_by' => auth()->id(),
+                    ]);
+                }
+            }
+
+            DB::commit();
+            return redirect()->route('clients.show', [$invoiceReference->client_id])->with('message', 'Invoice Updated Successfully');
+        } catch (Exception $e) {
+            DB::rollBack();
             return redirect()->back()->with('error', 'Failed to Update Invoice: ' . $e->getMessage());
         }
     }
@@ -179,7 +211,7 @@ class AdminInvoiceController extends Controller
     {
         try {
 
-            $invoice = Invoice::findOrFail($id);
+            $invoice = InvoiceRefrence::findOrFail($id);
 
             $invoice->delete();
 
