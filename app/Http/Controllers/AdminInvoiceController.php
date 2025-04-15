@@ -24,7 +24,10 @@ class AdminInvoiceController extends Controller
     public function index()
     {
         return Inertia::render('Invoices/Invoice', [
-            'invoices' => Invoice::with(['client', 'module'])->get(),
+            'invoices' => Invoice::with([
+                'client',
+                'module'
+            ])->get(),
         ]);
     }
 
@@ -34,7 +37,7 @@ class AdminInvoiceController extends Controller
     public function create(Request $request)
     {
         return Inertia::render('Invoices/CreateInvoice', [
-            'client' => Client::findOrFail($request->get('client_id')),
+            'client' => Client::with('serviceCharge')->findOrFail($request->get('client_id')),
             'modules' => Module::all(),
             'inventories' => Inventory::all(),
         ]);
@@ -113,7 +116,10 @@ class AdminInvoiceController extends Controller
 
         try {
 
-            $invoice_ref = InvoiceRefrence::with('invoices', 'client')->findOrFail($id);
+            $invoice_ref = InvoiceRefrence::with([
+                'invoices',
+                'client' => fn ($query) => $query->with('serviceCharge'),
+            ])->findOrFail($id);
             $modules = Module::all();
             $inventories = Inventory::all();
 
@@ -122,7 +128,6 @@ class AdminInvoiceController extends Controller
                 'modules' => $modules,
                 'inventories' => $inventories,
             ]);
-
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'Invoice not found');
         } catch (Exception $e) {

@@ -24,6 +24,7 @@ class UpdateClientRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'client_type' => ['required', 'string', 'max:100'],
             'client_name' => ['required', 'string', 'max:100'],
             'site_name' => ['required', 'string', 'max:100'],
             'client_email' => [
@@ -35,7 +36,7 @@ class UpdateClientRequest extends FormRequest
             ],
             'client_address' => ['required', 'string', 'max:100'],
             'client_phone' => ['required', 'string', 'digits:10'],
-            'service_charge' => ['required', 'numeric', 'min:0'],
+            'service_charge' => ['nullable', 'numeric', 'min:0'],
             'tax' => ['required', 'numeric', 'min:0'],
         ];
     }

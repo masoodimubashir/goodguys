@@ -8,7 +8,7 @@ export default function CreateProforma({ client, modules, inventories }) {
         client_name: client.client_name,
         client_address: client.client_address,
         tax: client.tax,
-        service_charge: client.service_charge,
+        service_charge: client?.service_charge?.service_charge || 0,
         items: [
             {
                 source: "custom",
@@ -138,7 +138,7 @@ export default function CreateProforma({ client, modules, inventories }) {
         const newItems = [...data.items];
         newItems[index][field] = value;
         setData("items", newItems);
-        
+
         // Clear specific validation error when field is updated
         if (validationErrors[`items.${index}.${field}`]) {
             const newValidationErrors = { ...validationErrors };
@@ -159,7 +159,7 @@ export default function CreateProforma({ client, modules, inventories }) {
             item_dimensions: [],
         };
         setData("items", newItems);
-        
+
         // Clear item-related validation errors
         const newValidationErrors = { ...validationErrors };
         Object.keys(newValidationErrors).forEach(key => {
@@ -209,7 +209,7 @@ export default function CreateProforma({ client, modules, inventories }) {
         }
 
         setData("items", newItems);
-        
+
         // Clear item-related validation errors
         const newValidationErrors = { ...validationErrors };
         Object.keys(newValidationErrors).forEach(key => {
@@ -224,7 +224,7 @@ export default function CreateProforma({ client, modules, inventories }) {
         const newItems = [...data.items];
         newItems[itemIndex].item_dimensions[dimIndex][field] = value;
         setData("items", newItems);
-        
+
         // Clear specific dimension validation error
         if (validationErrors[`items.${itemIndex}.item_dimensions.${dimIndex}.${field}`]) {
             const newValidationErrors = { ...validationErrors };
@@ -237,7 +237,7 @@ export default function CreateProforma({ client, modules, inventories }) {
         const newItems = [...data.items];
         newItems[itemIndex].item_dimensions.push({ type: "", value: "", si: "" });
         setData("items", newItems);
-        
+
         // Clear item dimensions array validation error if it exists
         if (validationErrors[`items.${itemIndex}.item_dimensions`]) {
             const newValidationErrors = { ...validationErrors };
@@ -278,7 +278,7 @@ export default function CreateProforma({ client, modules, inventories }) {
 
         post(route("proforma.store"), { data: payload, preserveScroll: true });
     };
-    
+
     // Helper function to get combined error message (server + client)
     const getErrorMessage = (field) => {
         return errors[field] || validationErrors[field];

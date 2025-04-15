@@ -33,7 +33,7 @@ class AdminProformaController extends Controller
     public function create(Request $request)
     {
         return Inertia::render('Proformas/CreateProforma', [
-            'client' => Client::findOrFail($request->get('client_id')),
+            'client' => Client::with('serviceCharge')->findOrFail($request->get('client_id')),
             'modules' => Module::all(),
             'inventories' => Inventory::all(),
         ]);
@@ -109,7 +109,10 @@ class AdminProformaController extends Controller
     {
         try {
 
-            $proforma_ref = ProformaRefrence::with('proformas', 'client')->findOrFail($id);
+            $proforma_ref = ProformaRefrence::with([
+                'proformas',
+                'client' => fn ($query) => $query->with('serviceCharge'),
+            ])->findOrFail($id);
             $modules = Module::all();
             $inventories = Inventory::all();
 

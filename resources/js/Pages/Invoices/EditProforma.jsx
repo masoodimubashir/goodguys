@@ -377,7 +377,7 @@ export default function EditInvoice({ proforma_ref, modules, inventories }) {
     client_address: proforma_ref.client?.client_address || "",
     invoice_number: proforma_ref.invoice_number,
     tax: proforma_ref.client?.tax || 0,
-    service_charge: proforma_ref.client?.service_charge || 0,
+    service_charge: proforma_ref.client?.service_charge?.service_charge || 0,
     items: mapInvoiceItemsToFormData(),
   });
 

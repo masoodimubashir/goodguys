@@ -377,7 +377,7 @@ export default function EditInvoice({ invoice_ref, modules, inventories }) {
     client_address: invoice_ref.client?.client_address || "",
     invoice_number: invoice_ref.invoice_number,
     tax: invoice_ref.client?.tax || 0,
-    service_charge: invoice_ref.client?.service_charge || 0,
+    service_charge: invoice_ref.client?.service_charge?.service_charge || 0,
     items: mapInvoiceItemsToFormData(),
   });
 

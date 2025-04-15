@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminAccountsController;
+use App\Http\Controllers\Admin\AdminClientProductController;
 use App\Http\Controllers\Admin\AdminClientsController;
 use App\Http\Controllers\Admin\AdminFieldController;
 use App\Http\Controllers\Admin\AdminInventoryController;
@@ -57,6 +58,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     // Route For Invoice
     Route::resource('invoice', AdminInvoiceController::class);
 
+    // Route For ClientProduct
+    // All The functionlaties to be removed
+    Route::resource('client-product', AdminClientProductController::class);
   
 });
 

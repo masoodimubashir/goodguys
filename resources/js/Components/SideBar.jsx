@@ -57,6 +57,14 @@ export const SideBar = () => {
                             </NavLink>
                         </li>
 
+                        <li>
+
+                            <NavLink active={url === '/client-product' ? true : false} href='/client-product'>
+                                <i className="iconoir-user-plus"></i>
+                                Client Product
+                            </NavLink>
+
+                        </li>
 
                         <li>
                             <NavLink active={url === '/accounts' ? true : false} href='/accounts'>
@@ -72,7 +80,8 @@ export const SideBar = () => {
                             </NavLink>
                         </li>
 
-            
+
+
 
                     </ul>
 

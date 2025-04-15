@@ -8,8 +8,18 @@ export default function AccountTab({ client, accountRef, handleEditAccount, hand
 
 
     const getFinalAmount = (amount) => {
-        const withService = amount + (amount * client.service_charge) / 100;
-        const withTax = withService + (withService * client.tax) / 100;
+        const baseAmount = Number(amount);
+        
+        if (isNaN(baseAmount)) return 0;
+        
+        const serviceChargeRate = client?.service_charge?.service_charge || 0;
+        
+        const taxRate = client?.tax || 0;
+        
+        const withService = baseAmount + (baseAmount * serviceChargeRate) / 100;
+        
+        const withTax = withService + (withService * taxRate) / 100;
+        
         return withTax;
     };
 

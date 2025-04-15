@@ -5,9 +5,6 @@ import { ShowMessage } from '@/Components/ShowMessage';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import { ProformaPdf } from '../PDF/ProformaPdf';
-import { InvoicePdf } from '../PDF/InvoicePdf';
 import ClientDetails from '@/Components/ClientDetails';
 import AccountTab from '@/Components/AccountTab';
 import LedgerTab from '@/Components/LedgerTab';
@@ -230,43 +227,143 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
 
             <Head title={`Client`} />
 
-            <div className="d-flex justify-content-end align-items-center mb-4 mt-4 gap-2">
-                {/* <Button variant="primary btn-sm" onClick={openProformaModal}>Add Proforma</Button> */}
-                {/* <Button variant="success btn-sm" onClick={openInvoiceModal}>Add Invoice</Button> */}
-                <Link
-                    href={route('invoice.create', { client_id: client.id })}
-                    className="btn btn-sm btn-primary"
-                >
-                    <i className="ti ti-plus me-1"></i> Create Invoice
-                </Link>
+            <div className="d-flex justify-content-between align-items-center mb-4">
 
-                <Link
-                    href={route('proforma.create', { client_id: client.id })}
-                    className="btn btn-sm btn-primary"
-                >
-                    <i className="ti ti-plus me-1"></i> Create Proforma
-                </Link>
+                <div className="d-flex gap-2">
 
-                <Button variant="success btn-sm" onClick={openAccountModal}>Create Account</Button>
+                    <div className="dropdown">
+
+                        <button
+                            className="btn btn-primary dropdown-toggle"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            Create
+                        </button>
+
+                        <ul className="dropdown-menu">
+                            <li>
+                                <Link href={route('invoice.create', { client_id: client?.id })} className="dropdown-item">
+                                    <i className="ti ti-file-invoice me-2"></i> Invoice
+                                </Link>
+                            </li>
+
+                            <li>
+                                <Link href={route('proforma.create', { client_id: client?.id })} className="dropdown-item">
+                                    <i className="ti ti-file-description me-2"></i> Proforma
+                                </Link>
+                            </li>
+
+                            <li>
+                                <hr className="dropdown-divider" />
+                            </li>
+
+                            <li>
+
+                                <button className="dropdown-item" onClick={openAccountModal}>
+                                    <i className="ti ti-building-bank me-2"></i> Account
+                                </button>
+
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                </div>
 
             </div>
 
+            {/* Client Information and Summary */}
+            <div className="row g-4">
 
-            <div className="row">
                 <div className="col-md-4">
-                    <ClientDetails client={client} />
-                </div>
-                <div className="col-md-8">
-                    <div className='card equal-card'>
+
+                    <div className="card shadow-sm h-100">
+
+                        <div className="card-header bg-light">
+                            <h5 className="card-title mb-2">Client Information</h5>
+                        </div>
+
                         <div className="card-body">
-                            <PdfTable
-                                client={client}
-                                pdfRef={pdfRef}
-                            />
+                            <div className="mb-3 pb-3 border-bottom">
+                                <div className="d-flex align-items-center mb-3">
+                                    <div className="avatar-sm bg-primary-subtle text-primary rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                        <i className="ti ti-building-skyscraper fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h5 className="mb-0">{client?.client_name}</h5>
+                                        <p className="text-muted mb-0">Site: {client?.site_name}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mb-3">
+                                <h6 className="text-uppercase text-muted fs-12 mb-2">Contact Details</h6>
+                                <div className="d-flex mb-2">
+                                    <i className="ti ti-mail text-muted me-2 mt-1"></i>
+                                    <div>
+                                        <p className="mb-0">{client?.client_email}</p>
+                                    </div>
+                                </div>
+                                <div className="d-flex mb-2">
+                                    <i className="ti ti-phone text-muted me-2 mt-1"></i>
+                                    <div>
+                                        <p className="mb-0">{client?.client_phone}</p>
+                                    </div>
+                                </div>
+                                <div className="d-flex mb-2">
+                                    <i className="ti ti-map-pin text-muted me-2 mt-1"></i>
+                                    <div>
+                                        <p className="mb-0">{client?.client_address}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mb-3">
+                                <h6 className="text-uppercase text-muted fs-12 mb-2">Billing Info</h6>
+                                <div className="d-flex justify-content-between mb-2">
+                                    <span className="text-muted">Tax Rate:</span>
+                                    <span>{client?.tax}%</span>
+                                </div>
+                                {client?.service_charge?.service_charge !== undefined && (
+                                    <div className="d-flex justify-content-between mb-2">
+                                        <span className="text-muted">Service Charge:</span>
+                                        <span>{client?.service_charge.service_charge}%</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="d-flex flex-column">
+                                <Link href={route('clients.edit', client?.id)} className="btn btn-outline-primary mb-2">
+                                    <i className="ti ti-edit me-1"></i> Edit Client
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="col-md-8">
+                    <div className="card shadow-sm h-100">
+                        <div className="card-header bg-light">
+                            <h5 className="card-title mb-2 ">Financial Summary</h5>
+                        </div>
+                        <div className="card-body">
+                            <div ref={pdfRef}>
+                                {/* PdfTable component would be rendered here */}
+                                <div>
+                                    <PdfTable
+                                        client={client}
+                                        pdfRef={pdfRef}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+
 
 
 
@@ -302,30 +399,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
             </div>
 
 
-            {/* <Modal show={showProformaModal} onHide={() => setShowProformaModal(false)}>
-                <Modal.Header closeButton>
-                    <Modal.Title>{isEditingProforma ? 'Edit' : 'Add'} Proforma</Modal.Title>
-                </Modal.Header>
-                <Form onSubmit={handleProformaSubmit} className="p-3">
-                    {renderFormFields(proformaForm, setProformaForm, proformaErrors)}
-                    <Button type="submit" disabled={processingProforma} className="mt-3">
-                        {isEditingProforma ? 'Update' : 'Create'} Proforma
-                    </Button>
-                </Form>
-            </Modal>
-
-            <Modal show={showInvoiceModal} onHide={() => setShowInvoiceModal(false)}>
-                <Modal.Header closeButton>
-                    <Modal.Title>{isEditingInvoice ? 'Edit' : 'Add'} Invoice</Modal.Title>
-                </Modal.Header>
-                <Form onSubmit={handleInvoiceSubmit} className="p-3">
-                    {renderFormFields(invoiceForm, setInvoiceForm, invoiceErrors)}
-                    <Button type="submit" disabled={processingInvoice} className="mt-3">
-                        {isEditingInvoice ? 'Update' : 'Create'} Invoice
-                    </Button>
-                </Form>
-            </Modal> */}
-
             <Modal show={showAccountModal} onHide={() => setShowAccountModal(false)} backdrop="static" keyboard={false}>
 
                 <Modal.Header closeButton>
@@ -333,7 +406,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 </Modal.Header>
 
                 <Form onSubmit={handleAccountSubmit} className="p-3">
-
 
                     <Form.Group className="pb-2 mt-2">
                         <Form.Label>Type</Form.Label>
@@ -380,11 +452,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                         />
                         <Form.Control.Feedback type="invalid">{accountErrors.item_name}</Form.Control.Feedback>
                     </Form.Group>
-
-
-
-
-
 
                     <Form.Group className="pb-2">
                         <Form.Label>Selling Price</Form.Label>

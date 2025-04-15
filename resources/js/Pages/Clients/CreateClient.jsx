@@ -1,13 +1,18 @@
+import { Head, Link, useForm } from "@inertiajs/react";
 import Button from "@/Components/Button";
 import InputError from "@/Components/InputError";
 import TextInput from "@/Components/TextInput";
 import InputLabel from "@/Components/InputLabel";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link } from "@inertiajs/react";
-import { useForm } from "@inertiajs/react";
+
+const CLIENT_TYPES = {
+  SERVICE: 'service',
+  PRODUCT: 'product'
+};
 
 export default function CreateClient() {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, reset } = useForm({
+        client_type: CLIENT_TYPES.SERVICE,
         client_name: '',
         client_email: '',
         client_phone: '',
@@ -17,143 +22,62 @@ export default function CreateClient() {
         tax: '',
     });
 
-    const submit = (e) => {
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setData(name, value);
+    };
+
+    const handleClientTypeChange = (type) => {
+        // Reset service charge if changing to product type
+        const updates = { client_type: type };
+        if (type === CLIENT_TYPES.PRODUCT) {
+            updates.service_charge = '';
+        }
+        setData(currentData => ({
+            ...currentData,
+            ...updates
+        }));
+    };
+
+    const handleSubmit = (e) => {
         e.preventDefault();
         post(route('clients.store'), {
             preserveScroll: true,
+            onSuccess: () => reset()
         });
     };
 
     return (
         <AuthenticatedLayout>
             <Head title="Create Client" />
-
-            <div className="row m-1">
+            
+            <BreadcrumbNav />
+            
+            <div className="row justify-content-center">
                 <div className="col-12">
-                    <ul className="app-line-breadcrumbs mb-3">
-                        <li>
-                            <Link href={route('clients.index')} className="f-s-14 f-w-500">
-                                <i className="iconoir-home-alt"></i>
-                            </Link>
-                        </li>
-                        <li className="active">
-                            <Link href={route('clients.index')} className="f-s-14 f-w-500">Back</Link>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <div className="row">
-                <div className="col-12">
-                    <div className="card">
+                    <div className="card shadow-sm border-0">
+                        <div className="card-header bg-white border-bottom">
+                            <h4 className="mb-0">Create New Client</h4>
+                        </div>
                         <div className="card-body">
-                            <form className="app-form" onSubmit={submit}>
-                                <div className="row">
-
-                                    {/* Client Name */}
-                                    <div className="col-md-6 mb-4">
-                                        <InputLabel htmlFor="client_name" value="Client Name" />
-                                        <TextInput
-                                            className="form-control"
-                                            id="client_name"
-                                            placeholder="Enter Client Name"
-                                            value={data.client_name}
-                                            onChange={(e) => setData('client_name', e.target.value)}
-                                        />
-                                        <InputError message={errors.client_name} />
-                                    </div>
-
-                                    {/* Client Email */}
-                                    <div className="col-md-6 mb-4">
-                                        <InputLabel htmlFor="client_email" value="Client Email" />
-                                        <TextInput
-                                            className="form-control"
-                                            type="email"
-                                            id="client_email"
-                                            placeholder="Enter Client Email"
-                                            value={data.client_email}
-                                            onChange={(e) => setData('client_email', e.target.value)}
-                                        />
-                                        <InputError message={errors.client_email} />
-                                    </div>
-
-                                    {/* Client Phone */}
-                                    <div className="col-md-6 mb-4">
-                                        <InputLabel htmlFor="client_phone" value="Client Phone" />
-                                        <TextInput
-                                            className="form-control"
-                                            id="client_phone"
-                                            placeholder="Enter Client Phone"
-                                            value={data.client_phone}
-                                            onChange={(e) => setData('client_phone', e.target.value)}
-                                        />
-                                        <InputError message={errors.client_phone} />
-                                    </div>
-
-                                    {/* Client Address */}
-                                    <div className="col-md-6 mb-4">
-                                        <InputLabel htmlFor="client_address" value="Client Address" />
-                                        <TextInput
-                                            className="form-control"
-                                            id="client_address"
-                                            placeholder="Enter Client Address"
-                                            value={data.client_address}
-                                            onChange={(e) => setData('client_address', e.target.value)}
-                                        />
-                                        <InputError message={errors.client_address} />
-                                    </div>
-
-                                    {/* Site Name */}
-                                    <div className="col-md-6 mb-4">
-                                        <InputLabel htmlFor="site_name" value="Site Name" />
-                                        <TextInput
-                                            className="form-control"
-                                            id="site_name"
-                                            placeholder="Enter Site Name"
-                                            value={data.site_name}
-                                            onChange={(e) => setData('site_name', e.target.value)}
-                                        />
-                                        <InputError message={errors.site_name} />
-                                    </div>
-
-                                    {/* Service Charge */}
-                                    <div className="col-md-6 mb-4">
-                                        <InputLabel htmlFor="service_charge" value="Service Charge (%)" />
-                                        <TextInput
-                                            className="form-control"
-                                            id="service_charge"
-                                            type="number"
-                                            placeholder="Enter Service Charge"
-                                            value={data.service_charge}
-                                            onChange={(e) => setData('service_charge', e.target.value)}
-                                        />
-                                        <InputError message={errors.service_charge} />
-                                    </div>
-
-                                    {/* Tax */}
-                                    <div className="col-md-6 mb-4">
-                                        <InputLabel htmlFor="tax" value="Tax (%)" />
-                                        <TextInput
-                                            className="form-control"
-                                            id="tax"
-                                            type="number"
-                                            step="0.01"
-                                            placeholder="Enter Tax Percentage"
-                                            value={data.tax}
-                                            onChange={(e) => setData('tax', e.target.value)}
-                                        />
-                                        <InputError message={errors.tax} />
-                                    </div>
-
-                                  
-
-                                    {/* Submit Button */}
+                            <form className="app-form" onSubmit={handleSubmit}>
+                                <div className="row g-4">
+                                    <ClientTypeSelector 
+                                        selectedType={data.client_type}
+                                        onChange={handleClientTypeChange} 
+                                    />
+                                    
+                                    <FormFields 
+                                        data={data}
+                                        errors={errors}
+                                        onChange={handleInputChange}
+                                    />
+                                    
                                     <div className="col-12 text-end">
-                                        <Button className="btn btn-primary" disabled={processing}>
+                                        <Button className="btn btn-primary px-4" disabled={processing}>
                                             {processing ? 'Submitting...' : 'Submit'}
                                         </Button>
                                     </div>
-
                                 </div>
                             </form>
                         </div>
@@ -161,5 +85,169 @@ export default function CreateClient() {
                 </div>
             </div>
         </AuthenticatedLayout>
+    );
+}
+
+// Reusable components to improve organization
+
+function BreadcrumbNav() {
+    return (
+        <div className="row mb-3">
+            <div className="col-12">
+                <ul className="app-line-breadcrumbs mb-3">
+                    <li>
+                        <Link href={route('clients.index')} className="f-s-14 f-w-500">
+                            <i className="iconoir-home-alt"></i>
+                        </Link>
+                    </li>
+                    <li className="active">
+                        <Link href={route('clients.index')} className="f-s-14 f-w-500">Back</Link>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    );
+}
+
+function ClientTypeSelector({ selectedType, onChange }) {
+    return (
+        <div className="col-12">
+            <InputLabel htmlFor="client_type" value="Client Type" />
+            <div className="btn-group w-100" role="group">
+                <input
+                    type="radio"
+                    className="btn-check"
+                    name="client_type"
+                    id="service"
+                    value={CLIENT_TYPES.SERVICE}
+                    checked={selectedType === CLIENT_TYPES.SERVICE}
+                    onChange={() => onChange(CLIENT_TYPES.SERVICE)}
+                />
+                <label className="btn btn-outline-primary" htmlFor="service">
+                    Service Based
+                </label>
+
+                <input
+                    type="radio"
+                    className="btn-check"
+                    name="client_type"
+                    id="product"
+                    value={CLIENT_TYPES.PRODUCT}
+                    checked={selectedType === CLIENT_TYPES.PRODUCT}
+                    onChange={() => onChange(CLIENT_TYPES.PRODUCT)}
+                />
+                <label className="btn btn-outline-primary" htmlFor="product">
+                    Product Based
+                </label>
+            </div>
+        </div>
+    );
+}
+
+function FormField({ label, id, type = "text", placeholder, value, onChange, error, ...props }) {
+    return (
+        <div className="col-md-6">
+            <InputLabel htmlFor={id} value={label} />
+            <TextInput
+                type={type}
+                className="form-control"
+                id={id}
+                name={id}
+                placeholder={placeholder}
+                value={value}
+                onChange={onChange}
+                {...props}
+            />
+            <InputError message={error} />
+        </div>
+    );
+}
+
+function FormFields({ data, errors, onChange }) {
+    const isServiceType = data.client_type === CLIENT_TYPES.SERVICE;
+    
+    return (
+        <>
+            <FormField
+                label="Client Name"
+                id="client_name"
+                placeholder="Enter Client Name"
+                value={data.client_name}
+                onChange={onChange}
+                error={errors.client_name}
+            />
+            
+            <FormField
+                label="Client Email"
+                id="client_email"
+                type="email"
+                placeholder="Enter Client Email"
+                value={data.client_email}
+                onChange={onChange}
+                error={errors.client_email}
+            />
+            
+            <FormField
+                label="Client Phone"
+                id="client_phone"
+                placeholder="Enter Client Phone"
+                value={data.client_phone}
+                onChange={onChange}
+                error={errors.client_phone}
+            />
+            
+            <FormField
+                label="Client Address"
+                id="client_address"
+                placeholder="Enter Client Address"
+                value={data.client_address}
+                onChange={onChange}
+                error={errors.client_address}
+            />
+            
+            <div className="col-md-4">
+                <InputLabel htmlFor="site_name" value="Site Name" />
+                <TextInput
+                    className="form-control"
+                    id="site_name"
+                    name="site_name"
+                    placeholder="Enter Site Name"
+                    value={data.site_name}
+                    onChange={onChange}
+                />
+                <InputError message={errors.site_name} />
+            </div>
+            
+            {isServiceType && (
+                <div className="col-md-4">
+                    <InputLabel htmlFor="service_charge" value="Service Charge (%)" />
+                    <TextInput
+                        type="number"
+                        className="form-control"
+                        id="service_charge"
+                        name="service_charge"
+                        placeholder="Enter Service Charge"
+                        value={data.service_charge}
+                        onChange={onChange}
+                    />
+                    <InputError message={errors.service_charge} />
+                </div>
+            )}
+            
+            <div className="col-md-4">
+                <InputLabel htmlFor="tax" value="Tax (%)" />
+                <TextInput
+                    type="number"
+                    step="0.01"
+                    className="form-control"
+                    id="tax"
+                    name="tax"
+                    placeholder="Enter Tax Percentage"
+                    value={data.tax}
+                    onChange={onChange}
+                />
+                <InputError message={errors.tax} />
+            </div>
+        </>
     );
 }

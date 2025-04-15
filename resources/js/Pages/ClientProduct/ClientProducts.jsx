@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -6,18 +7,16 @@ import $ from 'jquery';
 import 'datatables.net';
 import 'datatables.net-responsive';
 
-export default function Client({ clients: initialClients }) {
-    
+export default function ClientProducts({ clients: initialClients }) {
 
     const [clients, setClients] = useState(initialClients);
+
     const tableHead = [
-        'Name', 'Site Name', 'Email', 'Phone', 'Address',
-        'Service Charge (%)', 'Tax (%)', 'Actions'
+        'Name', 'Site Name', 'Email', 'Phone', 'Address', 'Tax (%)', 'Actions'
     ];
     const tableRef = useRef(null);
     const { flash, auth } = usePage().props;
     const { delete: destroy } = useForm();
-
 
     useEffect(() => {
         if (flash.message) {
@@ -43,7 +42,6 @@ export default function Client({ clients: initialClients }) {
         }
     };
 
-
     useEffect(() => {
         initializeDataTable();
         return () => {
@@ -54,7 +52,7 @@ export default function Client({ clients: initialClients }) {
     }, [clients]);
 
     const handleDelete = (id) => {
-        destroy(route('clients.destroy', id), {
+        destroy(route('client-product.destroy', id), {
             preserveScroll: true,
             onSuccess: () => {
                 if ($.fn.DataTable.isDataTable(tableRef.current)) {
@@ -67,15 +65,17 @@ export default function Client({ clients: initialClients }) {
         });
     };
 
+
     return (
         <AuthenticatedLayout>
+
             <Head title="Clients" />
 
             <div className="row g-4 mb-3 mt-3">
                 <div className="d-flex justify-content-end align-items-center">
                     {auth.user.role === 'admin' && (
-                        <Link href={route('clients.create')} className="btn btn-primary me-2">
-                            Add Client
+                        <Link href={route('client-product.create')} className="btn btn-primary me-2">
+                            Add Product
                         </Link>
                     )}
                 </div>
@@ -96,7 +96,7 @@ export default function Client({ clients: initialClients }) {
                                             clients.map((client) => (
                                                 <tr key={client.id}>
                                                     <td>
-                                                        <Link href={route('clients.show', client.id)} className="text-decoration-underline text-primary">
+                                                        <Link href={route('client-product.show', client.id)} className="text-decoration-underline text-primary">
                                                             {client.client_name}
                                                         </Link>
                                                     </td>
@@ -104,7 +104,6 @@ export default function Client({ clients: initialClients }) {
                                                     <td>{client.client_email}</td>
                                                     <td>{client.client_phone}</td>
                                                     <td>{client.client_address}</td>
-                                                    <td>{client.service_charge?.service_charge ?? 'NA'}</td>
                                                     <td>{client.tax}%</td>
                                                     {auth.user.role === 'admin' && (
                                                         <td>
@@ -116,7 +115,7 @@ export default function Client({ clients: initialClients }) {
                                                                 </button>
                                                                 <ul className="dropdown-menu">
                                                                     <li>
-                                                                        <Link className="dropdown-item" href={route('clients.edit', client.id)}>
+                                                                        <Link className="dropdown-item" href={route('client-product.edit', client.id)}>
                                                                             <i className="ti ti-edit"></i> Edit
                                                                         </Link>
                                                                     </li>
@@ -143,6 +142,21 @@ export default function Client({ clients: initialClients }) {
                     </div>
                 </div>
             </div>
+
         </AuthenticatedLayout>
-    );
+    )
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

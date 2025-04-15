@@ -6,24 +6,30 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 
 export default function EditClient({ client }) {
+  const isServiceClient = !!client.service_charge;
 
   const { data, setData, put, processing, errors } = useForm({
-    client_name: client.client_name,
-    site_name: client.site_name,
-    client_email: client.client_email,
-    client_phone: client.client_phone,
-    client_address: client.client_address,
-    service_charge: client.service_charge,
-    tax: client.tax,
+    'client_type': client.service_charge.service_charge ? 'SERVICE' : 'PRODUCT',
+    client_name: client.client_name || '',
+    site_name: client.site_name || '',
+    client_email: client.client_email || '',
+    client_phone: client.client_phone || '',
+    client_address: client.client_address || '',
+    tax: client.tax || 0,
+    service_charge: isServiceClient ? client.service_charge?.service_charge : '',
+    client_type: isServiceClient ? 'SERVICE' : 'PRODUCT',
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Optionally remove service_charge from data if it's a PRODUCT client
+    if (data.client_type === 'PRODUCT') {
+      delete data.service_charge;
+    }
+
     put(route('clients.update', client.id), {
       preserveScroll: true,
-      onSuccess: () => {
-        ShowMessage('success', 'Client updated successfully');
-      },
+      onSuccess: () => ShowMessage('success', 'Client updated successfully'),
     });
   };
 
@@ -95,17 +101,19 @@ export default function EditClient({ client }) {
                   <InputError message={errors.client_address} />
                 </div>
 
-                <div className="mb-3">
-                  <label className="form-label">Service Charge (%)</label>
-                  <TextInput
-                    type="number"
-                    className="form-control"
-                    placeholder="Enter Service Charge"
-                    value={data.service_charge}
-                    onChange={e => setData('service_charge', e.target.value)}
-                  />
-                  <InputError message={errors.service_charge} />
-                </div>
+                {data.client_type === 'SERVICE' && (
+                  <div className="mb-3">
+                    <label className="form-label">Service Charge (%)</label>
+                    <TextInput
+                      type="number"
+                      className="form-control"
+                      placeholder="Enter Service Charge"
+                      value={data.service_charge}
+                      onChange={e => setData('service_charge', e.target.value)}
+                    />
+                    <InputError message={errors.service_charge} />
+                  </div>
+                )}
 
                 <div className="mb-3">
                   <label className="form-label">Tax (%)</label>

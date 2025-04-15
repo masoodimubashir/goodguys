@@ -8,7 +8,9 @@ use App\Http\Requests\UpdateClientRequest;
 use App\Models\Client;
 use App\Models\Inventory;
 use App\Models\Module;
+use App\Models\ServiceCharge;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -17,7 +19,7 @@ class AdminClientsController extends Controller
     public function index()
     {
         return Inertia::render('Clients/Client', [
-            'clients' => Client::latest()->get(),
+            'clients' => Client::with('serviceCharge')->latest()->get(),
         ]);
     }
 
@@ -28,16 +30,31 @@ class AdminClientsController extends Controller
 
     public function store(StoreClientRequest $request)
     {
-        try {
 
-            Client::create(array_merge($request->validated(), [
+        try {
+            DB::beginTransaction();
+
+            $validatedData = $request->validated();
+
+            $client = Client::create(array_merge($validatedData, [
                 'created_by' => auth()->id(),
             ]));
 
-            return redirect()->route('clients.index')->with('message', 'Client Created');
+            if (isset($validatedData['service_charge'])) {
+                ServiceCharge::create([
+                    'client_id' => $client->id,
+                    'service_charge' => $validatedData['service_charge'],
+                    'created_by' => auth()->id(),
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('clients.index')->with('message', 'Client Created Successfully');
         } catch (Exception $e) {
+            DB::rollBack();
+            Log::error($e->getMessage());
             return redirect()->route('clients.index')
-                ->with('error', 'Failed to create client');
+                ->with('error', 'Failed to create client. Please try again.');
         }
     }
 
@@ -47,7 +64,8 @@ class AdminClientsController extends Controller
         $client->load([
             'invoiceRefrences' => fn($query) => $query->with('invoices'),
             'proformaRefrences' => fn($query) => $query->with('proformas'),
-            'accounts'
+            'accounts',
+            'serviceCharge'
         ]);
 
         return Inertia::render('Clients/ShowClient', [
@@ -60,31 +78,55 @@ class AdminClientsController extends Controller
     public function edit(Client $client)
     {
         return Inertia::render('Clients/EditClient', [
-            'client' => $client
+            'client' => $client->load('serviceCharge'),
         ]);
     }
 
     public function update(UpdateClientRequest $request, Client $client)
     {
         try {
-            $client->update($request->validated() + ['updated_by' => auth()->user()->id]);
+            
+            $data = $request->validated();
 
+            $data['updated_by'] = auth()->id();
+
+            if ($data['client_type'] === 'SERVICE') {
+
+                $serviceChargeValue = $data['service_charge'] ?? null;
+                unset($data['service_charge']);
+        
+                if ($serviceChargeValue !== null) {
+                    $client->serviceCharge()->updateOrCreate(
+                        ['client_id' => $client->id], 
+                        ['service_charge' => $serviceChargeValue]
+                    );
+                }
+            } else {
+                unset($data['service_charge']);
+        
+                $client->serviceCharge()->delete();
+            }
+        
+            // Update client details
+            $client->update($data);
+        
             return redirect()->route('clients.index')->with('message', 'Client Updated');
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to update client');
         }
+        
     }
+
+
 
     public function destroy(Client $client)
     {
         try {
             $client->delete();
 
-            return redirect()->route('clients.index')
-                ->with('message', 'Client Deleted');
+            return redirect()->route('clients.index')->with('message', 'Client Deleted');
         } catch (Exception $e) {
-            return redirect()->route('clients.index')
-                ->with('error', 'Failed to delete client');
+            return redirect()->route('clients.index')->with('error', 'Failed to delete client');
         }
     }
 }

@@ -4,13 +4,13 @@ import { Container, Card, Row, Col, Form, Button } from "react-bootstrap";
 
 export default function CreateInvoice({ client, modules, inventories }) {
 
-    
+
     const { data, setData, post, processing, errors } = useForm({
         client_id: client.id,
         client_name: client.client_name,
         client_address: client.client_address,
         tax: client.tax,
-        service_charge: client.service_charge,
+        service_charge: client?.service_charge?.service_charge ?? 0,
         items: [
             {
                 source: "custom",
@@ -179,17 +179,18 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                 />
                             </Form.Group>
                         </Col>
-                        <Col md={3}>
-                            <Form.Group>
-                                <Form.Label>Service Charge (%)</Form.Label>
-                                <Form.Control
-                                    type="number"
-                                    value={data.service_charge}
-                                    onChange={(e) => setData("service_charge", parseFloat(e.target.value))}
-                                    isInvalid={!!errors.service_charge}
-                                />
-                            </Form.Group>
-                        </Col>
+
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Service Charge (%)</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        value={data.service_charge}
+                                        onChange={(e) => setData("service_charge", parseFloat(e.target.value))}
+                                        isInvalid={!!errors.service_charge}
+                                    />
+                                </Form.Group>
+                            </Col>
                     </Row>
 
                     <Form.Group className="mb-4">
