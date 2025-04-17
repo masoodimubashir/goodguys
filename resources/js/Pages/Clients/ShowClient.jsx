@@ -242,6 +242,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                         </button>
 
                         <ul className="dropdown-menu">
+
                             <li>
                                 <Link href={route('invoice.create', { client_id: client?.id })} className="dropdown-item">
                                     <i className="ti ti-file-invoice me-2"></i> Invoice
@@ -362,10 +363,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                     </div>
                 </div>
             </div>
-
-
-
-
 
             <div className="card equal-card">
                 <div className="card-body">

@@ -12,7 +12,7 @@ export default function Client({ clients: initialClients }) {
     const [clients, setClients] = useState(initialClients);
     const tableHead = [
         'Name', 'Site Name', 'Email', 'Phone', 'Address',
-        'Service Charge (%)', 'Tax (%)', 'Actions'
+        'Service Charge (%)', 'Actions'
     ];
     const tableRef = useRef(null);
     const { flash, auth } = usePage().props;
@@ -101,11 +101,16 @@ export default function Client({ clients: initialClients }) {
                                                         </Link>
                                                     </td>
                                                     <td>{client.site_name}</td>
+
                                                     <td>{client.client_email}</td>
+                                                    
                                                     <td>{client.client_phone}</td>
+                                                    
                                                     <td>{client.client_address}</td>
-                                                    <td>{client.service_charge?.service_charge ?? 'NA'}</td>
-                                                    <td>{client.tax}%</td>
+                                                    
+                                                    <td>{client.service_charge?.service_charge || 0}</td>
+                                                    
+                                                    
                                                     {auth.user.role === 'admin' && (
                                                         <td>
                                                             <div className="btn-group dropdown-icon-none">

@@ -17,7 +17,6 @@ class Client extends Model
         'created_by',
         'updated_by',
         'site_name',
-        'tax',
     ];
 
 

@@ -12,12 +12,6 @@ export const SideBar = () => {
         <>
             <nav>
                 <div className="app-logo">
-
-                    {/* <Link className="logo d-inline-block" href={route('dashboard')}> */}
-                    {/* <ApplicationLogo className="w-50 h-50" /> */}
-                    {/* </Link> */}
-
-
                     <span className="bg-light-primary toggle-semi-nav">
                         <i className="ti ti-chevrons-right f-s-20"></i>
                     </span>
@@ -57,21 +51,12 @@ export const SideBar = () => {
                             </NavLink>
                         </li>
 
-                        <li>
-
-                            <NavLink active={url === '/client-product' ? true : false} href='/client-product'>
-                                <i className="iconoir-user-plus"></i>
-                                Client Product
-                            </NavLink>
-
-                        </li>
-
-                        <li>
+                        {/* <li>
                             <NavLink active={url === '/accounts' ? true : false} href='/accounts'>
                                 <i className="iconoir-user-plus"></i>
                                 Ledger
                             </NavLink>
-                        </li>
+                        </li> */}
 
                         <li>
                             <NavLink active={url === '/module' ? true : false} href='/module'>

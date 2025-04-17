@@ -4,25 +4,26 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
+import InputLabel from '@/Components/InputLabel';
 
 export default function EditClient({ client }) {
+
   const isServiceClient = !!client.service_charge;
 
   const { data, setData, put, processing, errors } = useForm({
-    'client_type': client.service_charge.service_charge ? 'SERVICE' : 'PRODUCT',
+    'client_type': client?.service_charge?.service_charge ? 'SERVICE' : 'PRODUCT',
     client_name: client.client_name || '',
     site_name: client.site_name || '',
     client_email: client.client_email || '',
     client_phone: client.client_phone || '',
     client_address: client.client_address || '',
-    tax: client.tax || 0,
-    service_charge: isServiceClient ? client.service_charge?.service_charge : '',
+    service_charge: isServiceClient ? client?.service_charge?.service_charge : '',
     client_type: isServiceClient ? 'SERVICE' : 'PRODUCT',
   });
 
   const handleSubmit = (e) => {
+
     e.preventDefault();
-    // Optionally remove service_charge from data if it's a PRODUCT client
     if (data.client_type === 'PRODUCT') {
       delete data.service_charge;
     }
@@ -31,11 +32,14 @@ export default function EditClient({ client }) {
       preserveScroll: true,
       onSuccess: () => ShowMessage('success', 'Client updated successfully'),
     });
+
   };
 
   return (
     <AuthenticatedLayout>
+      
       <Head title="Edit Client" />
+
       <div className="row g-4 mt-4">
         <div className="col-12">
           <div className="card">
@@ -54,13 +58,16 @@ export default function EditClient({ client }) {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">Site Name</label>
+                  <InputLabel
+                    htmlFor="site_name"
+                    value={isServiceClient ? "Site Name" : "Product Type"}
+                  />
                   <TextInput
-                    type="text"
                     className="form-control"
-                    placeholder="Enter Site Name"
+                    id="site_name"
+                    name="site_name"
+                    placeholder={isServiceClient ? "Enter Site Name" : "Enter Product Type"}
                     value={data.site_name}
-                    onChange={e => setData('site_name', e.target.value)}
                   />
                   <InputError message={errors.site_name} />
                 </div>
@@ -115,25 +122,18 @@ export default function EditClient({ client }) {
                   </div>
                 )}
 
-                <div className="mb-3">
-                  <label className="form-label">Tax (%)</label>
-                  <TextInput
-                    type="number"
-                    className="form-control"
-                    placeholder="Enter Tax"
-                    value={data.tax}
-                    onChange={e => setData('tax', e.target.value)}
-                  />
-                  <InputError message={errors.tax} />
-                </div>
+
 
                 <div className="d-flex justify-content-end gap-2">
+
                   <Link href={route('clients.index')} className="btn btn-secondary">
                     Cancel
                   </Link>
+
                   <button type="submit" className="btn btn-primary" disabled={processing}>
                     Update Client
                   </button>
+
                 </div>
               </form>
             </div>

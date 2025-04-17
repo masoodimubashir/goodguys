@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('client_phone', 10);
             $table->text('client_address');
             $table->string('site_name', 100);
-            $table->integer('tax')->default(0);     
             $table->integer('service_charge')->nullable()->default(0);
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

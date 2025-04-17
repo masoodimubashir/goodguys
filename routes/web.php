@@ -58,9 +58,6 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     // Route For Invoice
     Route::resource('invoice', AdminInvoiceController::class);
 
-    // Route For ClientProduct
-    // All The functionlaties to be removed
-    Route::resource('client-product', AdminClientProductController::class);
   
 });
 

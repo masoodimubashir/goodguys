@@ -6,8 +6,8 @@ import InputLabel from "@/Components/InputLabel";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
 const CLIENT_TYPES = {
-  SERVICE: 'service',
-  PRODUCT: 'product'
+    SERVICE: 'service',
+    PRODUCT: 'product'
 };
 
 export default function CreateClient() {
@@ -19,7 +19,6 @@ export default function CreateClient() {
         client_address: '',
         service_charge: '',
         site_name: '',
-        tax: '',
     });
 
     const handleInputChange = (e) => {
@@ -50,9 +49,9 @@ export default function CreateClient() {
     return (
         <AuthenticatedLayout>
             <Head title="Create Client" />
-            
+
             <BreadcrumbNav />
-            
+
             <div className="row justify-content-center">
                 <div className="col-12">
                     <div className="card shadow-sm border-0">
@@ -62,17 +61,17 @@ export default function CreateClient() {
                         <div className="card-body">
                             <form className="app-form" onSubmit={handleSubmit}>
                                 <div className="row g-4">
-                                    <ClientTypeSelector 
+                                    <ClientTypeSelector
                                         selectedType={data.client_type}
-                                        onChange={handleClientTypeChange} 
+                                        onChange={handleClientTypeChange}
                                     />
-                                    
-                                    <FormFields 
+
+                                    <FormFields
                                         data={data}
                                         errors={errors}
                                         onChange={handleInputChange}
                                     />
-                                    
+
                                     <div className="col-12 text-end">
                                         <Button className="btn btn-primary px-4" disabled={processing}>
                                             {processing ? 'Submitting...' : 'Submit'}
@@ -146,7 +145,7 @@ function ClientTypeSelector({ selectedType, onChange }) {
 
 function FormField({ label, id, type = "text", placeholder, value, onChange, error, ...props }) {
     return (
-        <div className="col-md-6">
+        <div className="col-md-4">
             <InputLabel htmlFor={id} value={label} />
             <TextInput
                 type={type}
@@ -164,8 +163,9 @@ function FormField({ label, id, type = "text", placeholder, value, onChange, err
 }
 
 function FormFields({ data, errors, onChange }) {
+
     const isServiceType = data.client_type === CLIENT_TYPES.SERVICE;
-    
+
     return (
         <>
             <FormField
@@ -176,7 +176,7 @@ function FormFields({ data, errors, onChange }) {
                 onChange={onChange}
                 error={errors.client_name}
             />
-            
+
             <FormField
                 label="Client Email"
                 id="client_email"
@@ -186,7 +186,7 @@ function FormFields({ data, errors, onChange }) {
                 onChange={onChange}
                 error={errors.client_email}
             />
-            
+
             <FormField
                 label="Client Phone"
                 id="client_phone"
@@ -195,7 +195,7 @@ function FormFields({ data, errors, onChange }) {
                 onChange={onChange}
                 error={errors.client_phone}
             />
-            
+
             <FormField
                 label="Client Address"
                 id="client_address"
@@ -204,22 +204,25 @@ function FormFields({ data, errors, onChange }) {
                 onChange={onChange}
                 error={errors.client_address}
             />
-            
-            <div className="col-md-4">
-                <InputLabel htmlFor="site_name" value="Site Name" />
+
+            <div className="col-md-3">
+                <InputLabel
+                    htmlFor="site_name"
+                    value={isServiceType ? "Site Name" : "Product Type"}
+                />
                 <TextInput
                     className="form-control"
                     id="site_name"
                     name="site_name"
-                    placeholder="Enter Site Name"
+                    placeholder={isServiceType ? "Enter Site Name" : "Enter Product Type"}
                     value={data.site_name}
                     onChange={onChange}
                 />
                 <InputError message={errors.site_name} />
             </div>
-            
+
             {isServiceType && (
-                <div className="col-md-4">
+                <div className="col-md-3">
                     <InputLabel htmlFor="service_charge" value="Service Charge (%)" />
                     <TextInput
                         type="number"
@@ -233,21 +236,6 @@ function FormFields({ data, errors, onChange }) {
                     <InputError message={errors.service_charge} />
                 </div>
             )}
-            
-            <div className="col-md-4">
-                <InputLabel htmlFor="tax" value="Tax (%)" />
-                <TextInput
-                    type="number"
-                    step="0.01"
-                    className="form-control"
-                    id="tax"
-                    name="tax"
-                    placeholder="Enter Tax Percentage"
-                    value={data.tax}
-                    onChange={onChange}
-                />
-                <InputError message={errors.tax} />
-            </div>
         </>
     );
 }
