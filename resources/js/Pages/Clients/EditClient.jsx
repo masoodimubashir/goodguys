@@ -11,14 +11,13 @@ export default function EditClient({ client }) {
   const isServiceClient = !!client.service_charge;
 
   const { data, setData, put, processing, errors } = useForm({
-    'client_type': client?.service_charge?.service_charge ? 'SERVICE' : 'PRODUCT',
+    client_type: client.client_type,
     client_name: client.client_name || '',
     site_name: client.site_name || '',
     client_email: client.client_email || '',
     client_phone: client.client_phone || '',
     client_address: client.client_address || '',
     service_charge: isServiceClient ? client?.service_charge?.service_charge : '',
-    client_type: isServiceClient ? 'SERVICE' : 'PRODUCT',
   });
 
   const handleSubmit = (e) => {
@@ -37,7 +36,7 @@ export default function EditClient({ client }) {
 
   return (
     <AuthenticatedLayout>
-      
+
       <Head title="Edit Client" />
 
       <div className="row g-4 mt-4">
@@ -57,20 +56,25 @@ export default function EditClient({ client }) {
                   <InputError message={errors.client_name} />
                 </div>
 
-                <div className="mb-3">
-                  <InputLabel
-                    htmlFor="site_name"
-                    value={isServiceClient ? "Site Name" : "Product Type"}
-                  />
-                  <TextInput
-                    className="form-control"
-                    id="site_name"
-                    name="site_name"
-                    placeholder={isServiceClient ? "Enter Site Name" : "Enter Product Type"}
-                    value={data.site_name}
-                  />
-                  <InputError message={errors.site_name} />
-                </div>
+                {
+                  client.service_charge && (
+                    <div className="mb-3">
+                      <InputLabel
+                        htmlFor="site_name"
+                        value={isServiceClient ? "Site Name" : "Product Type"}
+                      />
+                      <TextInput
+                        className="form-control"
+                        id="site_name"
+                        name="site_name"
+                        placeholder={isServiceClient ? "Enter Site Name" : "Enter Product Type"}
+                        value={data.site_name}
+                      />
+                      <InputError message={errors.site_name} />
+                    </div>
+                  )
+                }
+
 
                 <div className="mb-3">
                   <label className="form-label">Client Email</label>

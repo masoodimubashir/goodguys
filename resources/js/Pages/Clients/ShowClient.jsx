@@ -18,6 +18,7 @@ import PdfTable from '@/Components/PdfTable';
 export default function ShowClient({ client, modules = [], inventoryOptions = [] }) {
 
 
+    const client_type = client?.service_charge ? 'Site Name' : 'Product Name';
 
     const [showAccountModal, setShowAccountModal] = useState(false);
     const [isEditingAccount, setIsEditingAccount] = useState(false);
@@ -294,7 +295,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                     </div>
                                     <div>
                                         <h5 className="mb-0">{client?.client_name}</h5>
-                                        <p className="text-muted mb-0">Site: {client?.site_name}</p>
+                                        <p className="text-muted mb-0">{client_type}: {client?.site_name ?? 'NA'}</p>
                                     </div>
                                 </div>
                             </div>

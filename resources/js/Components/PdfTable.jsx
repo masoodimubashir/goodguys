@@ -31,7 +31,7 @@ export default function PdfTable({ client, pdfRef }) {
                     type: 'Proforma',
                     reference_number: reference.proforma_number,
                     created_at: reference.created_at,
-                    proformas: reference.proformas
+                    products: reference.products
                 });
             });
         }

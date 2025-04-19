@@ -32,6 +32,7 @@ class AdminClientsController extends Controller
     {
 
         try {
+
             DB::beginTransaction();
 
             $validatedData = $request->validated();
@@ -52,7 +53,6 @@ class AdminClientsController extends Controller
             return redirect()->route('clients.index')->with('message', 'Client Created Successfully');
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error($e->getMessage());
             return redirect()->route('clients.index')
                 ->with('error', 'Failed to create client. Please try again.');
         }
@@ -63,7 +63,7 @@ class AdminClientsController extends Controller
 
         $client->load([
             'invoiceRefrences' => fn($query) => $query->with('invoices'),
-            'proformaRefrences' => fn($query) => $query->with('proformas'),
+            'proformaRefrences' => fn($query) => $query->with(['products' => fn($query) => $query->with('proformas'),]),
             'accounts',
             'serviceCharge'
         ]);
@@ -85,7 +85,8 @@ class AdminClientsController extends Controller
     public function update(UpdateClientRequest $request, Client $client)
     {
         try {
-            
+
+
             $data = $request->validated();
 
             $data['updated_by'] = auth()->id();
@@ -94,27 +95,26 @@ class AdminClientsController extends Controller
 
                 $serviceChargeValue = $data['service_charge'] ?? null;
                 unset($data['service_charge']);
-        
+
                 if ($serviceChargeValue !== null) {
                     $client->serviceCharge()->updateOrCreate(
-                        ['client_id' => $client->id], 
+                        ['client_id' => $client->id],
                         ['service_charge' => $serviceChargeValue]
                     );
                 }
             } else {
                 unset($data['service_charge']);
-        
+
                 $client->serviceCharge()->delete();
             }
-        
+
             // Update client details
             $client->update($data);
-        
+
             return redirect()->route('clients.index')->with('message', 'Client Updated');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to update client');
         }
-        
     }
 
 

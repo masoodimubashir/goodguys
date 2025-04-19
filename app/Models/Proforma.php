@@ -9,7 +9,7 @@ class Proforma extends Model
 {
     protected $fillable = [
         'item_name',
-        'proforma_refrence_id',
+        'product_id',
         'description',
         'additional_description',
         'count',
@@ -17,7 +17,8 @@ class Proforma extends Model
         'tax',
         'service_charge',
         'created_by',
-        'updated_by'
+        'updated_by',
+        'is_price_visible'
     ];
 
    
@@ -26,7 +27,5 @@ class Proforma extends Model
         return $this->belongsTo(Module::class);
     }
 
-    public function proformaRefrence(): BelongsTo{
-        return $this->belongsTo(ProformaRefrence::class);
-    }
+    
 }

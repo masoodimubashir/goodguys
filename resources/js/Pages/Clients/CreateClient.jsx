@@ -6,8 +6,8 @@ import InputLabel from "@/Components/InputLabel";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
 const CLIENT_TYPES = {
-    SERVICE: 'service',
-    PRODUCT: 'product'
+    SERVICE: 'Service Client',
+    PRODUCT: 'Product Client',
 };
 
 export default function CreateClient() {
@@ -123,7 +123,7 @@ function ClientTypeSelector({ selectedType, onChange }) {
                     onChange={() => onChange(CLIENT_TYPES.SERVICE)}
                 />
                 <label className="btn btn-outline-primary" htmlFor="service">
-                    Service Based
+                    Service Client
                 </label>
 
                 <input
@@ -136,7 +136,7 @@ function ClientTypeSelector({ selectedType, onChange }) {
                     onChange={() => onChange(CLIENT_TYPES.PRODUCT)}
                 />
                 <label className="btn btn-outline-primary" htmlFor="product">
-                    Product Based
+                    Product Client
                 </label>
             </div>
         </div>

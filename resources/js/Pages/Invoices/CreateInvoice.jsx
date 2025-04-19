@@ -9,7 +9,6 @@ export default function CreateInvoice({ client, modules, inventories }) {
         client_id: client.id,
         client_name: client.client_name,
         client_address: client.client_address,
-        tax: client.tax,
         service_charge: client?.service_charge?.service_charge ?? 0,
         items: [
             {

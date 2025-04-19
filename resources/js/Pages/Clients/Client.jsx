@@ -11,7 +11,7 @@ export default function Client({ clients: initialClients }) {
 
     const [clients, setClients] = useState(initialClients);
     const tableHead = [
-        'Name', 'Site Name', 'Email', 'Phone', 'Address',
+        'Name', 'Client Type', 'Site  / Product', 'Email', 'Phone', 'Address',
         'Service Charge (%)', 'Actions'
     ];
     const tableRef = useRef(null);
@@ -100,7 +100,10 @@ export default function Client({ clients: initialClients }) {
                                                             {client.client_name}
                                                         </Link>
                                                     </td>
-                                                    <td>{client.site_name}</td>
+                                                    
+                                                    <td>{client.client_type}</td>
+
+                                                    <td>{client.site_name ?? 'NA'}</td>
 
                                                     <td>{client.client_email}</td>
                                                     
