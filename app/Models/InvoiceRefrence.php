@@ -15,9 +15,9 @@ class InvoiceRefrence extends Model
     ];
 
 
-    public function invoices(): HasMany
+    public function products(): HasMany
     {
-        return $this->hasMany(Invoice::class);
+        return $this->hasMany(Product::class);
     }
 
     public function client(): BelongsTo

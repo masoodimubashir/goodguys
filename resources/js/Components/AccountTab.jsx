@@ -25,7 +25,6 @@ export default function AccountTab({ client, accountRef, handleEditAccount, hand
 
 
     return (
-        <div className="tab-pane fade show active" id="html-tab-pane" role="tabpanel" aria-labelledby="html-tab" tabIndex="0">
             <div className="app-scroll table-responsive">
                 <table ref={accountRef} className="table table-striped text-start align-middle">
                     <thead>
@@ -138,6 +137,5 @@ export default function AccountTab({ client, accountRef, handleEditAccount, hand
                     </tbody>
                 </table>
             </div>
-        </div>
     );
 }

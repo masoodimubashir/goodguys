@@ -9,7 +9,6 @@ class Invoice extends Model
 {
 
     protected $fillable = [
-        'invoice_refrence_id',
         'item_name',
         'count',
         'price',
@@ -19,6 +18,8 @@ class Invoice extends Model
         'updated_by',
         'additional_description',
         'description',
+        'is_price_visible',
+        'product_id',
 
     ];
 
@@ -31,15 +32,10 @@ class Invoice extends Model
     ];
 
 
-  
+
 
     public function module()
     {
         return $this->belongsTo(Module::class);
-    }
-
-    public function invoiceRefrence(): BelongsTo
-    {
-        return $this->belongsTo(InvoiceRefrence::class);
     }
 }

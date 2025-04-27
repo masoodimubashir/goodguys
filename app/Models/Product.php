@@ -12,6 +12,7 @@ class Product extends Model
     protected $fillable = [
         'product_name',
         'proforma_refrence_id',
+        'invoice_refrence_id',
     ];
 
 
@@ -24,5 +25,15 @@ class Product extends Model
     public function proformas(): HasMany
     {
         return $this->hasMany(Proforma::class);
+    }
+
+    /**
+     * Get all of the proformas for the Invoice
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
     }
 }

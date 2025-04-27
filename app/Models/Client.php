@@ -55,6 +55,29 @@ class Client extends Model
     }
 
 
+
+    /**
+     * Get all of the purchaseLists for the Client
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function purchaseLists(): HasMany
+    {
+        return $this->hasMany(PurchaseList::class);
+    }
+
+
+    /**
+     * Get all of the costIncurreds for the Client
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function costIncurreds(): HasMany
+    {
+        return $this->hasMany(CostIncurred::class);
+    }
+
+
     protected function casts(): array
     {
         return [

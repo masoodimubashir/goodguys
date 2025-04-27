@@ -62,8 +62,10 @@ class AdminClientsController extends Controller
     {
 
         $client->load([
-            'invoiceRefrences' => fn($query) => $query->with('invoices'),
+            'invoiceRefrences' => fn($query) => $query->with(['products' => fn($query) => $query->with('invoices'),]),
             'proformaRefrences' => fn($query) => $query->with(['products' => fn($query) => $query->with('proformas'),]),
+            'purchaseLists',
+            'costIncurreds' ,
             'accounts',
             'serviceCharge'
         ]);
@@ -77,6 +79,8 @@ class AdminClientsController extends Controller
 
     public function edit(Client $client)
     {
+
+        
         return Inertia::render('Clients/EditClient', [
             'client' => $client->load('serviceCharge'),
         ]);

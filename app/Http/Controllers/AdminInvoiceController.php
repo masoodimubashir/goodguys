@@ -9,6 +9,8 @@ use App\Models\Inventory;
 use App\Models\Invoice;
 use App\Models\InvoiceRefrence;
 use App\Models\Module;
+use App\Models\Product;
+use App\Models\ProformaRefrence;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -48,55 +50,61 @@ class AdminInvoiceController extends Controller
      */
     public function store(StoreInvoiceRequest $request)
     {
+        DB::beginTransaction();
+
         try {
 
-
-            DB::beginTransaction();
 
             $data = $request->validated();
 
             $invoice_refrence = InvoiceRefrence::create([
                 'invoice_number' => uniqid('INV-'),
                 'client_id' => $data['client_id'],
-
             ]);
 
-            foreach ($data['items'] as $index => $item) {
+            foreach ($data['products'] as $productData) {
 
-
-                $item_dimensions = [];
-
-                if (!empty($item['item_dimensions']) && is_array($item['item_dimensions'])) {
-
-                    foreach ($item['item_dimensions'] as $dimension) {
-
-                        $item_dimensions[] = [
-                            'type' => $dimension['type'] ?? '',
-                            'value' => $dimension['value'] ?? '',
-                            'si' => $dimension['si'] ?? '',
-                        ];
-                    }
-                }
-
-                Invoice::create([
-                    'item_name' => $item['name'],
-                    'description' => $item['description'],
-                    'additional_description' => json_encode($item_dimensions),
+                $product = Product::create([
                     'invoice_refrence_id' => $invoice_refrence->id,
-                    'count' => $item['quantity'],
-                    'price' => $item['price'],
-                    'tax' => $data['tax'] ?? 0,
-                    'service_charge' => $data['service_charge'] ?? 0,
-                    'created_by' => auth()->id(),
+                    'product_name' => $productData['product_name'],
                 ]);
+
+                foreach ($productData['items'] as $item) {
+                    $item_dimensions = [];
+
+                    if (!empty($item['item_dimensions']) && is_array($item['item_dimensions'])) {
+                        foreach ($item['item_dimensions'] as $dimension) {
+                            $item_dimensions[] = [
+                                'type' => $dimension['type'] ?? '',
+                                'value' => $dimension['value'] ?? '',
+                                'si' => $dimension['si'] ?? '',
+                            ];
+                        }
+                    }
+
+                    Invoice::create([
+                        'client_id' => $data['client_id'],
+                        'item_name' => $item['name'],
+                        'product_id' => $product->id,
+                        'description' => $item['description'],
+                        'additional_description' => json_encode($item_dimensions),
+                        'count' => $item['quantity'],
+                        'price' => $item['price'],
+                        'tax' => $item['tax'] ?? 0,
+                        'service_charge' => $data['service_charge'] ?? 0,
+                        'is_price_visible' => $data['show_all_prices'],
+                        'created_by' => auth()->id(),
+                    ]);
+                }
             }
 
             DB::commit();
-
-            return redirect()->route('clients.show', [$invoice_refrence->client_id])->with('message', 'Invoice Created Successfully');
+            return redirect()->route('clients.show', [$invoice_refrence->client_id])
+                ->with('message', 'Proforma Created Successfully');
         } catch (Exception $e) {
+            Log::error('Failed to create proforma: ' . $e->getMessage());
             DB::rollBack();
-            return redirect()->back()->with('error', 'Failed to Create Invoice: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to Create Proforma: ' . $e->getMessage());
         }
     }
 
@@ -116,21 +124,24 @@ class AdminInvoiceController extends Controller
 
         try {
 
-            $invoice_ref = InvoiceRefrence::with([
-                'invoices',
-                'client' => fn ($query) => $query->with('serviceCharge'),
+            $invoice = InvoiceRefrence::with([
+                'products' => fn($query) => $query->with('invoices'),
+                'client' => fn($query) => $query->with('serviceCharge'),
             ])->findOrFail($id);
+
             $modules = Module::all();
             $inventories = Inventory::all();
 
             return Inertia::render('Invoices/EditInvoice', [
-                'invoice_ref' => $invoice_ref,
+                'invoice' => $invoice,
                 'modules' => $modules,
                 'inventories' => $inventories,
             ]);
         } catch (ModelNotFoundException $e) {
+            Log::error('Invoice not found', ['exception' => $e->getMessage()]);
             return redirect()->back()->with('error', 'Invoice not found');
         } catch (Exception $e) {
+
             return redirect()->back()->with('error', 'Something went wrong');
         }
     }
@@ -140,71 +151,88 @@ class AdminInvoiceController extends Controller
      */
     public function update(UpdateInvoiceRequest $request, $id)
     {
+        DB::beginTransaction();
+
         try {
-
-            DB::beginTransaction();
-
             $data = $request->validated();
+            $invoice = InvoiceRefrence::findOrFail($id);
 
-            $invoiceReference = InvoiceRefrence::findOrFail($id);
+            // Get existing product IDs for this invoice
+            $existingProductIds = Product::where('invoice_refrence_id', $invoice->id)
+                ->pluck('id')
+                ->toArray();
 
-            $incomingItemIds = collect($data['items'])->pluck('id')->filter()->all();
+            $processedProductIds = [];
 
-            Invoice::where('invoice_refrence_id', $invoiceReference->id)
-                ->whereNotIn('id', $incomingItemIds)
-                ->delete();
+            // Process each product in the request
+            foreach ($data['products'] as $productData) {
+                // Create or update the product
+                $product = Product::updateOrCreate(
+                    ['id' => $productData['id'] ?? null],
+                    [
+                        'invoice_refrence_id' => $invoice->id,
+                        'product_name' => $productData['product_name'],
+                    ]
+                );
 
-            foreach ($data['items'] as $item) {
+                $processedProductIds[] = $product->id;
 
+                // Get existing invoice item IDs for this product
+                $existingItemIds = Invoice::where('product_id', $product->id)
+                    ->pluck('id')
+                    ->toArray();
 
+                $processedItemIds = [];
 
-                $itemDimensions = [];
+                // Process each item in the product
+                foreach ($productData['items'] as $itemData) {
+                    // Convert item dimensions to JSON
+                    $itemDimensions = json_encode($itemData['item_dimensions']);
 
-                if (!empty($item['item_dimensions']) && is_array($item['item_dimensions'])) {
-                    foreach ($item['item_dimensions'] as $dimension) {
-                        $itemDimensions[] = [
-                            'type' => $dimension['type'] ?? '',
-                            'value' => $dimension['value'] ?? '',
-                            'si' => $dimension['si'] ?? '',
-                        ];
-                    }
-                }
-
-
-                if (!empty($item['id'])) {
-                    // Update existing invoice item
-                    Invoice::where('id', $item['id'])
-                        ->update([
-                            'item_name' => $item['name'],
-                            'description' => $item['description'],
-                            'additional_description' => json_encode($itemDimensions),
-                            'count' => $item['quantity'],
-                            'price' => $item['price'],
-                            'tax' => $data['tax'] ?? 0,
+                    // Create or update the invoice item
+                    $invoiceItem = Invoice::updateOrCreate(
+                        ['id' => $itemData['id'] ?? null],
+                        [
+                            'invoice_refrence_id' => $invoice->id,
+                            'product_id' => $product->id,
+                            'item_name' => $itemData['name'],
+                            'description' => $itemData['description'] ?? null,
+                            'additional_description' => $itemDimensions,
+                            'count' => $itemData['quantity'],
+                            'price' => $itemData['price'],
+                            'tax' => $itemData['tax'] ?? 0,
                             'service_charge' => $data['service_charge'] ?? 0,
+                            'source_type' => $itemData['source'],
+                            'source_id' => $itemData['source_id'],
                             'updated_by' => auth()->id(),
-                        ]);
-                } else {
-                    // Create new invoice item
-                    Invoice::create([
-                        'item_name' => $item['name'],
-                        'description' => $item['description'],
-                        'additional_description' => json_encode($itemDimensions),
-                        'invoice_refrence_id' => $invoiceReference->id,
-                        'count' => $item['quantity'],
-                        'price' => $item['price'],
-                        'tax' => $data['tax'] ?? 0,
-                        'service_charge' => $data['service_charge'] ?? 0,
-                        'created_by' => auth()->id(),
-                    ]);
+                            'created_by' => isset($itemData['id']) ? null : auth()->id(),
+                            'is_price_visible' => $data['show_all_prices'],
+                        ]
+                    );
+
+                    $processedItemIds[] = $invoiceItem->id;
                 }
+
+                // Delete items that were removed from the product
+                Invoice::where('product_id', $product->id)
+                    ->whereNotIn('id', $processedItemIds)
+                    ->delete();
             }
 
+            // Delete products that were removed from the invoice
+            Product::where('invoice_refrence_id', $invoice->id)
+                ->whereNotIn('id', $processedProductIds)
+                ->delete();
+
             DB::commit();
-            return redirect()->route('clients.show', [$invoiceReference->client_id])->with('message', 'Invoice Updated Successfully');
+
+            return redirect()->route('clients.show', [$invoice->client_id])
+                ->with('message', 'Invoice Updated Successfully');
         } catch (Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Failed to Update Invoice: ' . $e->getMessage());
+            Log::error('Error updating Invoice: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to Update Invoice: ' . $e->getMessage());
         }
     }
 
@@ -225,6 +253,65 @@ class AdminInvoiceController extends Controller
             return redirect()->back() > with('error', 'Invoice not found');
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Failed to delete Invoice');
+        }
+    }
+
+
+    public function createInvoiceFromPdf($id)
+    {
+
+        DB::beginTransaction();
+
+        
+
+        try {
+
+            $proforma_ref = ProformaRefrence::with([
+                'products' => fn($query) => $query->with('proformas'),
+                'client' => fn($query) => $query->with('serviceCharge'),
+            ])->findOrFail($id);
+
+            // Create new invoice
+            $invoice = InvoiceRefrence::create([
+                'invoice_number' => uniqid('INV-'),
+                'client_id' => $proforma_ref->client_id,
+            ]);
+
+            // Copy products and items
+            foreach ($proforma_ref->products as $product) {
+
+                $newProduct = $invoice->products()->create([
+                    'product_name' => $product->product_name,
+                    'invoice_refrence_id' => $invoice->id,
+                ]);
+
+                foreach ($product->proformas as $item) {
+
+                    $newProduct->invoices()->create([
+                        'item_name' => $item->item_name,
+                        'product_id' => $newProduct->id,
+                        'description' => $item->description,
+                        'additional_description' => $item->additional_description,
+                        'count' => $item->count,
+                        'price' => $item->price,
+                        'tax' => $item->tax,
+                        'service_charge' => $item->service_charge,
+                        'source_type' => $item->source_type,
+                        'source_id' => $item->source_id,
+                        'is_price_visible' => $item->is_price_visible,
+                    ]);
+
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->back()->with('message' , 'Invoice created successfully');
+
+        } catch (Exception $e) {
+            Log::error('Error creating invoice: ' . $e->getMessage());
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to create invoice');
         }
     }
 }

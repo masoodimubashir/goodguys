@@ -3,14 +3,13 @@ import { useForm, Link } from "@inertiajs/react";
 import { Container, Card, Row, Col, Form, Button } from "react-bootstrap";
 
 export default function CreateInvoice({ client, modules, inventories }) {
-
-
     const { data, setData, post, processing, errors } = useForm({
         client_id: client.id,
         client_name: client.client_name,
         client_address: client.client_address,
         service_charge: client?.service_charge?.service_charge ?? 0,
         tax: client.tax || 0,
+        show_all_prices: true, // New field to control price visibility globally
         products: [
             {
                 product_name: "",
@@ -24,12 +23,27 @@ export default function CreateInvoice({ client, modules, inventories }) {
                         quantity: '',
                         tax: client.tax || '',
                         item_dimensions: [],
-                        is_price_visible: true,
                     },
                 ],
             },
         ],
     });
+
+    // Toggle all prices visibility
+    const toggleAllPricesVisibility = (isVisible) => {
+        setData("show_all_prices", isVisible);
+        
+        // Update all items to reflect the global setting
+        const newProducts = data.products.map(product => ({
+            ...product,
+            items: product.items.map(item => ({
+                ...item,
+                // We don't need to modify the price value anymore since we're always showing it
+            }))
+        }));
+        
+        setData("products", newProducts);
+    };
 
     // Add new product
     const addProduct = () => {
@@ -47,8 +61,6 @@ export default function CreateInvoice({ client, modules, inventories }) {
                         quantity: '',
                         tax: client.tax || '',
                         item_dimensions: [],
-                        is_price_visible: true,
-
                     },
                 ],
             },
@@ -67,8 +79,6 @@ export default function CreateInvoice({ client, modules, inventories }) {
             quantity: '',
             tax: client.tax || '',
             item_dimensions: [],
-            is_price_visible: true,
-
         });
         setData("products", newProducts);
     };
@@ -113,8 +123,6 @@ export default function CreateInvoice({ client, modules, inventories }) {
             quantity: '',
             tax: data.tax,
             item_dimensions: [],
-            is_price_visible: true,
-
         };
         setData("products", newProducts);
     };
@@ -128,14 +136,14 @@ export default function CreateInvoice({ client, modules, inventories }) {
         if (item.source === "inventory") {
             const selected = inventories.find((i) => i.id === parsedId);
             if (selected) {
+                const price = selected.selling_price || 0;
                 newProducts[productIndex].items[itemIndex] = {
                     ...item,
                     source_id: selected.id,
                     name: selected.item_name,
                     description: selected.description || "",
-                    price: selected.selling_price || 0,
+                    price: price,
                     quantity: selected.count || 0,
-                    is_price_visible: true,
                     item_dimensions: (selected.item_dimensions || []).map((dim) => {
                         const [type, value, si] = dim.split(",");
                         return { type, value, si };
@@ -145,14 +153,14 @@ export default function CreateInvoice({ client, modules, inventories }) {
         } else if (item.source === "module") {
             const selected = modules.find((m) => m.id === parsedId);
             if (selected) {
+                const price = selected.selling_price || 0;
                 newProducts[productIndex].items[itemIndex] = {
                     ...item,
                     source_id: selected.id,
                     name: selected.module_name,
                     description: selected.description || "",
-                    price: selected.selling_price || 0,
+                    price: price,
                     quantity: selected.count || 0,
-                    is_price_visible: true,
                     item_dimensions: (selected.fields || []).map((dim) => {
                         const [type, value, si] = dim.split(",");
                         return { type, value, si };
@@ -189,7 +197,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
         setData("products", newProducts);
     };
 
-    // Calculate totals
+    // Calculate totals - always using the actual price values
     const { subtotal, taxAmount, serviceChargeAmount, total } = data.products.reduce(
         (acc, product) => {
             product.items.forEach((item) => {
@@ -207,19 +215,13 @@ export default function CreateInvoice({ client, modules, inventories }) {
     // Submit handler
     const handleSubmit = (e) => {
         e.preventDefault();
-        const payload = {
-            ...data,
-            products: data.products.map((product) => ({
-                ...product,
-                items: product.items.map((item) => ({
-                    ...item,
-                    item_dimensions: item.item_dimensions.map((dim) =>
-                        `${dim.type},${dim.value},${dim.si}`
-                    ),
-                })),
-            })),
-        };
-        post(route("proforma.store"), { data: payload, preserveScroll: true });
+        post(route("proforma.store"), { 
+            data: {
+                ...data,
+                show_all_prices: data.show_all_prices
+            },
+            preserveScroll: true 
+        });
     };
 
     return (
@@ -255,6 +257,21 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                 />
                             </Form.Group>
                         </Col>
+                        <Col md={4}>
+                            <Form.Group>
+                                <Form.Label>Price Visibility</Form.Label>
+                                <div className="d-flex align-items-center">
+                                    <Form.Check
+                                        type="switch"
+                                        id="price-visibility-switch"
+                                        label={data.show_all_prices ? "Showing all prices" : "Hiding all prices"}
+                                        checked={data.show_all_prices}
+                                        onChange={(e) => toggleAllPricesVisibility(e.target.checked)}
+                                        className="me-2"
+                                    />
+                                </div>
+                            </Form.Group>
+                        </Col>
                     </Row>
 
                     <Form.Group className="mb-4">
@@ -272,7 +289,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                     {data.products.map((product, productIndex) => (
                         <Card key={productIndex} className="mb-3 p-3 shadow-sm">
                             <Row className="align-items-center mb-3">
-                                <Col md={3}>
+                                <Col md={6}>
                                     <Form.Group>
                                         <Form.Label>Product Name</Form.Label>
                                         <Form.Control
@@ -282,19 +299,6 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                 updateProduct(productIndex, "product_name", e.target.value)
                                             }
                                             placeholder="Enter product name"
-                                        />
-                                    </Form.Group>
-                                </Col>
-                                <Col md={3}>
-                                    <Form.Group>
-                                        <Form.Label>Check Price Visibility</Form.Label>
-
-                                        <Form.Check
-                                            type="checkbox"
-                                            checked={product.is_price_visible} 
-                                            onChange={(e) =>
-                                                updateProduct(productIndex, "toggle_price", e.target.checked)
-                                            }
                                         />
                                     </Form.Group>
                                 </Col>
@@ -401,7 +405,6 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             </Form.Group>
                                         </Col>
 
-                                        {/* Added Tax field here */}
                                         <Col md={1}>
                                             <Form.Group>
                                                 <Form.Label>Tax (%)</Form.Label>

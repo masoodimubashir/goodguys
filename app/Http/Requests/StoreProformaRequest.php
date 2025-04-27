@@ -26,6 +26,7 @@ class StoreProformaRequest extends FormRequest
                 'client_name' => ['required', 'string'],
                 'client_address' => ['required', 'string'],
                 'service_charge' => ['nullable', 'integer'],
+                'show_all_prices' => ['required', 'boolean'],
                 'tax' => ['nullable', 'integer'],
                 'products' => ['required', 'array', 'min:1'],
                 'products.*.product_name' => ['required', 'string'],

@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('inventories', function (Blueprint $table) {
             $table->id();
-            $table->string('item_name');
-            $table->decimal('selling_price', 10, 2);
-            $table->decimal('buying_price', 10, 2);
-            $table->string('item_type');
-            $table->integer('count');
-            $table->json('item_dimensions');
+            $table->string('item_name')->nullable();
+            $table->decimal('selling_price', 10, 2)->default(0);
+            $table->decimal('buying_price', 10, 2)->default(0);
+            $table->string('item_type')->nullable();
+            $table->integer('count')->default(0);
+            $table->json('item_dimensions')->nullable();
             $table->string('item_sub_type')->nullable();
-            $table->string('description');
+            $table->string('description')->nullable();
             $table->tinyInteger('created_by')->nullable();
             $table->tinyInteger('updated_by')->nullable();
             $table->timestamps();

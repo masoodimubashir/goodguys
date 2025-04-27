@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('invoice_refrence_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('item_name');
             $table->string('description');
             $table->json('additional_description');
@@ -21,6 +21,7 @@ return new class extends Migration
             $table->unsignedBigInteger('price');
             $table->unsignedBigInteger('tax');
             $table->unsignedBigInteger('service_charge');
+            $table->boolean('is_price_visible');
             $table->unsignedTinyInteger('created_by')->nullable();
             $table->unsignedTinyInteger('updated_by')->nullable();
             $table->timestamps();

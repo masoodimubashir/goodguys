@@ -21,11 +21,10 @@ class Proforma extends Model
         'is_price_visible'
     ];
 
-   
 
-    public function module(): BelongsTo{
+
+    public function module(): BelongsTo
+    {
         return $this->belongsTo(Module::class);
     }
-
-    
 }

@@ -1,40 +1,82 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm, Link } from "@inertiajs/react";
 import { Container, Card, Row, Col, Form, Button } from "react-bootstrap";
 
-export default function EditProforma({ proforma_ref, modules, inventories }) {
+export default function EditProforma({ proforma, modules, inventories }) {
 
-  console.log(proforma_ref.client);
-  
 
     const { data, setData, put, processing, errors } = useForm({
-        id: proforma_ref.id,
-        client_id:proforma_ref.client.id,
-        client_name:proforma_ref.client.client_name,
-        client_address:proforma_ref.client.client_address,
-        service_charge:proforma_ref.client?.service_charge?.service_charge ?? 0,
-        products: proforma_ref.products.map(product => ({
-            id: product.id,
-            product_name: product.product_name,
-            items: product.proformas.map(item => ({
-                id: item.id,
-                source: "custom",
-                source_id: null,
-                name: item.item_name,
-                description: item.description,
-                price: item.price,
-                quantity: item.count,
-                tax: item.tax || client.tax,
-                item_dimensions: JSON.parse(item.additional_description || '[]').map(dim => ({
-                    type: dim.type,
-                    value: dim.value,
-                    si: dim.si
-                })),
-            }))
-        })),
+
+        id: proforma.id,
+        client_id: proforma.client.id,
+        client_name: proforma.client.client_name,
+        client_address: proforma.client.client_address,
+        service_charge: proforma.client.service_charge || proforma.client?.service_charge?.service_charge || 0,
+        tax: proforma.client.tax || 0,
+        show_all_prices: true,
+        products: [],
+        
     });
 
-    
+    // Initialize form with existing proforma data
+    useEffect(() => {
+        if (proforma && proforma.products) {
+            const formattedProducts = proforma.products.map(product => ({
+                id: product.id,
+                product_name: product.product_name,
+                items: (product.proformas || []).map(item => ({
+                    id: item.id,
+                    source: item.source || "custom",
+                    source_id: item.source_id || null,
+                    name: item.item_name,
+                    description: item.description || "",
+                    price: item.price || 0,
+                    quantity: item.count || 0,
+                    tax: item.tax || 0,
+                    item_dimensions: parseItemDimensions(item.additional_description),
+                }))
+            }));
+
+            // Check if all prices are visible
+            const allPricesVisible = formattedProducts.every(product => 
+                product.items.every(item => item.is_price_visible)
+            );
+            
+            setData({
+                ...data,
+                products: formattedProducts,
+                show_all_prices: allPricesVisible
+            });        
+        }
+    }, [proforma]);
+
+    // Parse item dimensions from JSON string
+    const parseItemDimensions = (dimensionsJson) => {
+        try {
+            if (!dimensionsJson) return [];
+            const dimensions = JSON.parse(dimensionsJson);
+            return Array.isArray(dimensions) ? dimensions : [];
+        } catch (error) {
+            console.error("Error parsing dimensions:", error);
+            return [];
+        }
+    };
+
+    // Toggle all prices visibility
+    const toggleAllPricesVisibility = (isVisible) => {
+        const newProducts = data.products.map(product => ({
+            ...product,
+            items: product.items.map(item => ({
+                ...item,
+            }))
+        }));
+        
+        setData({
+            ...data,
+            products: newProducts,
+            show_all_prices: isVisible
+        });
+    };
 
     // Add new product
     const addProduct = () => {
@@ -102,17 +144,34 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
         setData("products", newProducts);
     };
 
+    // Toggle price visibility for an individual item
+    const toggleItemPriceVisibility = (productIndex, itemIndex, isVisible) => {
+        const newProducts = [...data.products];
+        setData("products", newProducts);
+        
+        // Update global setting if needed
+        const allVisible = newProducts.every(p => 
+            p.items.every(i => i.is_price_visible)
+        );
+        const allHidden = newProducts.every(p => 
+            p.items.every(i => !i.is_price_visible)
+        );
+        
+        if (allVisible) setData("show_all_prices", true);
+        if (allHidden) setData("show_all_prices", false);
+    };
+
     // Handle source change for item
     const handleSourceChange = (productIndex, itemIndex, source) => {
         const newProducts = [...data.products];
         newProducts[productIndex].items[itemIndex] = {
+            ...newProducts[productIndex].items[itemIndex],
             source,
             source_id: null,
             name: "",
             description: "",
             price: '',
             quantity: '',
-            tax: data.tax,
             item_dimensions: [],
         };
         setData("products", newProducts);
@@ -134,7 +193,7 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                     description: selected.description || "",
                     price: selected.selling_price || 0,
                     quantity: selected.count || 0,
-                    item_dimensions: (selected.item_dimensions || []).map((dim) => {
+                    item_dimensions: (selected.item_dimensions || []).map(dim => {
                         const [type, value, si] = dim.split(",");
                         return { type, value, si };
                     }),
@@ -150,7 +209,7 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                     description: selected.description || "",
                     price: selected.selling_price || 0,
                     quantity: selected.count || 0,
-                    item_dimensions: (selected.fields || []).map((dim) => {
+                    item_dimensions: (selected.fields || []).map(dim => {
                         const [type, value, si] = dim.split(",");
                         return { type, value, si };
                     }),
@@ -171,10 +230,10 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
     // Add dimension to item
     const addDimension = (productIndex, itemIndex) => {
         const newProducts = [...data.products];
-        newProducts[productIndex].items[itemIndex].item_dimensions.push({ 
-            type: "", 
-            value: "", 
-            si: "" 
+        newProducts[productIndex].items[itemIndex].item_dimensions.push({
+            type: "",
+            value: "",
+            si: ""
         });
         setData("products", newProducts);
     };
@@ -187,8 +246,7 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
     };
 
     // Calculate totals
-    const { subtotal, taxAmount, serviceChargeAmount, total } = data.products.reduce(
-        (acc, product) => {
+    const { subtotal, taxAmount, serviceChargeAmount, total } = data.products.reduce((acc, product) => {
             product.items.forEach((item) => {
                 const itemSubtotal = item.quantity * item.price;
                 acc.subtotal += itemSubtotal;
@@ -204,29 +262,32 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
     // Submit handler
     const handleSubmit = (e) => {
         e.preventDefault();
+        
         const payload = {
             ...data,
-            products: data.products.map((product) => ({
+            products: data.products.map(product => ({
                 ...product,
-                items: product.items.map((item) => ({
+                items: product.items.map(item => ({
                     ...item,
-                    item_dimensions: item.item_dimensions.map((dim) =>
-                        `${dim.type},${dim.value},${dim.si}`
-                    ),
+                    item_dimensions: JSON.stringify(item.item_dimensions),
                 })),
             })),
         };
-        put(route("proforma.update", proforma_ref.id), { data: payload, preserveScroll: true });
+
+        put(route("proforma.update", proforma.id), {
+            data: payload,
+            preserveScroll: true
+        });
     };
 
     return (
         <Container className="py-5">
-            <Link href={route("clients.show", [proforma_ref.client.id])} className="btn btn-outline-secondary mb-3">
+            <Link href={route("clients.show", [proforma.client.id])} className="btn btn-outline-secondary mb-3">
                 ← Back
             </Link>
 
             <Card className="p-4 shadow">
-                <h2 className="text-center text-primary mb-4">Edit Proforma</h2>
+                <h2 className="text-center text-primary mb-4">Edit Proforma Invoice</h2>
 
                 <Form onSubmit={handleSubmit}>
                     <Row className="mb-4">
@@ -252,6 +313,21 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                 />
                             </Form.Group>
                         </Col>
+                        <Col md={4}>
+                            <Form.Group>
+                                <Form.Label>Price Visibility</Form.Label>
+                                <div className="d-flex align-items-center">
+                                    <Form.Check
+                                        type="switch"
+                                        id="price-visibility-switch"
+                                        label={data.show_all_prices ? "Showing all prices" : "Hiding all prices"}
+                                        checked={data.show_all_prices}
+                                        onChange={(e) => toggleAllPricesVisibility(e.target.checked)}
+                                        className="me-2"
+                                    />
+                                </div>
+                            </Form.Group>
+                        </Col>
                     </Row>
 
                     <Form.Group className="mb-4">
@@ -275,7 +351,7 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                         <Form.Control
                                             type="text"
                                             value={product.product_name}
-                                            onChange={(e) => 
+                                            onChange={(e) =>
                                                 updateProduct(productIndex, "product_name", e.target.value)
                                             }
                                             placeholder="Enter product name"
@@ -283,16 +359,16 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                     </Form.Group>
                                 </Col>
                                 <Col md={6} className="text-end">
-                                    <Button 
-                                        variant="danger" 
+                                    <Button
+                                        variant="danger"
                                         onClick={() => removeProduct(productIndex)}
                                         size="sm"
                                         className="me-2"
                                     >
                                         Remove Product
                                     </Button>
-                                    <Button 
-                                        variant="success" 
+                                    <Button
+                                        variant="success"
                                         onClick={() => addItem(productIndex)}
                                         size="sm"
                                     >
@@ -310,7 +386,7 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                                 <Form.Label>Source</Form.Label>
                                                 <Form.Select
                                                     value={item.source}
-                                                    onChange={(e) => 
+                                                    onChange={(e) =>
                                                         handleSourceChange(productIndex, itemIndex, e.target.value)
                                                     }
                                                 >
@@ -327,7 +403,7 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                                     <Form.Label>Select Item</Form.Label>
                                                     <Form.Select
                                                         value={item.source_id || ""}
-                                                        onChange={(e) => 
+                                                        onChange={(e) =>
                                                             handleItemSelect(productIndex, itemIndex, e.target.value)
                                                         }
                                                     >
@@ -347,7 +423,7 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                                 <Form.Label>Item Name</Form.Label>
                                                 <Form.Control
                                                     value={item.name}
-                                                    onChange={(e) => 
+                                                    onChange={(e) =>
                                                         updateItem(productIndex, itemIndex, "name", e.target.value)
                                                     }
                                                     disabled={item.source !== "custom"}
@@ -355,14 +431,14 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                             </Form.Group>
                                         </Col>
 
-                                        <Col md={2}>
+                                        <Col md={1}>
                                             <Form.Group>
-                                                <Form.Label>Quantity</Form.Label>
+                                                <Form.Label>Qty</Form.Label>
                                                 <Form.Control
                                                     type="number"
                                                     min="0"
                                                     value={item.quantity}
-                                                    onChange={(e) => 
+                                                    onChange={(e) =>
                                                         updateItem(productIndex, itemIndex, "quantity", parseInt(e.target.value) || '')
                                                     }
                                                     disabled={item.source !== "custom"}
@@ -370,27 +446,29 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                             </Form.Group>
                                         </Col>
 
+                                     
+
                                         <Col md={2}>
                                             <Form.Group>
                                                 <Form.Label>Price</Form.Label>
-                                                <Form.Control
-                                                    type="number"
-                                                    value={item.price}
-                                                    onChange={(e) => 
-                                                        updateItem(productIndex, itemIndex, "price", parseFloat(e.target.value) || 0)
-                                                    }
-                                                    disabled={item.source !== "custom"}
-                                                />
+                                                    <Form.Control
+                                                        type="number"
+                                                        value={item.price}
+                                                        onChange={(e) =>
+                                                            updateItem(productIndex, itemIndex, "price", parseFloat(e.target.value) || 0)
+                                                        }
+                                                        disabled={item.source !== "custom"}
+                                                    />
                                             </Form.Group>
                                         </Col>
 
-                                        <Col md={2}>
+                                        <Col md={1}>
                                             <Form.Group>
                                                 <Form.Label>Tax (%)</Form.Label>
                                                 <Form.Control
                                                     type="number"
                                                     value={item.tax}
-                                                    onChange={(e) => 
+                                                    onChange={(e) =>
                                                         updateItem(productIndex, itemIndex, "tax", parseFloat(e.target.value) || 0)
                                                     }
                                                 />
@@ -401,7 +479,7 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                             <Form.Group>
                                                 <Form.Label>Amount</Form.Label>
                                                 <div className="form-control bg-light">
-                                                    ₹{(item.quantity * item.price).toFixed(2)}
+                                                        {(item.quantity * item.price).toFixed(2)}
                                                 </div>
                                             </Form.Group>
                                         </Col>
@@ -413,7 +491,7 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                                     as="textarea"
                                                     rows={2}
                                                     value={item.description}
-                                                    onChange={(e) => 
+                                                    onChange={(e) =>
                                                         updateItem(productIndex, itemIndex, "description", e.target.value)
                                                     }
                                                     disabled={item.source !== "custom"}
@@ -429,7 +507,7 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                                         <Form.Control
                                                             placeholder="Type"
                                                             value={dim.type}
-                                                            onChange={(e) => 
+                                                            onChange={(e) =>
                                                                 handleDimensionChange(
                                                                     productIndex,
                                                                     itemIndex,
@@ -446,7 +524,7 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                                             placeholder="Value"
                                                             type="number"
                                                             value={dim.value}
-                                                            onChange={(e) => 
+                                                            onChange={(e) =>
                                                                 handleDimensionChange(
                                                                     productIndex,
                                                                     itemIndex,
@@ -462,7 +540,7 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                                         <Form.Control
                                                             placeholder="SI Unit"
                                                             value={dim.si}
-                                                            onChange={(e) => 
+                                                            onChange={(e) =>
                                                                 handleDimensionChange(
                                                                     productIndex,
                                                                     itemIndex,
@@ -476,10 +554,10 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                                     </Col>
                                                     {item.source === "custom" && (
                                                         <Col md={3}>
-                                                            <Button 
-                                                                variant="outline-danger" 
-                                                                size="sm" 
-                                                                onClick={() => 
+                                                            <Button
+                                                                variant="outline-danger"
+                                                                size="sm"
+                                                                onClick={() =>
                                                                     removeDimension(productIndex, itemIndex, dimIndex)
                                                                 }
                                                             >
@@ -490,9 +568,9 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                                 </Row>
                                             ))}
                                             {item.source === "custom" && (
-                                                <Button 
-                                                    variant="outline-primary" 
-                                                    size="sm" 
+                                                <Button
+                                                    variant="outline-primary"
+                                                    size="sm"
                                                     onClick={() => addDimension(productIndex, itemIndex)}
                                                 >
                                                     + Add Dimension
@@ -501,9 +579,9 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
                                         </Col>
 
                                         <Col md={12} className="text-end mt-3">
-                                            <Button 
-                                                variant="danger" 
-                                                onClick={() => removeItem(productIndex, itemIndex)} 
+                                            <Button
+                                                variant="danger"
+                                                onClick={() => removeItem(productIndex, itemIndex)}
                                                 size="sm"
                                             >
                                                 Remove Item
@@ -523,7 +601,7 @@ export default function EditProforma({ proforma_ref, modules, inventories }) {
 
                     <Card className="p-3 shadow-sm mb-4">
                         <Row>
-                            <Col md={8}><h5>Proforma Summary</h5></Col>
+                            <Col md={8}><h5>Invoice Summary</h5></Col>
                             <Col md={4} className="text-end"><h5>Amount (₹)</h5></Col>
                         </Row>
                         <hr />

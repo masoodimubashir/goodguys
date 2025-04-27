@@ -21,7 +21,6 @@ export default function LedgerTab({ client, tableRef, handleEditAccount, handleD
     };
 
     return (
-        <div className="tab-pane fade" id="css-tab-pane" role="tabpanel" aria-labelledby="css-tab" tabIndex="0">
             <div className="app-scroll table-responsive">
                 <table ref={tableRef} className="table table-striped text-start align-middle">
                     <thead>
@@ -143,6 +142,5 @@ export default function LedgerTab({ client, tableRef, handleEditAccount, handleD
                     </tbody>
                 </table>
             </div>
-        </div>
     );
 }

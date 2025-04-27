@@ -49,7 +49,6 @@ class AdminAccountsController extends Controller
             ]));
 
             return redirect()->back()->with('message', 'Account Recorded');
-            
         } catch (Exception $e) {
             Log::error($e->getMessage());
             return redirect()->back()->with('error', 'Failed to record Account');
@@ -74,15 +73,31 @@ class AdminAccountsController extends Controller
     {
         try {
 
-           $account = Account::find($id);
-
+            $account = Account::find($id);
+        
             if (!$account) {
                 throw new Exception('Account record not found', 404);
             }
-
+        
             $profit = ($request->selling_price - $request->buying_price) * $request->count;
+            
+            $descriptionData = $request->description;
+            $descriptionArray = [];
+            
+            if (is_string($descriptionData) && !is_array(json_decode($descriptionData, true))) {
 
-           $account->update([
+                $parts = explode(',', $descriptionData);
+                
+                for ($i = 0; $i < count($parts); $i += 3) {
+                    if (isset($parts[$i]) && isset($parts[$i+1]) && isset($parts[$i+2])) {
+                        $descriptionArray[] = $parts[$i] . "," . $parts[$i+1] . "," . $parts[$i+2];
+                    }
+                }
+            } else {
+                $descriptionArray = is_string($descriptionData) ? json_decode($descriptionData, true) : $descriptionData;
+            }
+        
+            $account->update([
                 'inventory_id' => $request->inventory_id,
                 'item_name' => $request->item_name,
                 'selling_price' => $request->selling_price,
@@ -90,9 +105,9 @@ class AdminAccountsController extends Controller
                 'count' => $request->count,
                 'profit' => $profit,
                 'updated_by' => auth()->id(),
-                'description' => $request->description,
+                'description' => $descriptionArray,
             ]);
-
+        
             return redirect()->back()->with('message', 'Account Updated');
         } catch (NotFoundHttpException $e) {
             return redirect()->back()->with('error', $e->getMessage());
@@ -120,7 +135,6 @@ class AdminAccountsController extends Controller
             $account->delete();
 
             return redirect()->back()->with('message', 'Account Deleted');
-            
         } catch (NotFoundHttpException $e) {
             return redirect()->back()->with('error', 'Account not found');
         } catch (Exception $e) {
