@@ -246,10 +246,10 @@ export default function CreateModule({ fields }) {
                                                 <InputLabel value="Fields" />
                                                 <button
                                                     type="button"
-                                                    className="btn btn-secondary btn-sm"
+                                                    className="btn btn-outline-success"
                                                     onClick={addRow}
                                                 >
-                                                    + Add Field
+                                                    <i class="ti ti-plus"></i>
                                                 </button>
                                             </div>
 
@@ -399,7 +399,7 @@ export default function CreateModule({ fields }) {
                                                                 className="btn btn-danger btn-sm"
                                                                 onClick={() => removeRow(index)}
                                                             >
-                                                                Remove
+                                                               <i class="ti ti-trash"></i>
                                                             </button>
                                                         )}
                                                     </div>

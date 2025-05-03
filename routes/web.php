@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminAccountsController;
+use App\Http\Controllers\Admin\AdminBankAccountController;
 use App\Http\Controllers\Admin\AdminClientProductController;
 use App\Http\Controllers\Admin\AdminClientsController;
 use App\Http\Controllers\Admin\AdminCostIncurredController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\Admin\AdminModuleController;
 use App\Http\Controllers\Admin\AdminProformaController;
 use App\Http\Controllers\Admin\AdminPurchaseListController;
 use App\Http\Controllers\Admin\AdminUsersController;
+use App\Http\Controllers\AdminAdminCompanyProfile;
 use App\Http\Controllers\AdminInvoiceController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -67,6 +69,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     // Route For Cost Incurred
     Route::resource('cost-incurred', AdminCostIncurredController::class);
+
+    // Route For Compnay Profile
+    Route::resource('company-profile', AdminAdminCompanyProfile::class);
+
+    // Route For Bank Account 
+    Route::resource('bank-account', AdminBankAccountController::class);
 
     
 });

@@ -61,26 +61,31 @@ export default function Module({ modules: initialModules }) {
     };
 
     return (
+
+
         <AuthenticatedLayout>
 
 
             <Head title="Modules" />
 
             <div className="row g-4 mt-4">
-                <div className="d-flex justify-content-end align-items-center mb-3 gap-2">
 
-                    
+                <div className="d-flex justify-content-end align-items-center mb-3 gap-2">
 
                     {auth.user.role === "admin" && (
 
                         <>
-                            <Link href={route("module.create")} className="btn btn-primary">
-                                <i className="ti ti-plus me-1"></i> Add Module
-                            </Link>
+                          
+                            <div className="d-flex gap-2">
+                                <Link href={route("module.create")} className="btn btn-primary">
+                                    <i className="ti ti-plus me-1"></i> Add Module
+                                </Link>
 
-                            <Link href={route('field.index')} className="btn btn-primary">
-                                View Fields
-                            </Link>
+                                <Link href={route('field.index')} className="btn btn-primary">
+                                    <i className="ti ti-eye me-1"></i> View Fields
+                                </Link>
+                            </div>
+                        
                         </>
 
                     )}

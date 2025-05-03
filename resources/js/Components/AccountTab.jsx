@@ -36,7 +36,7 @@ export default function AccountTab({ client, accountRef, handleEditAccount, hand
                     </thead>
                     <tbody>
                         {[
-                            ...client.accounts.map(acc => ({ ...acc, type: 'Account' }))].map((entry) => (
+                            ...client.accounts.map(acc => ({ ...acc, type: 'accounts' }))].map((entry) => (
                                 <tr key={`${entry.type}-${entry.id}`} className="align-middle">
                                     <td className="text-start align-middle">
 

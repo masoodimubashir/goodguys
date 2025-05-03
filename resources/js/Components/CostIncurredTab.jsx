@@ -16,7 +16,7 @@ const DataTableComponent = ({ client, tableRef, handleEditAccount, handleDeleteI
                 <tbody>
                     {client.cost_incurreds.map(entry => ({
                         ...entry, 
-                        type: 'CostIncurred'
+                        type: 'cost-incurred'
                     })).map((entry) => (
                         <tr key={`${entry.type}-${entry.id}`} className="align-middle">
                             <td className="text-start align-middle">
@@ -33,7 +33,7 @@ const DataTableComponent = ({ client, tableRef, handleEditAccount, handleDeleteI
 
                             <td className="text-start align-middle">
                                 {entry.selling_price !== null && entry.selling_price !== undefined ? (
-                                    <span>${parseFloat(entry.selling_price).toFixed(2)}</span>
+                                    <span>{parseFloat(entry.selling_price).toFixed(2)}</span>
                                 ) : (
                                     <span className="text-muted">N/A</span>
                                 )}
@@ -41,7 +41,7 @@ const DataTableComponent = ({ client, tableRef, handleEditAccount, handleDeleteI
 
                             <td className="text-start align-middle">
                                 {entry.buying_price !== null && entry.buying_price !== undefined ? (
-                                    <span>${parseFloat(entry.buying_price).toFixed(2)}</span>
+                                    <span>{parseFloat(entry.buying_price).toFixed(2)}</span>
                                 ) : (
                                     <span className="text-muted">N/A</span>
                                 )}

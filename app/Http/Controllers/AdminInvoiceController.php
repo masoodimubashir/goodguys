@@ -262,7 +262,6 @@ class AdminInvoiceController extends Controller
 
         DB::beginTransaction();
 
-        
 
         try {
 
@@ -270,6 +269,10 @@ class AdminInvoiceController extends Controller
                 'products' => fn($query) => $query->with('proformas'),
                 'client' => fn($query) => $query->with('serviceCharge'),
             ])->findOrFail($id);
+
+            $proforma_ref->update([
+                'is_converted_to_invoice' => 1,
+            ]);
 
             // Create new invoice
             $invoice = InvoiceRefrence::create([

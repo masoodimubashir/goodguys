@@ -26,7 +26,7 @@ class StoreClientRequest extends FormRequest
             'client_name'     => ['required', 'string', 'max:100'],
             'client_email'    => ['required', 'string', 'email', 'max:100', 'unique:clients,client_email'],
             'site_name'       => ['nullable', 'string', 'max:100'],
-            'client_address'  => ['required', 'string', 'max:100'],
+            'client_address'  => ['required', 'string', 'max:500'],
             'client_phone'    => ['required', 'string', 'digits:10'],
             'service_charge'  => ['nullable', 'integer', 'min:0', 'max:100'],
         ];

@@ -67,12 +67,28 @@ export default function Field({ fields: initialFields }) {
 
     return (
         <AuthenticatedLayout>
+
             <Head title="Field Management" />
+
+
             <div className="row g-4 mt-4">
                 <div className="d-flex justify-content-between align-items-center">
-                    <Link href={route('module.index')} className="btn btn-sm btn-outline-secondary">
-                        <i className="ti ti-arrow-left me-1"></i> Back
-                    </Link>
+                 
+                    <div className="row m-1">
+                        <div className="col-12">
+                            <ul className="app-line-breadcrumbs mb-3">
+                                <li>
+                                    <Link href={route('module.index')} className="f-s-14 f-w-500">
+                                        <span><i className="iconoir-home-alt"></i></span>
+                                    </Link>
+                                </li>
+                                <li className="active">
+                                    <Link href={route('module.index')} className="f-s-14 f-w-500">Back</Link>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
                     {auth.user.role === 'admin' && (
                         <Link href={route('field.create')} className="btn btn-sm btn-primary">
                             <i className="ti ti-plus me-1"></i> Add Field
@@ -135,6 +151,6 @@ export default function Field({ fields: initialFields }) {
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </AuthenticatedLayout >
     );
 }

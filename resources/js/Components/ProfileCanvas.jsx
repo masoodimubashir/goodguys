@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { router } from '@inertiajs/react'
 
-import { Link } from '@inertiajs/react';
+
+import { Link, router } from '@inertiajs/react';
 import NavLink from './NavLink';
 
 const ProfileCanvas = ({ Logo }) => {
@@ -16,8 +16,6 @@ const ProfileCanvas = ({ Logo }) => {
 
     const logOut = (e) => {
         e.preventDefault()
-        console.log(e);
-        
         router.post(route('logout'));
     }
 
@@ -73,9 +71,9 @@ const ProfileCanvas = ({ Logo }) => {
                         <li>
                             <NavLink
                                 className="f-w-500"
-                                href=""
+                                href={route('company-profile.index')}
                             >
-                                <i className="iconoir-settings pe-1 f-s-20"></i> Settings
+                                <i className="iconoir-settings pe-1 f-s-20"></i> Company Profile
                             </NavLink>
                         </li>
 

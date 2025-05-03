@@ -281,7 +281,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
     };
 
     return (
-        <Container className="py-5">
+        <Container className="py-2 col-lg-6 col-md-10">
             <Link href={route("clients.show", [proforma.client.id])} className="btn btn-outline-secondary mb-3">
                 ← Back
             </Link>
@@ -343,7 +343,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
 
                     {/* Products Section */}
                     {data.products.map((product, productIndex) => (
-                        <Card key={productIndex} className="mb-3 p-3 shadow-sm">
+                        <Card key={productIndex} className="mb-4 p-4 shadow-sm rounded-3 bg-light-subtle">
                             <Row className="align-items-center mb-3">
                                 <Col md={6}>
                                     <Form.Group>
@@ -360,15 +360,15 @@ export default function EditProforma({ proforma, modules, inventories }) {
                                 </Col>
                                 <Col md={6} className="text-end">
                                     <Button
-                                        variant="danger"
+                                        variant="outline-danger"
                                         onClick={() => removeProduct(productIndex)}
                                         size="sm"
                                         className="me-2"
                                     >
-                                        Remove Product
+                                         <i className="ti ti-trash"></i> Remove Product
                                     </Button>
                                     <Button
-                                        variant="success"
+                                        variant="outline-success"
                                         onClick={() => addItem(productIndex)}
                                         size="sm"
                                     >
@@ -379,8 +379,10 @@ export default function EditProforma({ proforma, modules, inventories }) {
 
                             {/* Items for this product */}
                             {product.items.map((item, itemIndex) => (
-                                <Card key={itemIndex} className="mb-3 p-3">
+                                <Card key={itemIndex} className="mb-3  border-0 bg-light-subtle">
                                     <Row className="align-items-end">
+
+
                                         <Col md={2}>
                                             <Form.Group>
                                                 <Form.Label>Source</Form.Label>
@@ -446,8 +448,6 @@ export default function EditProforma({ proforma, modules, inventories }) {
                                             </Form.Group>
                                         </Col>
 
-                                     
-
                                         <Col md={2}>
                                             <Form.Group>
                                                 <Form.Label>Price</Form.Label>
@@ -484,7 +484,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
                                             </Form.Group>
                                         </Col>
 
-                                        <Col md={6} className="mt-3">
+                                        <Col md={12} className="mt-3">
                                             <Form.Group>
                                                 <Form.Label>Description</Form.Label>
                                                 <Form.Control
@@ -500,7 +500,6 @@ export default function EditProforma({ proforma, modules, inventories }) {
                                         </Col>
 
                                         <Col md={6} className="mt-3">
-                                            <Form.Label>Item Dimensions</Form.Label>
                                             {item.item_dimensions.map((dim, dimIndex) => (
                                                 <Row key={dimIndex} className="mb-2">
                                                     <Col md={3}>
@@ -556,12 +555,12 @@ export default function EditProforma({ proforma, modules, inventories }) {
                                                         <Col md={3}>
                                                             <Button
                                                                 variant="outline-danger"
-                                                                size="sm"
+                                                            
                                                                 onClick={() =>
                                                                     removeDimension(productIndex, itemIndex, dimIndex)
                                                                 }
                                                             >
-                                                                Remove
+                                                                 <i className="ti ti-trash"></i>
                                                             </Button>
                                                         </Col>
                                                     )}
@@ -578,13 +577,13 @@ export default function EditProforma({ proforma, modules, inventories }) {
                                             )}
                                         </Col>
 
-                                        <Col md={12} className="text-end mt-3">
+                                        <Col md={6} className="text-end mt-3">
                                             <Button
-                                                variant="danger"
+                                                variant="outline-danger"
                                                 onClick={() => removeItem(productIndex, itemIndex)}
                                                 size="sm"
                                             >
-                                                Remove Item
+                                                 <i className="ti ti-trash"></i> Remove Module
                                             </Button>
                                         </Col>
                                     </Row>
@@ -593,13 +592,13 @@ export default function EditProforma({ proforma, modules, inventories }) {
                         </Card>
                     ))}
 
-                    <div className="d-flex justify-content-between mb-4">
-                        <Button variant="primary" onClick={addProduct}>
-                            + Add New Product
+                    <div className="d-flex justify-content-end mb-4">
+                        <Button variant="primary btn-sm" onClick={addProduct}>
+                            + Add
                         </Button>
                     </div>
 
-                    <Card className="p-3 shadow-sm mb-4">
+                    <Card className="p-3 border rounded-3 mb-4">
                         <Row>
                             <Col md={8}><h5>Invoice Summary</h5></Col>
                             <Col md={4} className="text-end"><h5>Amount (₹)</h5></Col>
@@ -625,8 +624,8 @@ export default function EditProforma({ proforma, modules, inventories }) {
                     </Card>
 
                     <div className="text-end">
-                        <Button type="submit" variant="primary" disabled={processing}>
-                            Update Proforma
+                        <Button type="submit" variant="primary" size="sm" disabled={processing}>
+                            Update
                         </Button>
                     </div>
                 </Form>

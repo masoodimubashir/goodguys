@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('proforma_refrences', function (Blueprint $table) {
             $table->id();
             $table->foreignId('client_id')->constrained('clients')->cascadeOnDelete();
+            $table->boolean('is_converted_to_invoice')->default(false);
             $table->string('proforma_number');
             $table->timestamps();
         });

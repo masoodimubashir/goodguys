@@ -22,6 +22,7 @@ export default function CreateField() {
     return (
         <AuthenticatedLayout>
             <Head title="Create Field" />
+
             <div className="row m-1">
                 <div className="col-12">
                     <ul className="app-line-breadcrumbs mb-3">
@@ -36,6 +37,8 @@ export default function CreateField() {
                     </ul>
                 </div>
             </div>
+
+            
 
             <div className="row">
                 <div className="col-12">

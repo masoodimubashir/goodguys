@@ -76,6 +76,17 @@ class Client extends Model
     {
         return $this->hasMany(CostIncurred::class);
     }
+    
+
+    /**
+     * Get the bankAccount associated with the Client
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function bankAccount(): HasOne
+    {
+        return $this->hasOne(BankAccount::class);
+    }
 
 
     protected function casts(): array

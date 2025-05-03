@@ -8,6 +8,8 @@ use App\Http\Requests\UpdateCostIncurredRequest;
 use App\Models\CostIncurred;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class AdminCostIncurredController extends Controller
@@ -38,6 +40,13 @@ class AdminCostIncurredController extends Controller
             $validatedData = $request->validated();
 
             $validatedData['created_by'] = auth()->user()->id;
+
+             // Handle file upload
+             if ($request->hasFile('bill')) {
+                // Delete old file if needed
+                Storage::disk('public')->delete($purchaseList->bill);
+                $validated['bill'] = $request->file('bill')->store('purchase-lists', 'public');
+            }
 
             CostIncurred::create($validatedData);
 
@@ -84,7 +93,7 @@ class AdminCostIncurredController extends Controller
             $cost_incurred->update($validatedData);
 
             return redirect()->back()->with('message', 'Cost incurred updated successfully');
-            
+
         } catch (NotFoundHttpException $e) {
             return redirect()->back()->with('error', 'Record not found');
         } catch (Exception $e) {
@@ -102,7 +111,8 @@ class AdminCostIncurredController extends Controller
 
             $cost_incurred = CostIncurred::find($id);
 
-            if (!$$cost_incurred) {
+
+            if (!$cost_incurred) {
                 throw new Exception(' record not found', 404);
             }
 
@@ -112,6 +122,7 @@ class AdminCostIncurredController extends Controller
         } catch (NotFoundHttpException $e) {
             return redirect()->back()->with('error', 'Record not found');
         } catch (Exception $e) {
+            Log::error($e->getMessage());
             return redirect()->back()->with('error', 'Failed to delete Record');
         }
     }

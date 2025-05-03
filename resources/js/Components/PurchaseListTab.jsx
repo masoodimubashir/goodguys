@@ -26,7 +26,7 @@ const PurchaseListTab = ({ client, tableRef, handleEditAccount, handleDeleteItem
                 <tbody>
                     {client.purchase_lists.map(entry => ({
                         ...entry, 
-                        type: 'PurchaseList'
+                        type: 'purchase-list'
                     })).map((entry) => {
                         const fileExtension = entry.bill ? getFileExtension(entry.bill) : null;
                         

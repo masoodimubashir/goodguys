@@ -14,22 +14,23 @@ import $ from 'jquery';
 import 'datatables.net';
 import 'datatables.net-responsive';
 
-export default function ShowClient({ client, modules = [], inventoryOptions = [], vendors = [] }) {
-    console.log(client);
-    
+export default function ShowClient({ client, modules = [], inventoryOptions = [], vendors = [], company_profile = null }) {
+
 
     const { delete: destroy } = useForm();
-
     const flash = usePage().props.flash;
 
     // State management
     const [state, setState] = useState({
         showAccountModal: false,
         showPurchaseListModal: false,
+        showCostIncurredModal: false,
         isEditingAccount: false,
         isEditingPurchaseList: false,
+        isEditingCostIncurred: false,
         currentAccountId: null,
         currentPurchaseListId: null,
+        currentCostIncurredId: null,
         isLoading: false
     });
 
@@ -37,9 +38,8 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
     const refs = {
         tableRef: useRef(null),
         accountRef: useRef(null),
-        pdfRef: useRef(null),
         purchaseListRef: useRef(null),
-        CostIncurredRef : useRef(null)
+        costIncurredRef: useRef(null)
     };
 
     // Form handlers
@@ -60,26 +60,46 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         client_id: client.id || '',
         vendor_name: client.client_name,
         purchase_date: new Date().toISOString().split('T')[0],
-        bill: null, // Change from empty string to null for file inputs
+        bill: null,
     });
 
-    // Initialize DataTables
+    const costIncurredForm = useInertiaForm({
+        client_id: client.id,
+        entry_name: '',
+        count: '',
+        selling_price: '',
+        buying_price: '',
+    });
+
     useEffect(() => {
         const initializeDataTables = () => {
-            Object.values(refs).forEach(ref => {
-                if ($.fn.DataTable.isDataTable(ref.current)) {
-                    $(ref.current).DataTable().destroy();
+            // Only initialize DataTables on table elements
+            const tables = [
+                refs.accountRef.current?.querySelector('table'),
+                refs.tableRef.current?.querySelector('table'),
+                refs.purchaseListRef.current?.querySelector('table'),
+                refs.costIncurredRef.current?.querySelector('table')
+            ].filter(Boolean); // Remove null/undefined
+    
+            tables.forEach(table => {
+                if ($.fn.DataTable.isDataTable(table)) {
+                    $(table).DataTable().destroy();
                 }
-                $(ref.current).DataTable({
+                $(table).DataTable({
                     responsive: true,
                     pageLength: 10,
                     lengthMenu: [[10, 20, 40, -1], [10, 20, 40, "All"]]
                 });
             });
         };
-
+    
         initializeDataTables();
-    }, [client.invoices, client.proformas]);
+    
+        // Cleanup function to destroy DataTables when component unmounts
+        return () => {
+            $('.dataTable').DataTable().destroy().clear();
+        };
+    }, [client.invoices, client.proformas, client.accounts, client.purchase_lists, client.cost_incurred]);
 
     // Flash messages
     useEffect(() => {
@@ -89,36 +109,72 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
 
     // Modal handlers
     const openModal = (type, item = null) => {
+        switch (type) {
+            case 'account':
+                setState(prev => ({
+                    ...prev,
+                    showAccountModal: true,
+                    isEditingAccount: !!item,
+                    currentAccountId: item?.id || null
+                }));
+                accountForm.reset();
+                if (item) accountForm.setData(item);
+                break;
 
-        if (type === 'account') {
-            setState(prev => ({
-                ...prev,
-                showAccountModal: true,
-                isEditingAccount: !!item,
-                currentAccountId: item?.id || null
-            }));
-            accountForm.reset();
-            if (item) accountForm.setData(item);
-        } else {
-            setState(prev => ({
-                ...prev,
-                showPurchaseListModal: true,
-                isEditingPurchaseList: !!item,
-                currentPurchaseListId: item?.id || null
-            }));
-            purchaseListForm.reset();
-            if (item) purchaseListForm.setData(item);
+            case 'purchase-list':
+                setState(prev => ({
+                    ...prev,
+                    showPurchaseListModal: true,
+                    isEditingPurchaseList: !!item,
+                    currentPurchaseListId: item?.id || null
+                }));
+                purchaseListForm.reset();
+                if (item) purchaseListForm.setData(item);
+                break;
+
+            case 'cost-incurred':
+                setState(prev => ({
+                    ...prev,
+                    showCostIncurredModal: true,
+                    isEditingCostIncurred: !!item,
+                    currentCostIncurredId: item?.id || null
+                }));
+                costIncurredForm.reset();
+                if (item) costIncurredForm.setData(item);
+                break;
+            default:
+                break;
         }
     };
 
     // Form submission handlers
     const handleSubmit = async (type, e) => {
-        e.preventDefault();
-        const form = type === 'accounts' ? accountForm : purchaseListForm;
-        const isEditing = type === 'accounts' ? state.isEditingAccount : state.isEditingPurchaseList;
-        const id = type === 'accounts' ? state.currentAccountId : state.currentPurchaseListId;
 
-        // Create FormData for file uploads
+        e.preventDefault();
+
+        let form, isEditing, currentId;
+
+        switch (type) {
+            case 'accounts':
+                form = accountForm;
+                isEditing = state.isEditingAccount;
+                currentId = state.currentAccountId;
+                break;
+            case 'purchase-list':
+                form = purchaseListForm;
+                isEditing = state.isEditingPurchaseList;
+                currentId = state.currentPurchaseListId;
+                break;
+            case 'cost-incurred':
+                form = costIncurredForm;
+                isEditing = state.isEditingCostIncurred;
+                currentId = state.currentCostIncurredId;
+                break;
+            default:
+                console.error(`Unknown form type: ${type}`);
+                return;
+        }
+
         const formData = new FormData();
         for (const key in form.data) {
             if (form.data[key] !== null) {
@@ -126,24 +182,27 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
             }
         }
 
+        const pascalType = type.split('-').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join('');
+
         const options = {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset();
                 setState(prev => ({
                     ...prev,
-                    [`show${type.charAt(0).toUpperCase() + type.slice(1)}Modal`]: false,
-                    [`isEditing${type.charAt(0).toUpperCase() + type.slice(1)}`]: false,
-                    [`current${type.charAt(0).toUpperCase() + type.slice(1)}Id`]: null
+                    [`show${pascalType}Modal`]: false,
+                    [`isEditing${pascalType}`]: false,
+                    [`current${pascalType}Id`]: null
                 }));
                 ShowMessage('success', `${type.replace('-', ' ')} ${isEditing ? 'updated' : 'created'} successfully`);
             }
         };
 
-        if (isEditing && id) {
-            // For updates, use POST with _method=PUT
+        if (isEditing && currentId) {
             formData.append('_method', 'PUT');
-            router.post(route(`${type}.update`, id), formData, options);
+            router.post(route(`${type}.update`, currentId), formData, options);
         } else {
             form.post(route(`${type}.store`), formData, options);
         }
@@ -151,35 +210,22 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
 
     // Delete handler
     const handleDelete = (itemId, type) => {
-        const routeMap = {
-            'Invoice': 'invoice.destroy',
-            'Proforma': 'proforma.destroy',
-            'Account': 'accounts.destroy',
-            'PurchaseList': 'purchase-list.destroy'
-        };
-
-        destroy(route(routeMap[type], { id: itemId }), {
+        const url = type + '.' + 'destroy';
+        destroy(route(url, itemId), {
             preserveScroll: true,
             onSuccess: () => {
-                // Check if refs exists before attempting to use it
-                if (refs && typeof refs === 'object') {
-                    Object.values(refs).forEach(ref => {
-                        if (ref && ref.current && $.fn.DataTable.isDataTable(ref.current)) {
-                            $(ref.current).DataTable().destroy();
-                        }
-                    });
-                }
-                ShowMessage('success', flash.message);
-            },
-            onError: () => {
-                ShowMessage('error', flash.error);
+                Object.values(refs).forEach(ref => {
+                    if (ref.current && $.fn.DataTable.isDataTable(ref.current)) {
+                        $(ref.current).DataTable().ajax.reload();
+                    }
+                });
             }
         });
     };
+
     // Inventory/module change handlers
     const handleSourceChange = (type, e) => {
         setState(prev => ({ ...prev, isLoading: true }));
-
         const source = type === 'inventory'
             ? inventoryOptions.find(item => item.id === parseInt(e.target.value))
             : modules.find(mod => mod.id === parseInt(e.target.value));
@@ -195,7 +241,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 description: type === 'inventory' ? source.item_dimensions : source.fields
             });
         }
-
         setState(prev => ({ ...prev, isLoading: false }));
     };
 
@@ -203,14 +248,16 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         <AuthenticatedLayout>
             <Head title={`Client - ${client.client_name}`} />
 
-            {/* Action Buttons */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <div className="d-flex gap-2">
+            {/* Main Content */}
+            <div className="container-fluid py-4">
+                {/* Action Buttons */}
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h2 className="mb-0">Client Details</h2>
                     <div className="dropdown">
                         <button className="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            Create
+                           Create
                         </button>
-                        <ul className="dropdown-menu">
+                        <ul className="dropdown-menu dropdown-menu-end">
                             <li>
                                 <Link href={route('invoice.create', { client_id: client.id })} className="dropdown-item">
                                     <i className="ti ti-file-invoice me-2"></i> Invoice
@@ -222,11 +269,10 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                 </Link>
                             </li>
                             <li>
-                                <Button href={route('cost-incurred.create', { client_id: client.id })} className="dropdown-item">
-                                    <i className="ti ti-file-description me-2"></i> Cost Incurred
-                                </Button>
+                                <Link href={route('bank-account.create', { client_id: client.id })} className="dropdown-item">
+                                    <i className="ti ti-building-bank me-2"></i> Bank Account
+                                </Link>
                             </li>
-                            
                             <li><hr className="dropdown-divider" /></li>
                             <li>
                                 <button className="dropdown-item" onClick={() => openModal('account')}>
@@ -238,74 +284,75 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                     <i className="ti ti-shopping-cart me-2"></i> Purchase List
                                 </button>
                             </li>
+                            <li>
+                                <button className="dropdown-item" onClick={() => openModal('cost-incurred')}>
+                                    <i className="ti ti-cash-banknote me-2"></i> Cost Incurred
+                                </button>
+                            </li>
                         </ul>
                     </div>
                 </div>
-            </div>
 
-            {/* Client Information and Summary */}
-            <div className="row g-4">
-                <ClientInfoCard client={client} />
+                {/* Client Information and Summary */}
+                <div className="row g-4 mb-4">
+                    
+                    <ClientInfoCard client={client} />
 
-                <div className="col-12">
-                    <div className="card shadow-sm h-100">
-                        <div className="card-header bg-light">
-                            <h5 className="card-title mb-2">Financial Summary</h5>
-                        </div>
-                        <div className="card-body">
-                            <div ref={refs.pdfRef}>
-                                <PdfTable client={client} pdfRef={refs.pdfRef} />
+                    {client.bank_account && <BankAccountCard BankProfile={client.bank_account} />}
+                    
+                    <div className="col-12">
+                        <div className="card shadow-sm">
+                            <div className="card-header">
+                                <h5 className="card-title mb-0">PDF Report</h5>
+                            </div>
+                            <div className="card-body">
+                                <div ref={refs.pdfRef}>
+                                    <PdfTable client={client} pdfRef={refs.pdfRef} CompanyProfile={company_profile || {}} />
+                                </div>
                             </div>
                         </div>
                     </div>
+
                 </div>
-            </div>
 
-
-            <div className="col-12">
+                {/* Tabs Section */}
                 <div className="card">
-                    <div className="card-body">
-                        <ul className="nav nav-tabs tab-light-secondary justify-content-around" id="justify-Light"
-                            role="tablist">
-                            <li className="nav-item flex-fill" role="presentation">
-                                <button className="nav-link active w-100" id="justify-home-tab" data-bs-toggle="tab"
-                                    data-bs-target="#justify-home-tab-pane" type="button" role="tab"
-                                    aria-controls="justify-home-tab-pane" aria-selected="true"> <i
-                                        className="ti ti-lifebuoy pe-1 ps-1"></i> Accounts</button>
+                    <div className="card-body p-2">
+                        <ul className="nav nav-tabs tab-light-secondary" role="tablist">
+                            <li className="nav-item" role="presentation">
+                                <button className="nav-link active" data-bs-toggle="tab" data-bs-target="#accounts-tab" type="button" role="tab">
+                                    <i className="ti ti-lifebuoy me-1"></i> Accounts
+                                </button>
                             </li>
-                            <li className="nav-item flex-fill" role="presentation">
-                                <button className="nav-link w-100" id="justify-profile-tab" data-bs-toggle="tab"
-                                    data-bs-target="#justify-profile-tab-pane" type="button" role="tab"
-                                    aria-controls="justify-profile-tab-pane" aria-selected="false"> <i
-                                        className="ti ti-keyboard-show pe-1 ps-1"></i> Ledger </button>
+                            <li className="nav-item" role="presentation">
+                                <button className="nav-link" data-bs-toggle="tab" data-bs-target="#ledger-tab" type="button" role="tab">
+                                    <i className="ti ti-keyboard-show me-1"></i> Ledger
+                                </button>
                             </li>
-                            <li className="nav-item flex-fill" role="presentation">
-                                <button className="nav-link w-100" id="justify-contact-tab" data-bs-toggle="tab"
-                                    data-bs-target="#justify-contact-tab-pane" type="button" role="tab"
-                                    aria-controls="justify-contact-tab-pane" aria-selected="false"><i
-                                        className="ti ti-file-dislike pe-1 ps-1"></i>Purchase List</button>
+                            <li className="nav-item" role="presentation">
+                                <button className="nav-link" data-bs-toggle="tab" data-bs-target="#purchase-list-tab" type="button" role="tab">
+                                    <i className="ti ti-shopping-cart me-1"></i> Purchase List
+                                </button>
                             </li>
-                            <li className="nav-item flex-fill" role="presentation">
-                                <button className="nav-link w-100" id="justify-about-tab" data-bs-toggle="tab"
-                                    data-bs-target="#justify-about-tab-pane" type="button" role="tab"
-                                    aria-controls="justify-about-tab-pane" aria-selected="false"><i
-                                        className="ti ti-ball-basketball pe-1 ps-1"></i>Cost Incurred</button>
+                            <li className="nav-item" role="presentation">
+                                <button className="nav-link" data-bs-toggle="tab" data-bs-target="#cost-incurred-tab" type="button" role="tab">
+                                    <i className="ti ti-cash-banknote me-1"></i> Cost Incurred
+                                </button>
                             </li>
-
                         </ul>
-                        <div className="tab-content" id="justify-LightContent">
-                            <div className="tab-pane fade show active" id="justify-home-tab-pane" role="tabpanel"
-                                aria-labelledby="justify-home-tab" tabIndex="0">
+                        
+                        <div className="tab-content p-3">
+                            <div className="tab-pane fade show active" id="accounts-tab" role="tabpanel">
                                 <AccountTab
                                     client={client}
                                     accountRef={refs.accountRef}
                                     handleEditAccount={(account) => openModal('account', account)}
                                     handleDeleteItem={handleDelete}
                                 />
+                                
                             </div>
 
-                            <div className="tab-pane fade" id="justify-profile-tab-pane" role="tabpanel"
-                                aria-labelledby="justify-profile-tab" tabIndex="0">
+                            <div className="tab-pane fade" id="ledger-tab" role="tabpanel">
                                 <LedgerTab
                                     client={client}
                                     tableRef={refs.tableRef}
@@ -314,8 +361,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                 />
                             </div>
 
-                            <div className="tab-pane fade" id="justify-contact-tab-pane" role="tabpanel"
-                                aria-labelledby="justify-contact-tab" tabIndex="0">
+                            <div className="tab-pane fade" id="purchase-list-tab" role="tabpanel">
                                 <PurchaseListTab
                                     client={client}
                                     tableRef={refs.purchaseListRef}
@@ -324,24 +370,20 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                 />
                             </div>
 
-                            <div className="tab-pane fade" id="justify-about-tab-pane" role="tabpanel"
-                                aria-labelledby="justify-about-tab" tabIndex="0">
+                            <div className="tab-pane fade" id="cost-incurred-tab" role="tabpanel">
                                 <CostIncurredTab
                                     client={client}
-                                    tableRef={refs.CostIncurredRef}
-                                    handleEditAccount={(purchase_list) => openModal('purchase-list', purchase_list)}
+                                    tableRef={refs.costIncurredRef}
+                                    handleEditAccount={(costIncurred) => openModal('cost-incurred', costIncurred)}
                                     handleDeleteItem={handleDelete}
                                 />
                             </div>
-
                         </div>
                     </div>
                 </div>
             </div>
 
-
-
-            {/* Account Modal */}
+            {/* Modals */}
             <AccountModal
                 show={state.showAccountModal}
                 onHide={() => setState(prev => ({ ...prev, showAccountModal: false }))}
@@ -355,7 +397,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 handleSourceChange={handleSourceChange}
             />
 
-            {/* Purchase List Modal */}
             <PurchaseListModal
                 show={state.showPurchaseListModal}
                 onHide={() => setState(prev => ({ ...prev, showPurchaseListModal: false }))}
@@ -365,57 +406,134 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 handleSubmit={(e) => handleSubmit('purchase-list', e)}
                 vendors={vendors}
             />
+
+            <CostIncurredModal
+                show={state.showCostIncurredModal}
+                onHide={() => setState(prev => ({ ...prev, showCostIncurredModal: false }))}
+                form={costIncurredForm}
+                errors={costIncurredForm.errors}
+                isLoading={state.isLoading}
+                isEditing={state.isEditingCostIncurred}
+                handleSubmit={(e) => handleSubmit('cost-incurred', e)}
+            />
         </AuthenticatedLayout>
     );
 }
 
-// Extracted ClientInfoCard component
-const ClientInfoCard = ({ client }) => {
-    const client_type = client?.service_charge ? 'Site Name' : 'Product Name';
+const BankAccountCard = ({ BankProfile }) => {
+
+    const handleDelete = () => {
+        if (confirm('Are you sure you want to delete this Bank Account?')) {
+            router.delete(route('bank-account.destroy', BankProfile.id), {
+                preserveScroll: true,
+            });
+        }
+    };
 
     return (
-        <div className="col-md-4">
+        <div className="col-md-8">
             <div className="card shadow-sm h-100">
-                <div className="card-header bg-light">
-                    <h5 className="card-title mb-2">Client Information</h5>
+                <div className="card-header  d-flex justify-content-between align-items-center">
+                    <h5 className="card-title mb-0">Bank Account</h5>
+                    <div className="d-flex gap-2">
+                        <Link href={route('bank-account.edit', BankProfile.id)} className="btn btn-sm btn-outline-primary">
+                            <i className="ti ti-edit me-1"></i> Edit
+                        </Link>
+                        <button onClick={handleDelete} className="btn btn-sm btn-outline-danger">
+                            <i className="ti ti-trash me-1"></i> Delete
+                        </button>
+                    </div>
                 </div>
                 <div className="card-body">
-                    <div className="mb-3 pb-3 border-bottom">
-                        <div className="d-flex align-items-center mb-3">
-                            <div className="avatar-sm bg-primary-subtle text-primary rounded-circle me-3 d-flex align-items-center justify-content-center">
-                                <i className="ti ti-building-skyscraper fs-4"></i>
-                            </div>
-                            <div>
-                                <h5 className="mb-0">{client.client_name}</h5>
-                                <p className="text-muted mb-0">{client_type}: {client.site_name || 'NA'}</p>
-                            </div>
+                    <div className="d-flex align-items-center mb-3">
+                        <div className="avatar-sm bg-primary-subtle text-primary rounded-circle me-3 d-flex align-items-center justify-content-center">
+                            <i className="ti ti-building-bank fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 className="mb-1">{BankProfile.holder_name}</h5>
+                            <p className="text-muted mb-0">{BankProfile.bank_name}</p>
                         </div>
                     </div>
 
-                    <div className="mb-3">
-                        <h6 className="text-uppercase text-muted fs-12 mb-2">Contact Details</h6>
-                        <ContactDetail icon="ti ti-mail" text={client.client_email} />
-                        <ContactDetail icon="ti ti-phone" text={client.client_phone} />
-                        <ContactDetail icon="ti ti-map-pin" text={client.client_address} />
+                    <div className="row">
+                        <div className="col-md-6">
+                            <div className="mb-3">
+                                <h6 className="text-uppercase text-muted fs-12 mb-2">Account Details</h6>
+                                <p className="mb-1"><span className="text-muted">Account No:</span> {BankProfile.account_number || 'NA'}</p>
+                                <p className="mb-1"><span className="text-muted">Branch Code:</span> {BankProfile.branch_code}</p>
+                                <p className="mb-1"><span className="text-muted">IFSC Code:</span> {BankProfile.ifsc_code}</p>
+                            </div>
+                        </div>
+                        <div className="col-md-6">
+                            <div className="mb-3">
+                                <h6 className="text-uppercase text-muted fs-12 mb-2">Other Details</h6>
+                                <p className="mb-1"><span className="text-muted">Swift Code:</span> {BankProfile.swift_code}</p>
+                                <p className="mb-1"><span className="text-muted">UPI Address:</span> {BankProfile.upi_address}</p>
+                                <p className="mb-1"><span className="text-muted">Tax Number:</span> {BankProfile.tax_number}</p>
+                            </div>
+                        </div>
                     </div>
-
-                    <div className="mb-3">
-                        <h6 className="text-uppercase text-muted fs-12 mb-2">Billing Info</h6>
-                        {client.service_charge?.service_charge !== undefined && (
-                            <InfoRow label="Service Charge:" value={`${client.service_charge.service_charge}%`} />
-                        )}
-                    </div>
-
-                    <Link href={route('clients.edit', client.id)} className="btn btn-outline-primary">
-                        <i className="ti ti-edit me-1"></i> Edit Client
-                    </Link>
                 </div>
             </div>
         </div>
     );
 };
 
-// Extracted AccountModal component
+const ClientInfoCard = ({ client }) => {
+
+    
+    const client_type = client?.service_charge ? 'Site Name' : 'Product Name';
+
+    return (
+        <div className="col-md-4">
+            <div className="card shadow-sm h-100">
+                <div className="card-header  d-flex justify-content-between align-items-center">
+                    <h5 className="card-title mb-0">Client Information</h5>
+                    <Link href={route('clients.edit', client.id)} className="btn btn-sm btn-outline-primary">
+                        <i className="ti ti-edit me-1"></i> Edit
+                    </Link>
+                </div>
+                <div className="card-body">
+                    <div className="d-flex align-items-center mb-3">
+                        <div className="avatar-sm bg-primary-subtle text-primary rounded-circle me-3 d-flex align-items-center justify-content-center">
+                            <i className="ti ti-user-circle fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 className="mb-1">{client.client_name}</h5>
+                            <p className="text-muted mb-0">{client_type}: {client.site_name || 'NA'}</p>
+                        </div>
+                    </div>
+
+                    <div className="mb-3">
+                        <h6 className="text-uppercase text-muted fs-12 mb-2">Contact Details</h6>
+                        <div className="d-flex align-items-center mb-2">
+                            <i className="ti ti-mail text-muted me-2"></i>
+                            <span>{client.client_email || 'N/A'}</span>
+                        </div>
+                        <div className="d-flex align-items-center mb-2">
+                            <i className="ti ti-phone text-muted me-2"></i>
+                            <span>{client.client_phone || 'N/A'}</span>
+                        </div>
+                        <div className="d-flex align-items-center">
+                            <i className="ti ti-map-pin text-muted me-2"></i>
+                            <span>{client.client_address || 'N/A'}</span>
+                        </div>
+                    </div>
+
+                    {client.service_charge?.service_charge !== undefined && (
+                        <div className="alert alert-info py-2">
+                            <div className="d-flex justify-content-between">
+                                <span>Service Charge:</span>
+                                <strong>{client.service_charge.service_charge}%</strong>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const AccountModal = ({
     show,
     onHide,
@@ -428,28 +546,28 @@ const AccountModal = ({
     handleSubmit,
     handleSourceChange
 }) => (
-    <Modal show={show} onHide={onHide} backdrop="static" size="lg">
-        <Modal.Header closeButton>
+    <Modal show={show} onHide={onHide} backdrop="static" size="lg" centered>
+        <Modal.Header closeButton className="border-0 pb-0">
             <Modal.Title>{isEditing ? 'Edit' : 'Create'} Account</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
-            <Modal.Body>
+            <Modal.Body className="pt-0">
                 <div className="row">
                     <div className="col-md-6">
                         <Form.Group className="mb-3">
                             <Form.Label>Type</Form.Label>
-                            <div>
+                            <div className="d-flex gap-3">
                                 <Form.Check
-                                    inline
-                                    label="Inventory"
                                     type="radio"
+                                    id="inventory-type"
+                                    label="Inventory"
                                     checked={form.data.type === 'inventory'}
                                     onChange={() => form.setData('type', 'inventory')}
                                 />
                                 <Form.Check
-                                    inline
-                                    label="Module"
                                     type="radio"
+                                    id="module-type"
+                                    label="Module"
                                     checked={form.data.type === 'module'}
                                     onChange={() => form.setData('type', 'module')}
                                 />
@@ -504,27 +622,32 @@ const AccountModal = ({
                             <Form.Control.Feedback type="invalid">{errors.item_name}</Form.Control.Feedback>
                         </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label>Selling Price</Form.Label>
-                            <Form.Control
-                                type="number"
-                                value={form.data.selling_price}
-                                onChange={(e) => form.setData('selling_price', e.target.value)}
-                                isInvalid={!!errors.selling_price}
-                            />
-                            <Form.Control.Feedback type="invalid">{errors.selling_price}</Form.Control.Feedback>
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>Buying Price</Form.Label>
-                            <Form.Control
-                                type="number"
-                                value={form.data.buying_price}
-                                onChange={(e) => form.setData('buying_price', e.target.value)}
-                                isInvalid={!!errors.buying_price}
-                            />
-                            <Form.Control.Feedback type="invalid">{errors.buying_price}</Form.Control.Feedback>
-                        </Form.Group>
+                        <div className="row">
+                            <div className="col-md-6">
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Selling Price</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        value={form.data.selling_price}
+                                        onChange={(e) => form.setData('selling_price', e.target.value)}
+                                        isInvalid={!!errors.selling_price}
+                                    />
+                                    <Form.Control.Feedback type="invalid">{errors.selling_price}</Form.Control.Feedback>
+                                </Form.Group>
+                            </div>
+                            <div className="col-md-6">
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Buying Price</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        value={form.data.buying_price}
+                                        onChange={(e) => form.setData('buying_price', e.target.value)}
+                                        isInvalid={!!errors.buying_price}
+                                    />
+                                    <Form.Control.Feedback type="invalid">{errors.buying_price}</Form.Control.Feedback>
+                                </Form.Group>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -543,7 +666,7 @@ const AccountModal = ({
                     </div>
                     <div className="col-md-6">
                         <Form.Group className="mb-3">
-                            <Form.Label>Service Charge(%)</Form.Label>
+                            <Form.Label>Service Charge (%)</Form.Label>
                             <Form.Control
                                 type="number"
                                 value={form.data.service_charge}
@@ -567,17 +690,21 @@ const AccountModal = ({
                     <Form.Control.Feedback type="invalid">{errors.description}</Form.Control.Feedback>
                 </Form.Group>
             </Modal.Body>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={onHide}>Close</Button>
-                <Button type="submit" disabled={form.processing}>
-                    {form.processing ? 'Processing...' : (isEditing ? 'Update' : 'Create')}
+            <Modal.Footer className="border-0">
+                <Button variant="light" onClick={onHide}>Cancel</Button>
+                <Button type="submit" variant="primary" disabled={form.processing}>
+                    {form.processing ? (
+                        <>
+                            <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            Processing...
+                        </>
+                    ) : isEditing ? 'Update' : 'Create'}
                 </Button>
             </Modal.Footer>
         </Form>
     </Modal>
 );
 
-// Extracted PurchaseListModal component
 const PurchaseListModal = ({
     show,
     onHide,
@@ -598,12 +725,12 @@ const PurchaseListModal = ({
     };
 
     return (
-        <Modal show={show} onHide={onHide} backdrop="static" size="lg">
-            <Modal.Header closeButton>
+        <Modal show={show} onHide={onHide} backdrop="static" size="lg" centered>
+            <Modal.Header closeButton className="border-0 pb-0">
                 <Modal.Title>{isEditing ? 'Edit' : 'Create'} Purchase List</Modal.Title>
             </Modal.Header>
             <Form onSubmit={handleSubmit} encType='multipart/form-data'>
-                <Modal.Body>
+                <Modal.Body className="pt-0">
                     <div className="row">
                         <div className="col-md-6">
                             <Form.Group className="mb-3">
@@ -646,18 +773,24 @@ const PurchaseListModal = ({
                                     href={previewUrl || form.data.bill_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-primary"
+                                    className="btn btn-sm btn-outline-primary"
                                 >
+                                    <i className="ti ti-file me-1"></i>
                                     {previewUrl ? 'Preview File' : 'View Current File'}
                                 </a>
                             </div>
                         )}
                     </Form.Group>
                 </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={onHide}>Close</Button>
-                    <Button type="submit" disabled={form.processing}>
-                        {form.processing ? 'Processing...' : (isEditing ? 'Update' : 'Create')}
+                <Modal.Footer className="border-0">
+                    <Button variant="light" onClick={onHide}>Cancel</Button>
+                    <Button type="submit" variant="primary" disabled={form.processing}>
+                        {form.processing ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                Processing...
+                            </>
+                        ) : isEditing ? 'Update' : 'Create'}
                     </Button>
                 </Modal.Footer>
             </Form>
@@ -665,17 +798,107 @@ const PurchaseListModal = ({
     );
 };
 
-// Helper components
-const ContactDetail = ({ icon, text }) => (
-    <div className="d-flex mb-2">
-        <i className={`${icon} text-muted me-2 mt-1`}></i>
-        <div><p className="mb-0">{text || 'N/A'}</p></div>
-    </div>
-);
+const CostIncurredModal = ({
+    show,
+    onHide,
+    form,
+    errors,
+    isLoading,
+    isEditing,
+    handleSubmit
+}) => (
+    <Modal show={show} onHide={onHide} backdrop="static" size="lg" centered>
+        <Modal.Header closeButton className="border-0 pb-0">
+            <Modal.Title>{isEditing ? 'Edit' : 'Create'} Cost Incurred</Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleSubmit}>
+            <Modal.Body className="pt-0">
+                <div className="row">
+                    <div className="col-md-6">
+                        <Form.Group className="mb-3">
+                            <Form.Label>Entry Name</Form.Label>
+                            <Form.Control
+                                name="entry_name"
+                                value={form.data.entry_name}
+                                onChange={(e) => form.setData('entry_name', e.target.value)}
+                                isInvalid={!!errors.entry_name}
+                                disabled={isLoading}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {errors.entry_name}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+                    </div>
 
-const InfoRow = ({ label, value }) => (
-    <div className="d-flex justify-content-between mb-2">
-        <span className="text-muted">{label}</span>
-        <span>{value}</span>
-    </div>
+                    <div className="col-md-6">
+                        <Form.Group className="mb-3">
+                            <Form.Label>Count</Form.Label>
+                            <Form.Control
+                                type="number"
+                                name="count"
+                                value={form.data.count}
+                                onChange={(e) => form.setData('count', e.target.value)}
+                                isInvalid={!!errors.count}
+                                disabled={isLoading}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {errors.count}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+                    </div>
+                </div>
+
+                <div className="row">
+                    <div className="col-md-6">
+                        <Form.Group className="mb-3">
+                            <Form.Label>Selling Price</Form.Label>
+                            <Form.Control
+                                type="number"
+                                name="selling_price"
+                                value={form.data.selling_price}
+                                onChange={(e) => form.setData('selling_price', e.target.value)}
+                                isInvalid={!!errors.selling_price}
+                                disabled={isLoading}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {errors.selling_price}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+                    </div>
+
+                    <div className="col-md-6">
+                        <Form.Group className="mb-3">
+                            <Form.Label>Buying Price</Form.Label>
+                            <Form.Control
+                                type="number"
+                                name="buying_price"
+                                value={form.data.buying_price}
+                                onChange={(e) => form.setData('buying_price', e.target.value)}
+                                isInvalid={!!errors.buying_price}
+                                disabled={isLoading}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {errors.buying_price}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+                    </div>
+                </div>
+
+                <input type="hidden" name="client_id" value={form.data.client_id} />
+            </Modal.Body>
+            <Modal.Footer className="border-0">
+                <Button variant="light" onClick={onHide} disabled={isLoading}>
+                    Cancel
+                </Button>
+                <Button type="submit" variant="primary" disabled={isLoading || form.processing}>
+                    {isLoading || form.processing ? (
+                        <>
+                            <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            Processing...
+                        </>
+                    ) : isEditing ? 'Update' : 'Create'}
+                </Button>
+            </Modal.Footer>
+        </Form>
+    </Modal>
 );

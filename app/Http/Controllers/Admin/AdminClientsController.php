@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use App\Models\Client;
+use App\Models\CompanyProfile;
 use App\Models\Inventory;
 use App\Models\Module;
 use App\Models\ServiceCharge;
@@ -67,13 +68,16 @@ class AdminClientsController extends Controller
             'purchaseLists',
             'costIncurreds' ,
             'accounts',
-            'serviceCharge'
+            'serviceCharge',
+            'bankAccount'
         ]);
 
         return Inertia::render('Clients/ShowClient', [
             'client' => $client,
             'modules' => Module::latest()->get(),
             'inventoryOptions' => Inventory::latest()->get(),
+            'company_profile' => CompanyProfile::first()
+
         ]);
     }
 
@@ -116,7 +120,7 @@ class AdminClientsController extends Controller
             $client->update($data);
 
             return redirect()->route('clients.index')->with('message', 'Client Updated');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return redirect()->back()->with('error', 'Failed to update client');
         }
     }

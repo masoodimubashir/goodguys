@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 
 // Color Scheme
 const colors = {
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: colors.textLight,
     lineHeight: 1.4,
-    textAlign: 'right'
+    textAlign: 'left'
   },
   invoiceHeader: {
     flexDirection: 'row',
@@ -82,11 +82,19 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     overflow: 'hidden'
   },
-  productHeader: {
+  productHeader1: {
     backgroundColor: colors.primary,
     padding: 8,
     flexDirection: 'row',
     justifyContent: 'space-between'
+
+  },
+  productHeader2: {
+    backgroundColor: colors.primary,
+    padding: 8,
+    flexDirection: 'row',
+    justifyContent: 'flex-end'
+
   },
   productTitle: {
     color: 'white',
@@ -155,13 +163,35 @@ const styles = StyleSheet.create({
     transform: 'rotate(-45deg)',
     left: 100,
     top: 400
+  },
+  bankImagesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10
+  },
+  bankImageWrapper: {
+    width: '32%',
+    alignItems: 'center'
+  },
+  bankImageLabel: {
+    fontSize: 8,
+    marginBottom: 4
+  },
+  bankImage: {
+    width: 60,
+    height: 60
+  },
+  signatureImage: {
+    width: 60,
+    height: 30
   }
 });
 
-export const InvoicePdf = ({ client, data }) => {
-    
+export const InvoicePdf = ({ client, CompanyProfile, data }) => {
   const invoice = data || {};
   const products = invoice.products || [];
+  const bankAccount = client?.bank_account || null;
+
   let grandSubtotal = 0;
   let grandTotalTax = 0;
   let grandServiceCharge = 0;
@@ -171,8 +201,7 @@ export const InvoicePdf = ({ client, data }) => {
     let productSubtotal = 0;
     let productTax = 0;
     let productServiceCharge = 0;
-    
-    // Check if any items in this product have visible prices
+
     const hasVisiblePrices = invoiceItems.some(item => item.is_price_visible);
 
     const processedItems = invoiceItems.map(item => {
@@ -185,10 +214,9 @@ export const InvoicePdf = ({ client, data }) => {
       const itemServiceCharge = (itemTotal * serviceRate) / 100;
       const is_price_visible = item.is_price_visible;
 
-      // Only add to totals if price is visible
-        productSubtotal += itemTotal;
-        productTax += itemTax;
-        productServiceCharge += itemServiceCharge;
+      productSubtotal += itemTotal;
+      productTax += itemTax;
+      productServiceCharge += itemServiceCharge;
 
       let dimensions = [];
       try {
@@ -211,7 +239,6 @@ export const InvoicePdf = ({ client, data }) => {
       };
     });
 
-    // Add to grand totals
     grandSubtotal += productSubtotal;
     grandTotalTax += productTax;
     grandServiceCharge += productServiceCharge;
@@ -228,12 +255,11 @@ export const InvoicePdf = ({ client, data }) => {
   });
 
   const grandTotal = grandSubtotal + grandTotalTax + grandServiceCharge;
-  
-  // Check if any product has visible prices
   const showPrices = processedProducts.some(product => product.hasVisiblePrices);
 
   return (
     <Document>
+      {/* First Page - Main Invoice Content */}
       <Page size="A4" style={styles.page}>
         {/* Watermark */}
         <Text style={styles.watermark}>Invoice</Text>
@@ -241,12 +267,11 @@ export const InvoicePdf = ({ client, data }) => {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.primary }}>Good Guy's Interiors</Text>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.primary }}>{CompanyProfile.company_name}</Text>
             <Text style={styles.companyInfo}>
-              Badambagh Sopore {"\n"}
-              Baramulla, Srinagar, 193201{"\n"}
-              Tel: (212) 555-1234{"\n"}
-              abc@gmail.com
+              {CompanyProfile.company_address} {"\n"}
+              {CompanyProfile.company_contact_no} {"\n"}
+              {CompanyProfile.company_email}
             </Text>
           </View>
           <View>
@@ -284,7 +309,7 @@ export const InvoicePdf = ({ client, data }) => {
         <View style={styles.section}>
           {processedProducts.map((product, productIndex) => (
             <View style={styles.productSection} key={productIndex}>
-              <View style={styles.productHeader}>
+              <View style={styles.productHeader1}>
                 <Text style={styles.productTitle}>{product.product_name}</Text>
               </View>
               <View style={styles.table}>
@@ -330,14 +355,15 @@ export const InvoicePdf = ({ client, data }) => {
                   </View>
                 ))}
               </View>
-                <View style={styles.productHeader}>
-                  <Text style={styles.productTitle}>Total: ₹{product.productTotal}</Text>
-                </View>
+              <View style={styles.productHeader2}>
+                <Text style={styles.productTitle}>Total: ₹{product.productTotal}</Text>
+              </View>
             </View>
           ))}
         </View>
 
-        {/* Grand Totals - Only shown if any prices are visible */}
+        {/* Grand Totals */}
+        {showPrices && (
           <View style={styles.totals}>
             <View style={styles.totalRow}>
               <Text style={styles.label}>Subtotal:</Text>
@@ -358,12 +384,132 @@ export const InvoicePdf = ({ client, data }) => {
               </Text>
             </View>
           </View>
+        )}
 
-        {/* Footer */}
+        {/* Footer for first page */}
         <View style={styles.footer}>
-          <Text>GreenLeaf Interiors - Registered VAT Number: GB123 4567 89</Text>
-          <Text>Payment Terms: Net 15 Days | Late fee of 1.5% per month on overdue balances</Text>
-          <Text>All prices include VAT where applicable | www.greenleaf.com</Text>
+          <Text>Page 1 of 2</Text>
+        </View>
+      </Page>
+
+      {/* Second Page - Bank Details and Additional Information */}
+      <Page size="A4" style={styles.page}>
+        {/* Header for second page */}
+        <View style={styles.header}>
+          <View>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.primary }}>{CompanyProfile.company_name}</Text>
+            <Text style={styles.companyInfo}>
+              Invoice #: {invoice.invoice_number || '-'}
+            </Text>
+          </View>
+          <View>
+            <Text style={{ fontSize: 24, fontWeight: 'black', color: colors.secondary }}>Bank Details</Text>
+          </View>
+        </View>
+
+        {/* Bank Account Details Section */}
+        {bankAccount && (
+          <View style={[styles.section, { marginBottom: 15, padding: 10, backgroundColor: colors.lightBg, borderRadius: 4 }]}>
+            <Text style={styles.sectionTitle}>Bank Account Details</Text>
+
+            <View style={styles.twoColumn}>
+              <View style={styles.column}>
+                <View style={styles.infoRow}>
+                  <Text style={styles.label}>Bank Name:</Text>
+                  <Text style={styles.value}>{bankAccount.bank_name || '-'}</Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.label}>Account Holder:</Text>
+                  <Text style={styles.value}>{bankAccount.holder_name || '-'}</Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.label}>Account Number:</Text>
+                  <Text style={styles.value}>{bankAccount.account_number || '-'}</Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.label}>IFSC Code:</Text>
+                  <Text style={styles.value}>{bankAccount.ifsc_code || '-'}</Text>
+                </View>
+              </View>
+
+              <View style={styles.column}>
+                <View style={styles.infoRow}>
+                  <Text style={styles.label}>Branch Code:</Text>
+                  <Text style={styles.value}>{bankAccount.branch_code || '-'}</Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.label}>SWIFT Code:</Text>
+                  <Text style={styles.value}>{bankAccount.swift_code || '-'}</Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.label}>UPI Details:</Text>
+                  <Text style={styles.value}>
+                    {bankAccount.upi_number || '-'} {bankAccount.upi_address ? `(${bankAccount.upi_address})` : ''}
+                  </Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.label}>Tax Number:</Text>
+                  <Text style={styles.value}>{bankAccount.tax_number || '-'}</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Images Row */}
+            {(bankAccount.qr_code_image || bankAccount.signiture_image || bankAccount.company_stamp_image) && (
+              <View style={styles.bankImagesContainer}>
+                {bankAccount.qr_code_image && (
+                  <View style={styles.bankImageWrapper}>
+                    <Text style={styles.bankImageLabel}>QR Code</Text>
+                    <Image
+                      src={`/storage/${bankAccount.qr_code_image}`}
+                      style={styles.bankImage}
+                    />
+                  </View>
+                )}
+
+                {bankAccount.signiture_image && (
+                  <View style={styles.bankImageWrapper}>
+                    <Text style={styles.bankImageLabel}>Signature</Text>
+                    <Image
+                      src={`/storage/${bankAccount.signiture_image}`}
+                      style={styles.signatureImage}
+                    />
+                  </View>
+                )}
+
+                {bankAccount.company_stamp_image && (
+                  <View style={styles.bankImageWrapper}>
+                    <Text style={styles.bankImageLabel}>Company Stamp</Text>
+                    <Image
+                      src={`/storage/${bankAccount.company_stamp_image}`}
+                      style={styles.bankImage}
+                    />
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Additional Information Section */}
+        <View style={[styles.section, { marginTop: 20 }]}>
+          <Text style={styles.sectionTitle}>Payment Terms</Text>
+          <Text style={{ fontSize: 10, lineHeight: 1.5 }}>
+            - Payment due within 15 days of invoice date
+            {"\n"}
+            - Late payments are subject to 1.5% monthly interest
+            {"\n"}
+            - Make payments to the bank account details provided above
+            {"\n"}
+            - Include invoice number in all payments
+          </Text>
+        </View>
+
+        {/* Footer for second page */}
+        <View style={styles.footer}>
+          <Text>{CompanyProfile.company_name} - Registered VAT Number: {CompanyProfile.tax_number || 'Not Provided'}</Text>
+          <Text>All prices include VAT where applicable | {CompanyProfile.website || 'No website'}</Text>
+          <Text>Page 2 of 2</Text>
         </View>
       </Page>
     </Document>

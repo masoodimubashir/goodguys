@@ -18,7 +18,7 @@ class Proforma extends Model
         'service_charge',
         'created_by',
         'updated_by',
-        'is_price_visible'
+        'is_price_visible',
     ];
 
 

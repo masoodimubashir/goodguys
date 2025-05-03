@@ -156,7 +156,10 @@ class AdminProformaController extends Controller
 
             $proformaReference = ProformaRefrence::findOrFail($id);
 
-            // Get existing product IDs for this proforma reference
+            $proformaReference->update([
+                'is_converted_to_invoice' => 0
+            ]);
+
             $existingProductIds = Product::where('proforma_refrence_id', $proformaReference->id)->pluck('id')->toArray();
 
             // Track the products we process to determine which ones to delete later

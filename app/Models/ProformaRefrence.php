@@ -11,6 +11,7 @@ class ProformaRefrence extends Model
 
     protected $fillable = [
         'proforma_number',
+        'is_converted_to_invoice',
         'client_id',
     ];
 

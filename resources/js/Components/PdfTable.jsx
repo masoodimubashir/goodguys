@@ -5,10 +5,15 @@ import { InvoicePdf } from '@/Pages/PDF/InvoicePdf';
 import { ProformaPdf } from '@/Pages/PDF/ProformaPdf';
 import Swal from 'sweetalert2';
 
-export default function PdfTable({ client, pdfRef }) {
+export default function PdfTable({ client, pdfRef, CompanyProfile }) {
+
     const [convertingId, setConvertingId] = useState(null);
 
+    console.log(client);
+
+
     const mergedData = useMemo(() => {
+
         const entries = [];
 
         if (client?.invoice_refrences?.length > 0) {
@@ -32,7 +37,8 @@ export default function PdfTable({ client, pdfRef }) {
                     reference_number: reference.proforma_number,
                     created_at: reference.created_at,
                     products: reference.products,
-                    is_price_visible: reference.is_price_visible
+                    is_price_visible: reference.is_price_visible,
+                    is_converted_to_invoice: reference.is_converted_to_invoice
                 });
             });
         }
@@ -54,18 +60,18 @@ export default function PdfTable({ client, pdfRef }) {
 
     const handleConvertToInvoice = (id) => {
         if (confirm('Are you sure you want to convert this proforma to an invoice?')) {
-            setConvertingId(id); // Set the ID of the proforma being converted
+            setConvertingId(id);
             router.post(route('create-invoice-from-pdf', { id: id }), {
                 onSuccess: () => {
                     Swal.fire('Success!', 'Invoice created from proforma successfully.', 'success');
-                    setConvertingId(null); // Reset loading state
+                    setConvertingId(null);
                 },
                 onError: () => {
                     Swal.fire('Error!', 'Failed to create invoice from proforma.', 'error');
-                    setConvertingId(null); // Reset loading state
+                    setConvertingId(null);
                 },
                 onFinish: () => {
-                    setConvertingId(null); // Ensure loading state is reset even if there's an error
+                    setConvertingId(null);
                 }
             });
         }
@@ -78,7 +84,7 @@ export default function PdfTable({ client, pdfRef }) {
                     <tr>
                         <th>Created At</th>
                         <th>Type</th>
-                        <th>Reference #</th>
+                        <th>Reference </th>
                         <th>Actions</th>
                         <th>Options</th>
                     </tr>
@@ -87,6 +93,7 @@ export default function PdfTable({ client, pdfRef }) {
                     {mergedData.length > 0 ? (
                         mergedData.map(entry => (
                             <tr key={`${entry.type}-${entry.id}`} className="align-middle">
+
                                 <td>
                                     <div className="d-flex flex-column">
                                         <span>{new Date(entry.created_at).toLocaleDateString("en-US", {
@@ -99,32 +106,29 @@ export default function PdfTable({ client, pdfRef }) {
                                         </small>
                                     </div>
                                 </td>
+
                                 <td>
                                     <span className={`badge ${entry.type === 'Invoice' ? 'bg-primary' : 'bg-info'} text-white`}>
                                         {entry.type}
                                     </span>
                                 </td>
+
                                 <td>{entry.reference_number}</td>
+
                                 <td>
-                                    {entry.type === 'Proforma' && (
+                                    {entry.type === 'Proforma' && !entry.is_converted_to_invoice && (
                                         <button
                                             onClick={() => handleConvertToInvoice(entry.id)}
                                             className={`btn btn-sm ${convertingId === entry.id ? 'btn-secondary' : 'btn-primary'} position-relative`}
+                                            disabled={convertingId === entry.id}
                                             title="Convert to Invoice"
                                         >
-                                                Create Invoice
-                                        </button>
-                                    )}
-                                    {entry.type === 'Invoice' && (
-                                        <button
-                                            className="btn btn-sm btn-light-subtle border-0 rounded-circle icon-btn"
-                                            disabled
-                                            title="Already an invoice"
-                                        >
-                                            <i className="ti ti-check-circle text-success"></i>
+                                            Convert To Invoice
                                         </button>
                                     )}
                                 </td>
+
+
                                 <td>
                                     <div className="btn-group dropdown-icon-none">
                                         <button
@@ -162,9 +166,9 @@ export default function PdfTable({ client, pdfRef }) {
                                                 <PDFDownloadLink
                                                     document={
                                                         entry.type === 'Invoice' ? (
-                                                            <InvoicePdf client={client} data={entry} />
+                                                            <InvoicePdf client={client} CompanyProfile={CompanyProfile} data={entry} />
                                                         ) : (
-                                                            <ProformaPdf client={client} data={entry} is_price_visible={entry.is_price_visible} />
+                                                            <ProformaPdf client={client} CompanyProfile={CompanyProfile} data={entry} is_price_visible={entry.is_price_visible} />
                                                         )
                                                     }
                                                     fileName={`${entry.type.toLowerCase()}-${entry.id}.pdf`}

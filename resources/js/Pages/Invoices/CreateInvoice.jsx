@@ -3,16 +3,18 @@ import { useForm, Link } from "@inertiajs/react";
 import { Container, Card, Row, Col, Form, Button } from "react-bootstrap";
 
 export default function CreateInvoice({ client, modules, inventories }) {
+
+
     const { data, setData, post, processing, errors } = useForm({
         client_id: client.id,
         client_name: client.client_name,
         client_address: client.client_address,
         service_charge: client?.service_charge?.service_charge ?? 0,
         tax: client.tax || 0,
-        show_all_prices: true, 
+        show_all_prices: true,
         products: [
             {
-                product_name: "",
+                product_name: client.site_name || '',
                 items: [
                     {
                         source: "custom",
@@ -21,7 +23,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                         description: "",
                         price: '',
                         quantity: '',
-                        tax: client.tax || '',
+                        tax: client.tax || 0,
                         item_dimensions: [],
                     },
                 ],
@@ -29,19 +31,20 @@ export default function CreateInvoice({ client, modules, inventories }) {
         ],
     });
 
+    
+
     // Toggle all prices visibility
     const toggleAllPricesVisibility = (isVisible) => {
         setData("show_all_prices", isVisible);
-        
+
         // Update all items to reflect the global setting
         const newProducts = data.products.map(product => ({
             ...product,
             items: product.items.map(item => ({
                 ...item,
-                // We don't need to modify the price value anymore since we're always showing it
             }))
         }));
-        
+
         setData("products", newProducts);
     };
 
@@ -50,7 +53,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
         setData("products", [
             ...data.products,
             {
-                product_name: "",
+                product_name: client.site_name || "",
                 items: [
                     {
                         source: "custom",
@@ -59,7 +62,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                         description: "",
                         price: '',
                         quantity: '',
-                        tax: client.tax || '',
+                        tax: client.tax || 0,
                         item_dimensions: [],
                     },
                 ],
@@ -77,7 +80,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
             description: "",
             price: '',
             quantity: '',
-            tax: client.tax || '',
+            tax: client.tax || 0,
             item_dimensions: [],
         });
         setData("products", newProducts);
@@ -215,29 +218,30 @@ export default function CreateInvoice({ client, modules, inventories }) {
     // Submit handler
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route("invoice.store"), { 
+        post(route("invoice.store"), {
             data: {
                 ...data,
                 show_all_prices: data.show_all_prices
             },
-            preserveScroll: true 
+            preserveScroll: true
         });
     };
 
     return (
-        <Container className="py-5">
-            <Link href={route("clients.show", [client.id])} className="btn btn-outline-secondary mb-3">
-                ← Back
+
+        <Container className="py-2 col-lg-6 col-md-10">
+            <Link href={route("clients.show", [client.id])} className="btn btn-link mb-4 text-decoration-none">
+                ← Back to Client
             </Link>
 
-            <Card className="p-4 shadow">
-                <h2 className="text-center text-primary mb-4">Create Invoice</h2>
+            <Card className="p-4 shadow-sm rounded-4 border-0">
+                <h2 className="text-center text-primary mb-5 fw-bold">Create Invoice</h2>
 
                 <Form onSubmit={handleSubmit}>
-                    <Row className="mb-4">
+                    <Row className="g-4 mb-4">
                         <Col md={4}>
                             <Form.Group>
-                                <Form.Label>Client Name</Form.Label>
+                                <Form.Label className="fw-semibold">Client Name</Form.Label>
                                 <Form.Control
                                     type="text"
                                     value={data.client_name}
@@ -248,7 +252,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                         </Col>
                         <Col md={4}>
                             <Form.Group>
-                                <Form.Label>Service Charge (%)</Form.Label>
+                                <Form.Label className="fw-semibold">Service Charge (%)</Form.Label>
                                 <Form.Control
                                     type="number"
                                     value={data.service_charge}
@@ -259,26 +263,23 @@ export default function CreateInvoice({ client, modules, inventories }) {
                         </Col>
                         <Col md={4}>
                             <Form.Group>
-                                <Form.Label>Price Visibility</Form.Label>
-                                <div className="d-flex align-items-center">
-                                    <Form.Check
-                                        type="switch"
-                                        id="price-visibility-switch"
-                                        label={data.show_all_prices ? "Showing all prices" : "Hiding all prices"}
-                                        checked={data.show_all_prices}
-                                        onChange={(e) => toggleAllPricesVisibility(e.target.checked)}
-                                        className="me-2"
-                                    />
-                                </div>
+                                <Form.Label className="fw-semibold">Price Visibility</Form.Label>
+                                <Form.Check
+                                    type="switch"
+                                    id="price-visibility-switch"
+                                    label={data.show_all_prices ? "Showing all prices" : "Hiding all prices"}
+                                    checked={data.show_all_prices}
+                                    onChange={(e) => toggleAllPricesVisibility(e.target.checked)}
+                                />
                             </Form.Group>
                         </Col>
                     </Row>
 
-                    <Form.Group className="mb-4">
-                        <Form.Label>Client Address</Form.Label>
+                    <Form.Group className="mb-5">
+                        <Form.Label className="fw-semibold">Client Address</Form.Label>
                         <Form.Control
                             as="textarea"
-                            rows={2}
+                            rows={3}
                             value={data.client_address}
                             onChange={(e) => setData("client_address", e.target.value)}
                             isInvalid={!!errors.client_address}
@@ -287,53 +288,49 @@ export default function CreateInvoice({ client, modules, inventories }) {
 
                     {/* Products Section */}
                     {data.products.map((product, productIndex) => (
-                        <Card key={productIndex} className="mb-3 p-3 shadow-sm">
+                        <Card key={productIndex} className="mb-4 p-4 shadow-md rounded-3 bg-light-subtle">
                             <Row className="align-items-center mb-3">
                                 <Col md={6}>
                                     <Form.Group>
-                                        <Form.Label>Product Name</Form.Label>
                                         <Form.Control
                                             type="text"
                                             value={product.product_name}
-                                            onChange={(e) =>
-                                                updateProduct(productIndex, "product_name", e.target.value)
-                                            }
+                                            onChange={(e) => updateProduct(productIndex, "product_name", e.target.value)}
                                             placeholder="Enter product name"
+                                            disabled={client.site_name}
                                         />
                                     </Form.Group>
                                 </Col>
-
                                 <Col md={6} className="text-end">
                                     <Button
-                                        variant="danger"
-                                        onClick={() => removeProduct(productIndex)}
+                                        variant="outline-danger"
                                         size="sm"
+                                        onClick={() => removeProduct(productIndex)}
                                         className="me-2"
                                     >
-                                        Remove Product
+                                        <i className="ti ti-trash"></i> Remove Product
                                     </Button>
                                     <Button
-                                        variant="success"
-                                        onClick={() => addItem(productIndex)}
+                                        variant="outline-success"
                                         size="sm"
+                                        onClick={() => addItem(productIndex)}
                                     >
-                                        + Add Item
+                                        <i className="ti ti-plus"></i> Add Module
                                     </Button>
                                 </Col>
                             </Row>
 
-                            {/* Items for this product */}
+                            {/* Items */}
                             {product.items.map((item, itemIndex) => (
-                                <Card key={itemIndex} className="mb-3 p-3">
-                                    <Row className="align-items-end">
+                                <Card key={itemIndex} className="mb-3  border-0 bg-light-subtle
+                                ">
+                                    <Row className="g-3">
                                         <Col md={2}>
                                             <Form.Group>
                                                 <Form.Label>Source</Form.Label>
                                                 <Form.Select
                                                     value={item.source}
-                                                    onChange={(e) =>
-                                                        handleSourceChange(productIndex, itemIndex, e.target.value)
-                                                    }
+                                                    onChange={(e) => handleSourceChange(productIndex, itemIndex, e.target.value)}
                                                 >
                                                     <option value="custom">Custom</option>
                                                     <option value="inventory">Inventory</option>
@@ -348,9 +345,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                     <Form.Label>Select Item</Form.Label>
                                                     <Form.Select
                                                         value={item.source_id || ""}
-                                                        onChange={(e) =>
-                                                            handleItemSelect(productIndex, itemIndex, e.target.value)
-                                                        }
+                                                        onChange={(e) => handleItemSelect(productIndex, itemIndex, e.target.value)}
                                                     >
                                                         <option value="">Select</option>
                                                         {(item.source === "inventory" ? inventories : modules).map((el) => (
@@ -368,9 +363,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                 <Form.Label>Item Name</Form.Label>
                                                 <Form.Control
                                                     value={item.name}
-                                                    onChange={(e) =>
-                                                        updateItem(productIndex, itemIndex, "name", e.target.value)
-                                                    }
+                                                    onChange={(e) => updateItem(productIndex, itemIndex, "name", e.target.value)}
                                                     disabled={item.source !== "custom"}
                                                 />
                                             </Form.Group>
@@ -380,12 +373,10 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             <Form.Group>
                                                 <Form.Label>Qty</Form.Label>
                                                 <Form.Control
-                                                    type="number"
-                                                    min="0"
+                                                    type="text"
                                                     value={item.quantity}
-                                                    onChange={(e) =>
-                                                        updateItem(productIndex, itemIndex, "quantity", parseInt(e.target.value) || '')
-                                                    }
+                                                    min="0"
+                                                    onChange={(e) => updateItem(productIndex, itemIndex, "quantity", parseInt(e.target.value) || '')}
                                                     disabled={item.source !== "custom"}
                                                 />
                                             </Form.Group>
@@ -395,11 +386,9 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             <Form.Group>
                                                 <Form.Label>Price</Form.Label>
                                                 <Form.Control
-                                                    type="number"
+                                                    type="text"
                                                     value={item.price}
-                                                    onChange={(e) =>
-                                                        updateItem(productIndex, itemIndex, "price", parseFloat(e.target.value) || 0)
-                                                    }
+                                                    onChange={(e) => updateItem(productIndex, itemIndex, "price", parseFloat(e.target.value) || 0)}
                                                     disabled={item.source !== "custom"}
                                                 />
                                             </Form.Group>
@@ -409,11 +398,9 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             <Form.Group>
                                                 <Form.Label>Tax (%)</Form.Label>
                                                 <Form.Control
-                                                    type="number"
+                                                    type="text"
                                                     value={item.tax}
-                                                    onChange={(e) =>
-                                                        updateItem(productIndex, itemIndex, "tax", parseFloat(e.target.value) || 0)
-                                                    }
+                                                    onChange={(e) => updateItem(productIndex, itemIndex, "tax", parseFloat(e.target.value) || 0)}
                                                 />
                                             </Form.Group>
                                         </Col>
@@ -421,44 +408,33 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                         <Col md={2}>
                                             <Form.Group>
                                                 <Form.Label>Amount</Form.Label>
-                                                <div className="form-control bg-light">
+                                                <div className="form-control bg-body-secondary">
                                                     ₹{(item.quantity * item.price).toFixed(2)}
                                                 </div>
                                             </Form.Group>
                                         </Col>
 
-                                        <Col md={6} className="mt-3">
+                                        <Col md={12}>
                                             <Form.Group>
                                                 <Form.Label>Description</Form.Label>
                                                 <Form.Control
                                                     as="textarea"
                                                     rows={2}
                                                     value={item.description}
-                                                    onChange={(e) =>
-                                                        updateItem(productIndex, itemIndex, "description", e.target.value)
-                                                    }
+                                                    onChange={(e) => updateItem(productIndex, itemIndex, "description", e.target.value)}
                                                     disabled={item.source !== "custom"}
                                                 />
                                             </Form.Group>
                                         </Col>
 
-                                        <Col md={6} className="mt-3">
-                                            <Form.Label>Item Dimensions</Form.Label>
+                                        <Col md={6}>
                                             {item.item_dimensions.map((dim, dimIndex) => (
-                                                <Row key={dimIndex} className="mb-2">
+                                                <Row key={dimIndex} className="g-2 mb-2">
                                                     <Col md={3}>
                                                         <Form.Control
                                                             placeholder="Type"
                                                             value={dim.type}
-                                                            onChange={(e) =>
-                                                                handleDimensionChange(
-                                                                    productIndex,
-                                                                    itemIndex,
-                                                                    dimIndex,
-                                                                    "type",
-                                                                    e.target.value
-                                                                )
-                                                            }
+                                                            onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "type", e.target.value)}
                                                             disabled={item.source !== "custom"}
                                                         />
                                                     </Col>
@@ -467,15 +443,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                             placeholder="Value"
                                                             type="number"
                                                             value={dim.value}
-                                                            onChange={(e) =>
-                                                                handleDimensionChange(
-                                                                    productIndex,
-                                                                    itemIndex,
-                                                                    dimIndex,
-                                                                    "value",
-                                                                    e.target.value
-                                                                )
-                                                            }
+                                                            onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "value", e.target.value)}
                                                             disabled={item.source !== "custom"}
                                                         />
                                                     </Col>
@@ -483,28 +451,18 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                         <Form.Control
                                                             placeholder="SI Unit"
                                                             value={dim.si}
-                                                            onChange={(e) =>
-                                                                handleDimensionChange(
-                                                                    productIndex,
-                                                                    itemIndex,
-                                                                    dimIndex,
-                                                                    "si",
-                                                                    e.target.value
-                                                                )
-                                                            }
+                                                            onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "si", e.target.value)}
                                                             disabled={item.source !== "custom"}
                                                         />
                                                     </Col>
                                                     {item.source === "custom" && (
-                                                        <Col md={3}>
+                                                        <Col md="3">
                                                             <Button
                                                                 variant="outline-danger"
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    removeDimension(productIndex, itemIndex, dimIndex)
-                                                                }
+                                                                onClick={() => removeDimension(productIndex, itemIndex, dimIndex)}
                                                             >
-                                                                Remove
+                                                                <i className="ti ti-trash"></i>
+
                                                             </Button>
                                                         </Col>
                                                     )}
@@ -521,13 +479,13 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             )}
                                         </Col>
 
-                                        <Col md={12} className="text-end mt-3">
+                                        <Col md={6} className="text-end mt-3">
                                             <Button
-                                                variant="danger"
-                                                onClick={() => removeItem(productIndex, itemIndex)}
+                                                variant="outline-danger"
                                                 size="sm"
+                                                onClick={() => removeItem(productIndex, itemIndex)}
                                             >
-                                                Remove Item
+                                                <i className="ti ti-trash"></i> Remove Module
                                             </Button>
                                         </Col>
                                     </Row>
@@ -536,44 +494,42 @@ export default function CreateInvoice({ client, modules, inventories }) {
                         </Card>
                     ))}
 
-                    <div className="d-flex justify-content-between mb-4">
-                        <Button variant="primary" onClick={addProduct}>
-                            + Add New Product
+                    <div className="d-flex justify-content-end mb-5">
+                        <Button variant="primary btn-sm" onClick={addProduct}>
+                            + Add
                         </Button>
                     </div>
 
-                    <Card className="p-3 shadow-sm mb-4">
-                        <Row>
-                            <Col md={8}><h5>Invoice Summary</h5></Col>
-                            <Col md={4} className="text-end"><h5>Amount (₹)</h5></Col>
+                    {/* Invoice Summary */}
+                    <Card className="p-3 border  rounded-3 ">
+                        <h5 className="fw-bold mb-4">Invoice Summary</h5>
+                        <Row className="mb-2">
+                            <Col>Subtotal</Col>
+                            <Col className="text-end">₹{subtotal.toFixed(2)}</Col>
+                        </Row>
+                        <Row className="mb-2">
+                            <Col>Total Tax</Col>
+                            <Col className="text-end">₹{taxAmount.toFixed(2)}</Col>
+                        </Row>
+                        <Row className="mb-2">
+                            <Col>Service Charge ({data.service_charge}%)</Col>
+                            <Col className="text-end">₹{serviceChargeAmount.toFixed(2)}</Col>
                         </Row>
                         <hr />
-                        <Row className="mb-2">
-                            <Col md={8}>Subtotal</Col>
-                            <Col md={4} className="text-end">₹{subtotal.toFixed(2)}</Col>
-                        </Row>
-                        <Row className="mb-2">
-                            <Col md={8}>Total Tax</Col>
-                            <Col md={4} className="text-end">₹{taxAmount.toFixed(2)}</Col>
-                        </Row>
-                        <Row className="mb-2">
-                            <Col md={8}>Service Charge ({data.service_charge}%)</Col>
-                            <Col md={4} className="text-end">₹{serviceChargeAmount.toFixed(2)}</Col>
-                        </Row>
-                        <hr />
-                        <Row>
-                            <Col md={8}><h5>Total</h5></Col>
-                            <Col md={4} className="text-end"><h5>₹{total.toFixed(2)}</h5></Col>
+                        <Row className="fw-bold">
+                            <Col>Total</Col>
+                            <Col className="text-end">₹{total.toFixed(2)}</Col>
                         </Row>
                     </Card>
 
                     <div className="text-end">
-                        <Button type="submit" variant="primary" disabled={processing}>
+                        <Button type="submit" variant="success" size="lg" disabled={processing}>
                             Create Invoice
                         </Button>
                     </div>
                 </Form>
             </Card>
         </Container>
+
     );
 }

@@ -34,7 +34,7 @@ class UpdateClientRequest extends FormRequest
                 'max:100',
                 Rule::unique('clients', 'client_email')->ignore($this->route('client')),
             ],
-            'client_address' => ['required', 'string', 'max:100'],
+            'client_address' => ['required', 'string', 'max:500'],
             'client_phone' => ['required', 'string', 'digits:10'],
             'service_charge' => ['nullable', 'numeric', 'min:0'],
         ];

@@ -68,7 +68,7 @@ export default function User({ users: initialUsers }) {
 
                     {auth.user.role === 'admin' && (
                         <Link href={route('register')} className="btn btn-primary me-2">
-                            Add User
+                            <i className="ti ti-plus me-1"></i> Add User
                         </Link>
                     )}
                     

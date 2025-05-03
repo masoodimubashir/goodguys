@@ -163,7 +163,9 @@ export default function CreateInventory() {
                                     {/* Item Dimensions */}
                                     <div className="col-12">
                                         <div className="mb-4">
+                                            
                                             <InputLabel value="Item Dimensions (Max 3)" />
+
                                             <InputError message={errors.item_dimensions} />
 
                                             <div className="list-group rounded">
@@ -187,7 +189,7 @@ export default function CreateInventory() {
                                                             </div>
 
                                                             {/* Value */}
-                                                            <div className="col-md-3 mb-2">
+                                                            <div className="col-md-4 mb-2">
                                                                 <div className="input-group">
                                                                     <span className="input-group-text">🔢</span>
                                                                     <TextInput
@@ -220,7 +222,7 @@ export default function CreateInventory() {
                                                             </div>
 
                                                             {/* Add / Remove */}
-                                                            <div className="col-md-2 text-md-end text-start mt-1">
+                                                            <div className="col-md-1 text-md-end text-start mt-1">
                                                                 {index === 0 && data.item_dimensions.length < 3 ? (
                                                                     <button
                                                                         type="button"
@@ -228,16 +230,16 @@ export default function CreateInventory() {
                                                                         onClick={handleAddRow}
                                                                         title="Add More"
                                                                     >
-                                                                        <i className="fa fa-plus me-1"></i> Add
+                                                                        <i class="ti ti-plus"></i>
                                                                     </button>
                                                                 ) : (
                                                                     <button
                                                                         type="button"
-                                                                        className="btn btn-outline-danger w-100"
+                                                                        className="btn btn-sm btn-outline-danger w-100"
                                                                         onClick={() => handleRemoveRow(index)}
                                                                         title="Remove"
                                                                     >
-                                                                        <i className="fa fa-trash me-1"></i> Remove
+                                                                        <i className="ti ti-trash"></i> 
                                                                     </button>
                                                                 )}
                                                             </div>
