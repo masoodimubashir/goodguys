@@ -21,7 +21,7 @@ class Invoice extends Model
         'is_price_visible',
         'product_id',
 
-    ];
+    ]; 
 
     protected $casts = [
         'count' => 'integer',
@@ -32,10 +32,10 @@ class Invoice extends Model
     ];
 
 
-
-
     public function module()
     {
         return $this->belongsTo(Module::class);
     }
+
+
 }

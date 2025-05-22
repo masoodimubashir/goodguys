@@ -25,7 +25,9 @@ class UpdatePurchaseListRequest extends FormRequest
             'client_id' => 'required|exists:clients,id',
             'vendor_name' => 'required|string|max:255',
             'purchase_date' => 'required|date',
-            'bill' => 'required|file|mimes:jpeg,png,pdf|max:2048'
+            'bill' => 'required|file|mimes:jpeg,png,pdf|max:2048',
+            'bill_total' => 'required|integer|min:0',
+            'bill_description' => 'required|string|max:1000',
         ];
     }
 }

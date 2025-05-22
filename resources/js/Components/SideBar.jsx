@@ -6,7 +6,11 @@ import NavLink from './NavLink';
 
 export const SideBar = () => {
 
-    const { url } = usePage();
+    const { url, props } = usePage();
+
+    const user = props.auth.user;
+
+    
 
     return (
         <>
@@ -37,12 +41,17 @@ export const SideBar = () => {
                         </li>
 
 
-                        <li>
-                            <NavLink active={url === '/users' ? true : false} href='/users'>
-                                <i className="iconoir-user"></i>
-                                Users
-                            </NavLink>
-                        </li>
+
+
+                        {
+                            user.role === 'admin' &&
+                            <li>
+                                <NavLink active={url === '/users' ? true : false} href='/users'>
+                                    <i className="iconoir-user"></i>
+                                    Users
+                                </NavLink>
+                            </li>
+                        }
 
                         <li>
                             <NavLink active={url === '/clients' ? true : false} href='/clients'>

@@ -80,7 +80,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 refs.purchaseListRef.current?.querySelector('table'),
                 refs.costIncurredRef.current?.querySelector('table')
             ].filter(Boolean); // Remove null/undefined
-    
+
             tables.forEach(table => {
                 if ($.fn.DataTable.isDataTable(table)) {
                     $(table).DataTable().destroy();
@@ -92,9 +92,9 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 });
             });
         };
-    
+
         initializeDataTables();
-    
+
         // Cleanup function to destroy DataTables when component unmounts
         return () => {
             $('.dataTable').DataTable().destroy().clear();
@@ -255,7 +255,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                     <h2 className="mb-0">Client Details</h2>
                     <div className="dropdown">
                         <button className="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                           Create
+                            Create
                         </button>
                         <ul className="dropdown-menu dropdown-menu-end">
                             <li>
@@ -295,11 +295,11 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
 
                 {/* Client Information and Summary */}
                 <div className="row g-4 mb-4">
-                    
+
                     <ClientInfoCard client={client} />
 
                     {client.bank_account && <BankAccountCard BankProfile={client.bank_account} />}
-                    
+
                     <div className="col-12">
                         <div className="card shadow-sm">
                             <div className="card-header">
@@ -340,7 +340,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                 </button>
                             </li>
                         </ul>
-                        
+
                         <div className="tab-content p-3">
                             <div className="tab-pane fade show active" id="accounts-tab" role="tabpanel">
                                 <AccountTab
@@ -349,7 +349,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                     handleEditAccount={(account) => openModal('account', account)}
                                     handleDeleteItem={handleDelete}
                                 />
-                                
+
                             </div>
 
                             <div className="tab-pane fade" id="ledger-tab" role="tabpanel">
@@ -481,7 +481,7 @@ const BankAccountCard = ({ BankProfile }) => {
 
 const ClientInfoCard = ({ client }) => {
 
-    
+
     const client_type = client?.service_charge ? 'Site Name' : 'Product Name';
 
     return (

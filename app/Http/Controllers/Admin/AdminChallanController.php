@@ -3,29 +3,29 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use Exception;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class AdminUsersController extends Controller
+class AdminChallanController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return Inertia::render('Users/User', [
-            'users' => User::orderBy('name')->get(),
-        ]);
+        //
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        //
+
+        dd($request->client_id);
+        return Inertia::render("Challan/CreateChallan", [
+
+        ]);
     }
 
     /**
@@ -65,15 +65,6 @@ class AdminUsersController extends Controller
      */
     public function destroy(string $id)
     {
-        try {
-
-            $user = User::findOrFail($id);
-
-            $user->delete();
-
-            return redirect()->route('users.index')->with('message', 'User Deleted');
-        } catch (Exception $e) {
-            return redirect()->route('users.index')->with('error', 'Failed to delete user');
-        }
+        //
     }
 }

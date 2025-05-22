@@ -7,9 +7,10 @@ use App\Http\Requests\StorePurchaseListRequest;
 use App\Http\Requests\UpdatePurchaseListRequest;
 use App\Models\PurchaseList;
 use Exception;
-use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class AdminPurchaseListController extends Controller
 {
@@ -57,8 +58,19 @@ class AdminPurchaseListController extends Controller
      */
     public function show(string $id)
     {
-        //
+        try {
+            $purchaseList = PurchaseList::with(['purchasedProducts', 'returnLists'])->findOrFail($id);
+
+            return Inertia::render('PurchasedProduct/PurchasedProduct', [
+                'purchaseList' => $purchaseList,
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return redirect()->back()->with('error', 'Purchase list not found');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'Something went wrong');
+        }
     }
+
 
     /**
      * Show the form for editing the specified resource.

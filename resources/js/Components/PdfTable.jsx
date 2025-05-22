@@ -9,9 +9,6 @@ export default function PdfTable({ client, pdfRef, CompanyProfile }) {
 
     const [convertingId, setConvertingId] = useState(null);
 
-    console.log(client);
-
-
     const mergedData = useMemo(() => {
 
         const entries = [];

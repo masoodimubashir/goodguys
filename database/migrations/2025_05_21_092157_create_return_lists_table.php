@@ -11,20 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('purchase_lists', function (Blueprint $table) {
-            
+        Schema::create('return_lists', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
+            $table->foreignId('purchase_list_id')->constrained('purchase_lists')->onDelete('cascade');
             $table->string('vendor_name');
-            $table->date('purchase_date');
+            $table->date('return_date');
             $table->string('bill');
             $table->decimal('bill_total');
             $table->text('bill_description');
             $table->tinyInteger('created_by')->nullable();
-            $table->tinyInteger('updated_by')->nullable();
+            $table->tinyInteger('updated_by')->nullable();            
             $table->timestamps();
-            
         });
+
     }
 
     /**
@@ -32,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('purchase_lists');
+        Schema::dropIfExists('return_lists');
     }
 };

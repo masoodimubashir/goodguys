@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminAccountsController;
 use App\Http\Controllers\Admin\AdminBankAccountController;
+use App\Http\Controllers\Admin\AdminChallanController;
 use App\Http\Controllers\Admin\AdminClientProductController;
 use App\Http\Controllers\Admin\AdminClientsController;
 use App\Http\Controllers\Admin\AdminCostIncurredController;
@@ -9,7 +10,9 @@ use App\Http\Controllers\Admin\AdminFieldController;
 use App\Http\Controllers\Admin\AdminInventoryController;
 use App\Http\Controllers\Admin\AdminModuleController;
 use App\Http\Controllers\Admin\AdminProformaController;
+use App\Http\Controllers\Admin\AdminPurchasedProductController;
 use App\Http\Controllers\Admin\AdminPurchaseListController;
+use App\Http\Controllers\Admin\AdminReturnListController;
 use App\Http\Controllers\Admin\AdminUsersController;
 use App\Http\Controllers\AdminAdminCompanyProfile;
 use App\Http\Controllers\AdminInvoiceController;
@@ -25,7 +28,7 @@ Route::get('/', function () {
 });
 
 
-Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
 
 
     // Route For Viewing Dashbaord
@@ -61,8 +64,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     // Route For Invoice
     Route::resource('invoice', AdminInvoiceController::class);
-    Route::post('create-invoive-from-pdf/{id}', [AdminInvoiceController::class, 'createInvoiceFromPdf'])
-        ->name('create-invoice-from-pdf');
+    Route::post('create-invoive-from-pdf/{id}', [AdminInvoiceController::class, 'createInvoiceFromPdf'])->name('create-invoice-from-pdf');
 
     // Route For Purchase List
     Route::resource('purchase-list', AdminPurchaseListController::class);
@@ -75,6 +77,15 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     // Route For Bank Account 
     Route::resource('bank-account', AdminBankAccountController::class);
+
+    // Route For return List
+    Route::resource('return-list', AdminReturnListController::class);
+
+    // Route For Purchased Product
+    Route::resource('purchased-product', AdminPurchasedProductController::class);
+
+    // Route For Challan
+    Route::resource('/challan', AdminChallanController::class);
 
     
 });

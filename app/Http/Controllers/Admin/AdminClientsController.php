@@ -12,7 +12,6 @@ use App\Models\Module;
 use App\Models\ServiceCharge;
 use Exception;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class AdminClientsController extends Controller
@@ -63,28 +62,44 @@ class AdminClientsController extends Controller
     {
 
         $client->load([
-            'invoiceRefrences' => fn($query) => $query->with(['products' => fn($query) => $query->with('invoices'),]),
-            'proformaRefrences' => fn($query) => $query->with(['products' => fn($query) => $query->with('proformas'),]),
-            'purchaseLists',
-            'costIncurreds' ,
+            'invoiceRefrences' => fn($query) => $query->with([
+                'products' => fn($query) => $query->with('invoices'),
+            ]),
+            'proformaRefrences' => fn($query) => $query->with([
+                'products' => fn($query) => $query->with('proformas'),
+            ]),
+            'purchaseLists' => fn($query) => $query->with(['returnLists']),
+            'costIncurreds',
             'accounts',
             'serviceCharge',
             'bankAccount'
         ]);
 
-        return Inertia::render('Clients/ShowClient', [
-            'client' => $client,
-            'modules' => Module::latest()->get(),
-            'inventoryOptions' => Inventory::latest()->get(),
-            'company_profile' => CompanyProfile::first()
 
-        ]);
+
+        if ($client->client_type === 'Service Client') {
+            return Inertia::render('Clients/ShowServiceClient', [
+                'client' => $client,
+                'modules' => Module::latest()->get(),
+                'inventoryOptions' => Inventory::latest()->get(),
+                'company_profile' => CompanyProfile::first()
+
+            ]);
+        } else {
+            return Inertia::render('Clients/ShowProductClient', [
+                'client' => $client,
+                'modules' => Module::latest()->get(),
+                'inventoryOptions' => Inventory::latest()->get(),
+                'company_profile' => CompanyProfile::first()
+
+            ]);
+        }
     }
 
     public function edit(Client $client)
     {
 
-        
+
         return Inertia::render('Clients/EditClient', [
             'client' => $client->load('serviceCharge'),
         ]);

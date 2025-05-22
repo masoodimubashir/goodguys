@@ -8,6 +8,7 @@ import 'datatables.net-responsive';
 
 export default function Client({ clients: initialClients }) {
     
+    
 
     const [clients, setClients] = useState(initialClients);
     const tableHead = [
@@ -17,6 +18,8 @@ export default function Client({ clients: initialClients }) {
     const tableRef = useRef(null);
     const { flash, auth } = usePage().props;
     const { delete: destroy } = useForm();
+
+    
 
 
     useEffect(() => {
@@ -114,7 +117,6 @@ export default function Client({ clients: initialClients }) {
                                                     <td>{client.service_charge?.service_charge || 0}</td>
                                                     
                                                     
-                                                    {auth.user.role === 'admin' && (
                                                         <td>
                                                             <div className="btn-group dropdown-icon-none">
                                                                 <button className="border-0 icon-btn dropdown-toggle active"
@@ -136,7 +138,6 @@ export default function Client({ clients: initialClients }) {
                                                                 </ul>
                                                             </div>
                                                         </td>
-                                                    )}
                                                 </tr>
                                             ))
                                         ) : (
