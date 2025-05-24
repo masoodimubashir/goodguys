@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchaseList extends Model
@@ -21,19 +22,8 @@ class PurchaseList extends Model
 
 
     protected $casts = [
-        'purchase_date' => 'date',
         'bill_total' => 'integer',
     ];
-
-    /**
-     * Get all of the returnLists for the PurchaseList
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function returnLists(): HasMany
-    {
-        return $this->hasMany(ReturnList::class);
-    }
 
     /**
      * Get all of the  for the PurchaseList
@@ -55,6 +45,18 @@ class PurchaseList extends Model
     {
         return $this->hasMany(ChallanRefrence::class);
     }
+
+
+    /**
+     * Get the client that owns the PurchaseList
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
+    }
+  
 
     
 }

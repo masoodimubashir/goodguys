@@ -22,12 +22,13 @@ class UpdateReturnListrequest extends FormRequest
     public function rules(): array
     {
         return [
-            'purchase_list_id' => 'required|exists:purchase_lists,id',
+            'purchased_product_id' => 'required|exists:purchased_products,id',
             'vendor_name' => 'required|string|max:255',
             'return_date' => 'required|date',
-            'bill' => 'required|file|mimes:jpeg,png,pdf|max:2048',
+            'unit_count' => 'required|integer|min:1',
             'bill_total' => 'required|integer|min:0',
             'bill_description' => 'required|string|max:1000',
         ];
+
     }
 }

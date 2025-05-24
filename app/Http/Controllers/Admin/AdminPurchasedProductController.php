@@ -34,6 +34,7 @@ class AdminPurchasedProductController extends Controller
 
         try {
 
+
             PurchasedProduct::create([
                 'purchase_list_id' => $request->purchase_list_id,
                 'product_name' => $request->product_name,
@@ -77,12 +78,14 @@ class AdminPurchasedProductController extends Controller
                 'product_name' => 'required|string',
                 'price' => 'required|numeric',
                 'unit_count' => 'required|integer',
+                'description'=> 'required|string',
             ]);
 
             $purchasedProduct->update([
                 'product_name' => $request->product_name,
                 'price' => $request->price,
                 'unit_count' => $request->unit_count,
+                'description' => $request->description,
                 'updated_by' => auth()->id(),
             ]);
 

@@ -8,18 +8,18 @@ class ReturnList extends Model
 {
 
     protected $fillable = [
-        'purchase_list_id',
+        'purchased_product_id',
         'vendor_name',
         'return_date',
-        'bill',
         'bill_total',
+        'unit_count',
         'bill_description',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
-        'return_date' => 'date',
         'bill_total' => 'integer',
+        'unit_count' => 'integer',
     ];
 }

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->boolean('is_price_visible');
             $table->integer('price')->default(0);
             $table->integer('unit_count')->default(0);
-            $table->integer('description');
+            $table->longText('description');
             $table->string('item_name');
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();

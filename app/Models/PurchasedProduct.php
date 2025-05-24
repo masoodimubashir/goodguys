@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchasedProduct extends Model
 {
@@ -21,8 +22,18 @@ class PurchasedProduct extends Model
         'unit_count' => 'integer',
     ];
 
-    public function purchaseList()
+    public function purchaseLists()
     {
         return $this->belongsTo(PurchaseList::class);
+    }
+
+    /**
+     * Get all of the returnLists for the PurchaseList
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function returnLists(): HasMany
+    {
+        return $this->hasMany(ReturnList::class);
     }
 }

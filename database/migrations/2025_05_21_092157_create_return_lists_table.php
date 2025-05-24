@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('return_lists', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('purchase_list_id')->constrained('purchase_lists')->onDelete('cascade');
+            $table->foreignId('purchased_product_id')->constrained('purchased_products')->onDelete('cascade');
             $table->string('vendor_name');
             $table->date('return_date');
-            $table->string('bill');
+            $table->integer('unit_count');
             $table->decimal('bill_total');
             $table->text('bill_description');
             $table->tinyInteger('created_by')->nullable();

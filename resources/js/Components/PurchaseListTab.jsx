@@ -156,6 +156,14 @@ const PurchaseListTab = ({ client, tableRef, handleEditAccount, handleDeleteItem
                                             </button>
                                             <ul className="dropdown-menu">
                                                 <li>
+                                                    <Link
+                                                        className="dropdown-item"
+                                                        href={route('challan.show',  entry.id )}
+                                                    >
+                                                        <i className="ti ti-eye"></i> Challans
+                                                    </Link>
+                                                </li>
+                                                <li>
                                                     <button
                                                         className="dropdown-item"
                                                         onClick={() => handleEditAccount(entry)}

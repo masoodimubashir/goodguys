@@ -56,19 +56,25 @@ class AdminPurchaseListController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        try {
-            $purchaseList = PurchaseList::with(['purchasedProducts', 'returnLists'])->findOrFail($id);
+        $search = request('search');
 
-            return Inertia::render('PurchasedProduct/PurchasedProduct', [
-                'purchaseList' => $purchaseList,
-            ]);
-        } catch (ModelNotFoundException $e) {
-            return redirect()->back()->with('error', 'Purchase list not found');
-        } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Something went wrong');
-        }
+        $purchaseList = PurchaseList::with([
+            'purchasedProducts' => function ($query) use ($search) {
+                $query->when($search, function ($query) use ($search) {
+                    $query->where('product_name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                })
+                    ->with(['returnLists']);
+            },
+            'client' => with(['serviceCharge']),
+        ])
+            ->findOrFail($id);
+
+        return Inertia::render('PurchasedProduct/PurchasedProduct', [
+            'purchaseList' => $purchaseList,
+        ]);
     }
 
 

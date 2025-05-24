@@ -22,12 +22,9 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
     // State management
     const [state, setState] = useState({
         showPurchaseListModal: false,
-        showReturnListModal: false,
         isEditingPurchaseList: false,
-        isEditingReturnList: false,
         currentAccountId: null,
         currentPurchaseListId: null,
-        currentReturnListId: null,
         isLoading: false
     });
 
@@ -35,7 +32,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
     const refs = {
         tableRef: useRef(null),
         purchaseListRef: useRef(null),
-        returnListRef: useRef(null)
     };
 
     const purchaseListForm = useInertiaForm({
@@ -47,14 +43,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         bill_description: '',
     });
 
-    const returnListForm = useInertiaForm({
-        purchase_list_id: '',
-        vendor_name: client.client_name,
-        return_date: new Date().toISOString().split('T')[0],
-        bill: null,
-        bill_total: '',
-        bill_description: '',
-    });
+
 
     useEffect(() => {
         const initializeDataTables = () => {
@@ -62,7 +51,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
             const tables = [
                 refs.tableRef.current?.querySelector('table'),
                 refs.purchaseListRef.current?.querySelector('table'),
-                refs.returnListRef.current?.querySelector('table')
             ].filter(Boolean); // Remove null/undefined
 
             tables.forEach(table => {
@@ -83,7 +71,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         return () => {
             $('.dataTable').DataTable().destroy().clear();
         };
-    }, [client.invoices, client.proformas, client.purchase_lists, client.return_lists]);
+    }, [client.invoices, client.proformas, client.purchase_lists]);
 
     // Flash messages
     useEffect(() => {
@@ -106,17 +94,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 if (item) purchaseListForm.setData(item);
                 break;
 
-            case 'return-list':
-                setState(prev => ({
-                    ...prev,
-                    showReturnListModal: true,
-                    isEditingReturnList: !!item,
-                    currentReturnListId: item?.id || null
-                }));
-                returnListForm.reset();
-                if (item) returnListForm.setData(item);
-                break;
-
             default:
                 break;
         }
@@ -136,11 +113,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 isEditing = state.isEditingPurchaseList;
                 currentId = state.currentPurchaseListId;
                 break;
-            case 'return-list':
-                form = returnListForm;
-                isEditing = state.isEditingReturnList;
-                currentId = state.currentReturnListId;
-                break;
+
             default:
                 return;
         }
@@ -216,11 +189,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                     <i className="ti ti-file-invoice me-2"></i> Invoice
                                 </Link>
                             </li>
-                            <li>
-                                <Link href={route('challan.create', { client_id: client.id })} className="dropdown-item">
-                                    <i className="ti ti-file-description me-2"></i> challan
-                                </Link>
-                            </li>
+                          
                             <li>
                                 <Link href={route('bank-account.create', { client_id: client.id })} className="dropdown-item">
                                     <i className="ti ti-building-bank me-2"></i> Bank Account
@@ -235,11 +204,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                             </li>
 
 
-                            <li>
-                                <button className="dropdown-item" onClick={() => openModal('return-list')}>
-                                    <i className="ti ti-cash-banknote me-2"></i> Return Item
-                                </button>
-                            </li>
+
 
                         </ul>
                     </div>
@@ -270,74 +235,14 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 {/* Tabs Section */}
                 <div className="card">
                     <div className="card-body p-2">
-                        <ul className="nav nav-tabs tab-light-secondary" role="tablist">
 
+                        <PurchaseListTab
+                            client={client}
+                            tableRef={refs.purchaseListRef}
+                            handleEditAccount={(purchase_list) => openModal('purchase-list', purchase_list)}
+                            handleDeleteItem={handleDelete}
+                        />
 
-
-
-                            <li className="nav-item" role="presentation">
-                                <button className="nav-link" data-bs-toggle="tab" data-bs-target="#purchase-list-tab" type="button" role="tab">
-                                    <i className="ti ti-shopping-cart me-1"></i> Purchase List
-                                </button>
-                            </li>
-
-
-
-                            <li className="nav-item" role="presentation">
-                                <button className="nav-link" data-bs-toggle="tab" data-bs-target="#return-list-tab" type="button" role="tab">
-                                    <i className="ti ti-cash-banknote me-1"></i> Return list
-                                </button>
-                            </li>
-
-                            <li className="nav-item" role="presentation">
-                                <button className="nav-link" data-bs-toggle="tab" data-bs-target="#ledger-tab" type="button" role="tab">
-                                    <i className="ti ti-keyboard-show me-1"></i> Ledger
-                                </button>
-                            </li>
-
-                        </ul>
-
-                        <div className="tab-content p-3">
-
-
-
-
-
-                            <div className="tab-pane fade" id="purchase-list-tab" role="tabpanel">
-
-                                <PurchaseListTab
-                                    client={client}
-                                    tableRef={refs.purchaseListRef}
-                                    handleEditAccount={(purchase_list) => openModal('purchase-list', purchase_list)}
-                                    handleDeleteItem={handleDelete}
-                                />
-
-                            </div>
-
-
-
-                            <div className="tab-pane fade" id="return-list-tab" role="tabpanel">
-
-                                <ReturnListTab
-                                    client={client}
-                                    tableRef={refs.returnListRef}
-                                    handleEditAccount={(returnList) => openModal('return-list', returnList)}
-                                    handleDeleteItem={handleDelete}
-                                />
-                            </div>
-
-                            <div className="tab-pane fade" id="ledger-tab" role="tabpanel">
-
-                                <LedgerTab
-                                    client={client}
-                                    tableRef={refs.tableRef}
-                                    handleEditAccount={(account) => openModal('account', account)}
-                                    handleDeleteItem={handleDelete}
-                                />
-
-                            </div>
-
-                        </div>
                     </div>
                 </div>
             </div>
@@ -354,15 +259,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 vendors={vendors}
             />
 
-            <ReturnListModal
-                show={state.showReturnListModal}
-                onHide={() => setState(prev => ({ ...prev, showReturnListModal: false }))}
-                form={returnListForm}
-                errors={returnListForm.errors}
-                isEditing={state.isEditingReturnList}
-                handleSubmit={(e) => handleSubmit('return-list', e)}
-                purchaseLists={client.purchase_lists || []} // Pass the purchase lists
-            />
+
 
 
         </AuthenticatedLayout>
@@ -482,7 +379,6 @@ const ClientInfoCard = ({ client }) => {
         </div>
     );
 };
-
 
 
 const PurchaseListModal = ({
@@ -613,169 +509,5 @@ const PurchaseListModal = ({
     );
 };
 
-const ReturnListModal = ({
-    show,
-    onHide,
-    form,
-    errors,
-    isEditing,
-    handleSubmit,
-    purchaseLists
-}) => {
-    const [previewUrl, setPreviewUrl] = useState(null);
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            form.setData('bill', file);
-            setPreviewUrl(URL.createObjectURL(file));
-        }
-    };
-
-    return (
-        <Modal show={show} onHide={onHide} backdrop="static" size="lg" centered>
-            <Modal.Header closeButton className="border-0 pb-0">
-                <Modal.Title>{isEditing ? 'Edit' : 'Create'} Return</Modal.Title>
-            </Modal.Header>
-            <Form onSubmit={handleSubmit} encType="multipart/form-data">
-                <Modal.Body className="pt-0">
-                    <div className="row">
-                        {/* Purchase List Selection */}
-
-                        <div className="col-md-6">
-                            <Form.Group className="mb-3">
-                                <Form.Label>Vendor Name</Form.Label>
-                                <Form.Control
-                                    type='hidden'
-                                    value={form.data.vendor_name}
-                                    onChange={(e) => form.setData('vendor_name', e.target.value)}
-                                    isInvalid={!!errors.vendor_name}
-                                />
-                                <Form.Control.Feedback type="invalid">{errors.vendor_name}</Form.Control.Feedback>
-                            </Form.Group>
-                        </div>
-
-                        <div className="col-md-12">
-
-                            <Form.Group className="mb-3">
-                                <Form.Label>Purchase List</Form.Label>
-                                <Form.Select
-                                    value={form.data.purchase_list_id}
-                                    onChange={(e) => form.setData('purchase_list_id', e.target.value)}
-                                    isInvalid={!!errors.purchase_list_id}
-                                    disabled={isEditing} // Disable if editing existing return
-                                >
-                                    <option value="">Select Purchase</option>
-                                    {purchaseLists.map(purchase => (
-                                        <option key={purchase.id} value={purchase.id}>
-                                            {purchase.vendor_name} ({purchase.bill_total})
-                                        </option>
-                                    ))}
-                                </Form.Select>
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.purchase_list_id}
-                                </Form.Control.Feedback>
-                            </Form.Group>
-
-                        </div>
-
-
-                        {/* Return Date */}
-                        <div className="col-md-6">
-                            <Form.Group className="mb-3">
-                                <Form.Label>Return Date</Form.Label>
-                                <Form.Control
-                                    type="date"
-                                    value={form.data.return_date}
-                                    onChange={(e) => form.setData('return_date', e.target.value)}
-                                    isInvalid={!!errors.return_date}
-                                />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.return_date}
-                                </Form.Control.Feedback>
-                            </Form.Group>
-                        </div>
-
-                        {/* Return Bill Total */}
-                        <div className="col-md-6">
-                            <Form.Group className="mb-3">
-                                <Form.Label>Return Amount</Form.Label>
-                                <Form.Control
-                                    type="number"
-                                    step="0.01"
-                                    value={form.data.bill_total}
-                                    onChange={(e) => form.setData('bill_total', e.target.value)}
-                                    isInvalid={!!errors.bill_total}
-                                />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.bill_total}
-                                </Form.Control.Feedback>
-                            </Form.Group>
-                        </div>
-
-                        {/* Return Bill Upload */}
-                        <div className="col-12">
-                            <Form.Group className="mb-3">
-                                <Form.Label>Return Bill/Receipt</Form.Label>
-                                <Form.Control
-                                    type="file"
-                                    onChange={handleFileChange}
-                                    isInvalid={!!errors.bill}
-                                    accept="image/*,.pdf"
-                                />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.bill}
-                                </Form.Control.Feedback>
-
-                                {(previewUrl || form.data.bill) && (
-                                    <div className="mt-2">
-                                        <a
-                                            href={previewUrl || form.data.return_bill}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="btn btn-sm btn-outline-primary"
-                                        >
-                                            <i className="ti ti-file me-1"></i>
-                                            {previewUrl ? 'Preview File' : 'View Current File'}
-                                        </a>
-                                    </div>
-                                )}
-                            </Form.Group>
-                        </div>
-
-                        {/* Description */}
-                        <div className="col-md-12">
-                            <Form.Group className="mb-3">
-                                <Form.Label>Return Reason/Description</Form.Label>
-                                <Form.Control
-                                    as="textarea"
-                                    rows={3}
-                                    value={form.data.bill_description}
-                                    onChange={(e) => form.setData('bill_description', e.target.value)}
-                                    isInvalid={!!errors.bill_description}
-                                />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.bill_description}
-                                </Form.Control.Feedback>
-                            </Form.Group>
-                        </div>
-                    </div>
-                </Modal.Body>
-                <Modal.Footer className="border-0">
-                    <Button variant="light" onClick={onHide}>Cancel</Button>
-                    <Button type="submit" variant="primary" disabled={form.processing}>
-                        {form.processing ? (
-                            <>
-                                <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                                Processing...
-                            </>
-                        ) : isEditing ? 'Update' : 'Create'}
-                    </Button>
-                </Modal.Footer>
-            </Form>
-        </Modal>
-
-
-    );
-};
 

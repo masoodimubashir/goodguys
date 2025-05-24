@@ -68,7 +68,7 @@ class AdminClientsController extends Controller
             'proformaRefrences' => fn($query) => $query->with([
                 'products' => fn($query) => $query->with('proformas'),
             ]),
-            'purchaseLists' => fn($query) => $query->with(['returnLists']),
+            'purchaseLists',
             'costIncurreds',
             'accounts',
             'serviceCharge',

@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreReturnListrequest;
 use App\Http\Requests\UpdateReturnListrequest;
 use App\Models\ReturnList;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class AdminReturnListController extends Controller
@@ -34,7 +34,6 @@ class AdminReturnListController extends Controller
     {
         try {
 
-
             $validated = $request->validated();
 
             if ($request->hasFile('bill')) {
@@ -45,7 +44,7 @@ class AdminReturnListController extends Controller
 
             return redirect()->back()->with('message', 'Return list created successfully');
         } catch (\Exception $e) {
-
+            Log::error('Error creating return list: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to create Return List');
         }
     }
@@ -69,24 +68,29 @@ class AdminReturnListController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateReturnListrequest $request, ReturnList $returnList)
+    public function update(UpdateReturnListRequest $request, ReturnList $returnList)
     {
         try {
-
+            // Get validated data from the form request
             $validated = $request->validated();
 
             // Handle file upload
             if ($request->hasFile('bill')) {
-                // Delete old file if needed
-                Storage::disk('public')->delete($returnList->bill);
+                // Delete old file if it exists
+                if ($returnList->bill) {
+                    Storage::disk('public')->delete($returnList->bill);
+                }
                 $validated['bill'] = $request->file('bill')->store('purchase-lists', 'public');
+            } else {
+                // Keep the existing bill if no new file was uploaded
+                $validated['bill'] = $returnList->bill;
             }
 
             $returnList->update($validated);
 
-            return redirect()->back()->with('message', 'Returnlist updated successfully');
-        } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Failed to update Returnlist');
+            return redirect()->back()->with('message', 'Return updated successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update Return: ' . $e->getMessage());
         }
     }
 
