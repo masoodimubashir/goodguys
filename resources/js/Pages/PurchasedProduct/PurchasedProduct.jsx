@@ -1,26 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { useForm, usePage, router } from '@inertiajs/react';
+import { useForm, usePage, router, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
-import { Edit, Trash2, Plus, Calendar, IndianRupeeIcon, Package, User, ChevronDown, ChevronRight, RotateCcw, Check, CheckCircle } from 'lucide-react';
+import { Edit, Trash2, Plus, Calendar, IndianRupeeIcon, Package, User, ChevronDown, ChevronRight, RotateCcw, Check, CheckCircle, Search } from 'lucide-react';
 import Card from 'react-bootstrap/Card';
 import Table from 'react-bootstrap/Table';
 import Badge from 'react-bootstrap/Badge';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Collapse from 'react-bootstrap/Collapse';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function PurchasedProduct({ purchaseList }) {
 
-    console.log('Purchase List:', purchaseList);
-
-
     const [searchTerm, setSearchTerm] = useState('');
-    const flash = usePage().props.flash;
     const { delete: destroy } = useForm();
+    const [dateRange, setDateRange] = useState([null, null]);
+    const [startDate, endDate] = dateRange;
+
+    const flash = usePage().props.flash;
+
 
     const [state, setState] = useState({
         showAddProduct: false,
@@ -83,14 +86,28 @@ export default function PurchasedProduct({ purchaseList }) {
         });
     };
 
-    // In your handleSearch function:
+
+
+    const resetFilters = () => {
+        setSearchTerm('');
+        setDateRange([null, null]);
+
+        router.get(route('purchase-list.show', {
+            purchase_list: purchaseList.id
+        }), {}, {
+            preserveState: true,
+            preserveScroll: true
+        });
+    };
+
     const handleSearch = (e) => {
-        const term = e.target.value;
-        setSearchTerm(term);
-        router.get(route('purchase-list.show', { purchase_list: purchaseList.id }), {
-            search: term,
-            page: 1
-        }, {
+        e.preventDefault();
+        router.get(route('purchase-list.show', {
+            purchase_list: purchaseList.id,
+            search: searchTerm,
+            start_date: startDate ? startDate.toISOString().split('T')[0] : null,
+            end_date: endDate ? endDate.toISOString().split('T')[0] : null,
+        }), {}, {
             preserveState: true,
             preserveScroll: true
         });
@@ -330,7 +347,7 @@ export default function PurchasedProduct({ purchaseList }) {
     const calculateRemainingAmount = (product) => {
 
         console.log('Calculating remaining amount for product:', product);
-        
+
         const productTotal = calcTotal(product.price, product.unit_count);
         const returnsTotal = product.return_lists?.reduce(
             (sum, returnItem) => sum + parseFloat(returnItem.bill_total * returnItem.unit_count || 0), 0) || 0;
@@ -345,84 +362,88 @@ export default function PurchasedProduct({ purchaseList }) {
 
     return (
         <AuthenticatedLayout>
-            <div className="container-fluid">
-                {/* Stats Cards */}
-                <div className="row g-4 mb-4">
-                    <div className="col-12 col-sm-6 col-lg-3">
-                        <div className="card border-0 shadow-sm card-hover h-100">
-                            <div className="card-body p-4">
-                                <div className="d-flex align-items-center">
-                                    <div className="stats-icon bg-blue-light me-3">
-                                        <IndianRupeeIcon className="text-blue-600" />
-                                    </div>
-                                    <div>
-                                        <p className="small text-slate-600 mb-1">Purchased Total</p>
-                                        <h6 className="fw-bold text-slate-800 mb-0">₹{purchasedTotal.toLocaleString('en-IN')}</h6>
-                                    </div>
+            <Link href={route('clients.show', purchaseList.client_id)} className="btn btn-sm btn-secondary mb-3" >
+                Back
+            </Link >
+
+            {/* Stats Cards */}
+            <div className="row g-4 mb-4">
+
+
+                <div className="col-12 col-sm-6 col-lg-3">
+                    <div className="card border-0 shadow-sm card-hover h-100">
+                        <div className="card-body p-4">
+                            <div className="d-flex align-items-center">
+                                <div className="stats-icon bg-blue-light me-3">
+                                    <IndianRupeeIcon className="text-blue-600" />
+                                </div>
+                                <div>
+                                    <p className="small text-slate-600 mb-1">Purchased Total</p>
+                                    <h6 className="fw-bold text-slate-800 mb-0">₹{purchasedTotal.toLocaleString('en-IN')}</h6>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div className="col-12 col-sm-6 col-lg-3">
-                        <div className="card border-0 shadow-sm card-hover h-100">
-                            <div className="card-body p-4">
-                                <div className="d-flex align-items-center">
-                                    <div className="stats-icon bg-red-light me-3">
-                                        <IndianRupeeIcon className="text-red-600" />
-                                    </div>
-                                    <div>
-                                        <p className="small text-slate-600 mb-1">Returned Total</p>
-                                        <h6 className="fw-bold text-slate-800 mb-0">₹{returnedTotal.toLocaleString('en-IN')}</h6>
-                                    </div>
+                <div className="col-12 col-sm-6 col-lg-3">
+                    <div className="card border-0 shadow-sm card-hover h-100">
+                        <div className="card-body p-4">
+                            <div className="d-flex align-items-center">
+                                <div className="stats-icon bg-red-light me-3">
+                                    <IndianRupeeIcon className="text-red-600" />
+                                </div>
+                                <div>
+                                    <p className="small text-slate-600 mb-1">Returned Total</p>
+                                    <h6 className="fw-bold text-slate-800 mb-0">₹{returnedTotal.toLocaleString('en-IN')}</h6>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div className="col-12 col-sm-4 col-lg-2">
-                        <div className="card border-0 shadow-sm card-hover h-100">
-                            <div className="card-body p-4">
-                                <div className="d-flex align-items-center">
-                                    <div className="stats-icon bg-green-light me-3">
-                                        <IndianRupeeIcon className="text-green-600" />
-                                    </div>
-                                    <div>
-                                        <p className="small text-slate-600 mb-1">Net Total</p>
-                                        <h6 className="fw-bold text-slate-800 mb-0">₹{netTotal.toLocaleString('en-IN')}</h6>
-                                    </div>
+                <div className="col-12 col-sm-4 col-lg-2">
+                    <div className="card border-0 shadow-sm card-hover h-100">
+                        <div className="card-body p-4">
+                            <div className="d-flex align-items-center">
+                                <div className="stats-icon bg-green-light me-3">
+                                    <IndianRupeeIcon className="text-green-600" />
+                                </div>
+                                <div>
+                                    <p className="small text-slate-600 mb-1">Net Total</p>
+                                    <h6 className="fw-bold text-slate-800 mb-0">₹{netTotal.toLocaleString('en-IN')}</h6>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div className="col-12 col-sm-4 col-lg-2">
-                        <div className="card border-0 shadow-sm card-hover h-100">
-                            <div className="card-body p-4">
-                                <div className="d-flex align-items-center">
-                                    <div className="stats-icon bg-green-light me-3">
-                                        <Package className="text-green-600" />
-                                    </div>
-                                    <div>
-                                        <p className="small text-slate-600 mb-1">Products</p>
-                                        <h6 className="fw-bold text-slate-800 mb-0">{productCount}</h6>
-                                    </div>
+                <div className="col-12 col-sm-4 col-lg-2">
+                    <div className="card border-0 shadow-sm card-hover h-100">
+                        <div className="card-body p-4">
+                            <div className="d-flex align-items-center">
+                                <div className="stats-icon bg-green-light me-3">
+                                    <Package className="text-green-600" />
+                                </div>
+                                <div>
+                                    <p className="small text-slate-600 mb-1">Products</p>
+                                    <h6 className="fw-bold text-slate-800 mb-0">{productCount}</h6>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div className="col-12 col-sm-4 col-lg-2">
-                        <div className="card border-0 shadow-sm card-hover h-100">
-                            <div className="card-body p-4">
-                                <div className="d-flex align-items-center">
-                                    <div className="stats-icon bg-purple-light me-3">
-                                        <User className="text-purple-600" />
-                                    </div>
-                                    <div>
-                                        <p className="small text-slate-600 mb-1">Vendor</p>
-                                        <h6 className="fw-semibold text-slate-800 mb-0">{purchaseList.vendor_name}</h6>
-                                    </div>
+                <div className="col-12 col-sm-4 col-lg-2">
+                    <div className="card border-0 shadow-sm card-hover h-100">
+                        <div className="card-body p-4">
+                            <div className="d-flex align-items-center">
+                                <div className="stats-icon bg-purple-light me-3">
+                                    <User className="text-purple-600" />
+                                </div>
+                                <div>
+                                    <p className="small text-slate-600 mb-1">Vendor</p>
+                                    <h6 className="fw-semibold text-slate-800 mb-0">{purchaseList.vendor_name}</h6>
                                 </div>
                             </div>
                         </div>
@@ -440,14 +461,45 @@ export default function PurchasedProduct({ purchaseList }) {
                     <h5 className="mb-0 me-3">Purchase Management</h5>
 
                     <div className="d-flex align-items-center gap-2">
-                        <Form.Control
-                            type="text"
-                            size="sm"
-                            placeholder="Search products..."
-                            value={searchTerm}
-                            onChange={handleSearch}
-                            style={{ width: '250px' }}
-                        />
+
+
+                        <Form onSubmit={handleSearch}>
+                            <InputGroup >
+                                <Form.Control
+                                    size='sm'
+                                    type="text"
+                                    placeholder="Press Enter To Search"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                                <DatePicker
+                                    selectsRange={true}
+                                    startDate={startDate}
+                                    endDate={endDate}
+                                    onChange={(update) => setDateRange(update)}
+                                    isClearable={true}
+                                    placeholderText="Date range"
+                                    className="form-control form-control-sm"
+                                    dateFormat="yyyy-MM-dd"
+                                />
+                                <Button
+                                    type="submit"
+                                    size='sm'
+                                    variant="outline-secondary"
+                                >
+                                    <Search size={14} /> {/* Import Search icon from lucide-react */}
+                                </Button>
+                                <Button
+                                    size='sm'
+                                    variant="outline-danger"
+                                    onClick={resetFilters}
+                                    disabled={!searchTerm && !startDate && !endDate}
+                                >
+                                    <RotateCcw size={14} /> {/* Import RotateCcw icon from lucide-react */}
+                                </Button>
+                            </InputGroup>
+                        </Form>
+
 
                         <Button size="sm" onClick={toggleAddProduct} variant={state.showAddProduct ? "secondary" : "primary"}>
                             {state.showAddProduct ? "Cancel" : <><Plus size={14} className="me-1" />Add Product</>}
@@ -548,6 +600,8 @@ export default function PurchasedProduct({ purchaseList }) {
                                 {state.showAddProduct && (
                                     <tr className="table-success">
                                         <td></td>
+                                        <td></td>
+
                                         <td>
                                             <Form.Control
                                                 size="sm"

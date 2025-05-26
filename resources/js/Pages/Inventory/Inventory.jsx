@@ -78,7 +78,7 @@ export default function Inventory({ inventories: initialInventories }) {
             <div className="row g-4 mt-4">
                 <div className="d-flex justify-content-end align-items-center mb-3">
                     {auth.user.role === 'admin' && (
-                        <Link href={route('inventory.create')} className="btn btn-primary">
+                        <Link href={route('inventory.create')} className="btn btn-sm btn-primary">
                             <i className="ti ti-plus me-1"></i> Add Item
                         </Link>
                     )}

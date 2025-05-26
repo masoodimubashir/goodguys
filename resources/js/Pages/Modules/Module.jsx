@@ -77,11 +77,11 @@ export default function Module({ modules: initialModules }) {
                         <>
                           
                             <div className="d-flex gap-2">
-                                <Link href={route("module.create")} className="btn btn-primary">
+                                <Link href={route("module.create")} className="btn btn-sm btn-primary">
                                     <i className="ti ti-plus me-1"></i> Add Module
                                 </Link>
 
-                                <Link href={route('field.index')} className="btn btn-primary">
+                                <Link href={route('field.index')} className="btn btn-sm btn-primary">
                                     <i className="ti ti-eye me-1"></i> View Fields
                                 </Link>
                             </div>

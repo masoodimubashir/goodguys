@@ -77,7 +77,7 @@ export default function Client({ clients: initialClients }) {
             <div className="row g-4 mb-3 mt-3">
                 <div className="d-flex justify-content-end align-items-center">
                     {auth.user.role === 'admin' && (
-                        <Link href={route('clients.create')} className="btn btn-primary me-2">
+                        <Link href={route('clients.create')} className="btn btn-sm btn-primary me-2">
                             <i className="ti ti-plus me-1"></i> Add Client
                         </Link>
                     )}

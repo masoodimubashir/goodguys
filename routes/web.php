@@ -86,8 +86,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Route For Challan
     Route::resource('/challan', AdminChallanController::class);
-
-    
+    Route::get('create/challanpdf/{id}', [AdminChallanController::class, 'createChallanPdf'])->name('create.challanpdf');
 });
 
 

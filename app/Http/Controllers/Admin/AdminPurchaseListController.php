@@ -59,24 +59,36 @@ class AdminPurchaseListController extends Controller
     public function show($id)
     {
         $search = request('search');
+        $startDate = request('start_date');
+        $endDate = request('end_date');
 
         $purchaseList = PurchaseList::with([
-            'purchasedProducts' => function ($query) use ($search) {
+            'purchasedProducts' => function ($query) use ($search, $startDate, $endDate) {
                 $query->when($search, function ($query) use ($search) {
                     $query->where('product_name', 'like', "%{$search}%")
                         ->orWhere('description', 'like', "%{$search}%");
                 })
+                    ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
+                        $query->whereBetween('created_at', [$startDate, $endDate]);
+                    })
                     ->with(['returnLists']);
             },
-            'client' => with(['serviceCharge']),
+            'client' => function ($query) {
+                $query->with(['serviceCharge']);
+            },
         ])
             ->findOrFail($id);
 
+
         return Inertia::render('PurchasedProduct/PurchasedProduct', [
             'purchaseList' => $purchaseList,
+            'filters' => [
+                'search' => $search,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ],
         ]);
     }
-
 
     /**
      * Show the form for editing the specified resource.

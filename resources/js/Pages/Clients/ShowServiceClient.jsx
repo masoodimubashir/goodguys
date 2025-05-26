@@ -5,10 +5,7 @@ import { ShowMessage } from '@/Components/ShowMessage';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import LedgerTab from '@/Components/LedgerTab';
-import PdfTable from '@/Components/PdfTable';
 import PurchaseListTab from '@/Components/PurchaseListTab';
-import ReturnListTab from '@/Components/ReturnListTab';
 import $ from 'jquery';
 import 'datatables.net';
 import 'datatables.net-responsive';
@@ -217,24 +214,9 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
 
                     {client.bank_account && <BankAccountCard BankProfile={client.bank_account} />}
 
-                    <div className="col-12">
-                        <div className="card shadow-sm">
-                            <div className="card-header">
-                                <h5 className="card-title mb-0">PDF Report</h5>
-                            </div>
-                            <div className="card-body">
-                                <div ref={refs.pdfRef}>
-                                    <PdfTable client={client} pdfRef={refs.pdfRef} CompanyProfile={company_profile || {}} />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
 
                 {/* Tabs Section */}
-                <div className="card">
-                    <div className="card-body p-2">
 
                         <PurchaseListTab
                             client={client}
@@ -243,8 +225,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                             handleDeleteItem={handleDelete}
                         />
 
-                    </div>
-                </div>
             </div>
 
 

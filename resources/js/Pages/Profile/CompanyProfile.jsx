@@ -10,15 +10,17 @@ import { ShowMessage } from '@/Components/ShowMessage';
 const CompanyProfile = ({ companyProfile = {} }) => {
 
 
+    console.log(companyProfile);
+    
 
     const { flash } = usePage().props;
 
 
     const { data, setData, post, put, errors, processing } = useForm({
-        company_name: companyProfile.company_name || '',
-        company_address: companyProfile.company_address || '',
-        company_contact_no: companyProfile.company_contact_no || '',
-        company_email: companyProfile.company_email || '',
+        company_name: companyProfile?.company_name || '',
+        company_address: companyProfile?.company_address || '',
+        company_contact_no: companyProfile?.company_contact_no || '',
+        company_email: companyProfile?.company_email || '',
         logo: null,
     });
 
@@ -30,8 +32,8 @@ const CompanyProfile = ({ companyProfile = {} }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        if (companyProfile.id) {
-            put(route("company-profile.update", companyProfile.id), {
+        if (companyProfile?.id) {
+            put(route("company-profile.update", companyProfile?.id), {
                 preserveScroll: true,
             });
         } else {
