@@ -4,6 +4,7 @@ import InputError from "@/Components/InputError";
 import TextInput from "@/Components/TextInput";
 import InputLabel from "@/Components/InputLabel";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
 
 const CLIENT_TYPES = {
     SERVICE: 'Service Client',
@@ -46,13 +47,25 @@ export default function CreateClient() {
         });
     };
 
+    const breadcrumbs = [
+        { href: '/clients', label: 'Back', active: true }
+    ];
+
     return (
         <AuthenticatedLayout>
             <Head title="Create Client" />
 
-            <BreadcrumbNav />
-
             <div className="row justify-content-center">
+
+                <div className="d-flex justify-content-between align-items-center">
+
+                    <BreadCrumbHeader
+                        breadcrumbs={breadcrumbs}
+                    />
+                  
+
+                </div>
+
                 <div className="col-12">
                     <div className="card shadow-sm border-0">
                         <div className="card-header bg-white border-bottom">
@@ -208,13 +221,13 @@ function FormFields({ data, errors, onChange }) {
             <div className="col-md-3">
                 <InputLabel
                     htmlFor="site_name"
-                    value={isServiceType ? "Site Name" : "Product Type"}
+                    value={isServiceType ? "Entry Name" : "Product Type"}
                 />
                 <TextInput
                     className="form-control"
                     id="site_name"
                     name="site_name"
-                    placeholder={isServiceType ? "Enter Site Name" : "Enter Product Type"}
+                    placeholder={isServiceType ? "Enter Entry Name" : "Enter Product Type"}
                     value={data.site_name}
                     onChange={onChange}
                 />

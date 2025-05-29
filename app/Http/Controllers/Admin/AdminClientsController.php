@@ -10,6 +10,7 @@ use App\Models\CompanyProfile;
 use App\Models\Inventory;
 use App\Models\Module;
 use App\Models\ServiceCharge;
+use App\Models\Vendor;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -68,29 +69,34 @@ class AdminClientsController extends Controller
             'proformaRefrences' => fn($query) => $query->with([
                 'products' => fn($query) => $query->with('proformas'),
             ]),
-            'purchaseLists',
+            'purchaseLists.vendor',
             'costIncurreds',
             'accounts',
             'serviceCharge',
             'bankAccount'
         ]);
 
+        $groupedPurchaseLists = $client->purchaseLists->groupBy('vendor_id');
+
+        $clientVendorIds = $client->purchaseLists->pluck('vendor_id')->unique();
+
+        $clientVendors = Vendor::whereIn('id', $clientVendorIds)->orderBy('vendor_name')->get();
 
 
         if ($client->client_type === 'Service Client') {
             return Inertia::render('Clients/ShowServiceClient', [
                 'client' => $client,
-                'modules' => Module::latest()->get(),
-                'inventoryOptions' => Inventory::latest()->get(),
-                'company_profile' => CompanyProfile::first()
-
+                'groupedPurchaseLists' => $groupedPurchaseLists,
+                'client_vendors' => $clientVendors,
+                'vendors' => Vendor::orderBy('vendor_name')->get(),
             ]);
         } else {
             return Inertia::render('Clients/ShowProductClient', [
                 'client' => $client,
                 'modules' => Module::latest()->get(),
                 'inventoryOptions' => Inventory::latest()->get(),
-                'company_profile' => CompanyProfile::first()
+                'company_profile' => CompanyProfile::first(),
+                'vendors' => Vendor::orderBy('vendor_name')->get(),
 
             ]);
         }

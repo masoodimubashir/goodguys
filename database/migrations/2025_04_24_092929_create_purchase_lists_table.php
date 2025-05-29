@@ -12,10 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('purchase_lists', function (Blueprint $table) {
-            
+
             $table->id();
+            $table->foreignId('vendor_id')->constrained('vendors')->onDelete('cascade');
             $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
-            $table->string('vendor_name');
+            $table->string('list_name');
             $table->date('purchase_date');
             $table->string('bill');
             $table->decimal('bill_total');
@@ -23,7 +24,6 @@ return new class extends Migration
             $table->tinyInteger('created_by')->nullable();
             $table->tinyInteger('updated_by')->nullable();
             $table->timestamps();
-            
         });
     }
 

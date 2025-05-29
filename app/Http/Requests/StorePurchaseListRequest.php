@@ -23,7 +23,8 @@ class StorePurchaseListRequest extends FormRequest
     {
         return [
             'client_id' => 'required|exists:clients,id',
-            'vendor_name' => 'required|string|max:255',
+            'list_name' => 'required|string|max:255',
+            'vendor_id' => 'required|exists:vendors,id',
             'purchase_date' => 'required|date',
             'bill' => 'required|file|mimes:jpeg,png,pdf|max:2048',
             'bill_total' => 'required|integer|min:0',

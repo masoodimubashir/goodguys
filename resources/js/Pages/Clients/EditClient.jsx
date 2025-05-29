@@ -5,6 +5,7 @@ import { ShowMessage } from '@/Components/ShowMessage';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
+import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 
 export default function EditClient({ client }) {
 
@@ -34,12 +35,26 @@ export default function EditClient({ client }) {
 
   };
 
+  const breadcrumbs = [
+    { href: '/clients', label: 'Back', active: true }
+  ];
+
   return (
     <AuthenticatedLayout>
 
       <Head title="Edit Client" />
 
       <div className="row g-4 mt-4">
+
+        <div className="d-flex justify-content-between align-items-center">
+
+          <BreadCrumbHeader
+            breadcrumbs={breadcrumbs}
+          />
+
+
+        </div>
+
         <div className="col-12">
           <div className="card">
             <div className="card-body p-3">

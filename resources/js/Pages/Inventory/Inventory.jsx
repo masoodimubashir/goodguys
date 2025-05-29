@@ -6,9 +6,10 @@ import { ShowMessage } from '@/Components/ShowMessage';
 import $ from 'jquery';
 import 'datatables.net';
 import 'datatables.net-responsive';
-import Swal from 'sweetalert2';
+import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
 
 export default function Inventory({ inventories: initialInventories }) {
+
     const [inventories, setInventories] = useState(initialInventories);
     const tableRef = useRef(null);
     const { flash, auth } = usePage().props;
@@ -72,17 +73,26 @@ export default function Inventory({ inventories: initialInventories }) {
         });
     };
 
+    const breadcrumbs = [
+        { href: '/inventory', label: 'Back', active: true }
+    ];
+
     return (
         <AuthenticatedLayout>
             <Head title="Inventory" />
             <div className="row g-4 mt-4">
-                <div className="d-flex justify-content-end align-items-center mb-3">
-                    {auth.user.role === 'admin' && (
-                        <Link href={route('inventory.create')} className="btn btn-sm btn-primary">
-                            <i className="ti ti-plus me-1"></i> Add Item
-                        </Link>
-                    )}
+
+                <div className="d-flex justify-content-between align-items-center">
+
+                    <BreadCrumbHeader
+                        breadcrumbs={breadcrumbs}
+                    />
+                    <Link href={route('inventory.create')} className="btn btn-sm btn-primary">
+                        <i className="ti ti-plus me-1"></i> Add Item
+                    </Link>
+
                 </div>
+
                 <div className="col-12">
                     <div className="card shadow-sm">
                         <div className="card-body p-3">

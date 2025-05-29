@@ -10,7 +10,7 @@ export const SideBar = () => {
 
     const user = props.auth.user;
 
-    
+
 
     return (
         <>
@@ -47,7 +47,7 @@ export const SideBar = () => {
                             user.role === 'admin' &&
                             <li>
                                 <NavLink active={url === '/users' ? true : false} href='/users'>
-                                    <i className="iconoir-user"></i>
+                                    <i class="iconoir-user-badge-check"></i>
                                     Users
                                 </NavLink>
                             </li>
@@ -60,19 +60,20 @@ export const SideBar = () => {
                             </NavLink>
                         </li>
 
-                        {/* <li>
-                            <NavLink active={url === '/accounts' ? true : false} href='/accounts'>
-                                <i className="iconoir-user-plus"></i>
-                                Ledger
-                            </NavLink>
-                        </li> */}
-
                         <li>
                             <NavLink active={url === '/module' ? true : false} href='/module'>
-                                <i className="iconoir-user-plus"></i>
+                                <i class="iconoir-box"></i>
                                 Module
                             </NavLink>
                         </li>
+
+                        <li>
+                            <NavLink active={url === '/vendor' ? true : false} href='/vendor'>
+                                <i class="iconoir-box"></i>
+                                Vendors
+                            </NavLink>
+                        </li>
+
 
 
 

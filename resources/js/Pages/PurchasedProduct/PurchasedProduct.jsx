@@ -5,7 +5,7 @@ import { ShowMessage } from '@/Components/ShowMessage';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
-import { Edit, Trash2, Plus, Calendar, IndianRupeeIcon, Package, User, ChevronDown, ChevronRight, RotateCcw, Check, CheckCircle, Search } from 'lucide-react';
+import { Edit, Trash2, Plus, IndianRupeeIcon, Package, User, ChevronDown, ChevronRight, RotateCcw, Check, CheckCircle, Search } from 'lucide-react';
 import Card from 'react-bootstrap/Card';
 import Table from 'react-bootstrap/Table';
 import Badge from 'react-bootstrap/Badge';
@@ -14,6 +14,7 @@ import Col from 'react-bootstrap/Col';
 import Collapse from 'react-bootstrap/Collapse';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 
 export default function PurchasedProduct({ purchaseList }) {
 
@@ -31,8 +32,8 @@ export default function PurchasedProduct({ purchaseList }) {
         expandedProducts: {},
         showAddReturn: {},
         editingReturnId: null,
-        selectedProducts: {}, // Track selected products for challan creation
-        showChallanForm: false, // Show/hide challan creation form
+        selectedProducts: {},
+        showChallanForm: false,
     });
 
     const challanForm = useForm({
@@ -85,8 +86,6 @@ export default function PurchasedProduct({ purchaseList }) {
             }
         });
     };
-
-
 
     const resetFilters = () => {
         setSearchTerm('');
@@ -360,15 +359,27 @@ export default function PurchasedProduct({ purchaseList }) {
         return product.unit_count - returnsQty;
     };
 
+    const breadcrumbs = [
+        { href: `/clients.show/${purchaseList.client_id}`, label: 'Back', active: true }
+    ];
+
     return (
         <AuthenticatedLayout>
-            <Link href={route('clients.show', purchaseList.client_id)} className="btn btn-sm btn-secondary mb-3" >
-                Back
-            </Link >
+
+        
 
             {/* Stats Cards */}
             <div className="row g-4 mb-4">
 
+                <div className="d-flex justify-content-between align-items-center">
+
+                    <BreadCrumbHeader
+                        breadcrumbs={breadcrumbs}
+                    />
+
+                   
+
+                </div>
 
                 <div className="col-12 col-sm-6 col-lg-3">
                     <div className="card border-0 shadow-sm card-hover h-100">
@@ -386,7 +397,7 @@ export default function PurchasedProduct({ purchaseList }) {
                     </div>
                 </div>
 
-                <div className="col-12 col-sm-6 col-lg-3">
+                <div className="col-12 col-sm-2 col-lg-3">
                     <div className="card border-0 shadow-sm card-hover h-100">
                         <div className="card-body p-4">
                             <div className="d-flex align-items-center">
@@ -426,7 +437,7 @@ export default function PurchasedProduct({ purchaseList }) {
                                     <Package className="text-green-600" />
                                 </div>
                                 <div>
-                                    <p className="small text-slate-600 mb-1">Products</p>
+                                    <p className="small text-slate-600 mb-1">Items</p>
                                     <h6 className="fw-bold text-slate-800 mb-0">{productCount}</h6>
                                 </div>
                             </div>
@@ -502,7 +513,7 @@ export default function PurchasedProduct({ purchaseList }) {
 
 
                         <Button size="sm" onClick={toggleAddProduct} variant={state.showAddProduct ? "secondary" : "primary"}>
-                            {state.showAddProduct ? "Cancel" : <><Plus size={14} className="me-1" />Add Product</>}
+                            {state.showAddProduct ? "Cancel" : <><Plus size={14} className="me-1" />Add Item</>}
                         </Button>
 
                         {Object.values(state.selectedProducts).filter(Boolean).length > 0 && (
@@ -586,7 +597,7 @@ export default function PurchasedProduct({ purchaseList }) {
                                 <tr>
                                     <th width="20"></th>
                                     <th width="100"></th>
-                                    <th>Product Name</th>
+                                    <th>Item Name</th>
                                     <th>Unit Price (₹)</th>
                                     <th>Quantity</th>
                                     <th>Total (₹)</th>
@@ -607,7 +618,7 @@ export default function PurchasedProduct({ purchaseList }) {
                                                 size="sm"
                                                 value={addProductForm.data.product_name}
                                                 onChange={e => addProductForm.setData('product_name', e.target.value)}
-                                                placeholder="Product name"
+                                                placeholder="Item name"
                                             />
                                         </td>
                                         <td>
@@ -799,6 +810,7 @@ export default function PurchasedProduct({ purchaseList }) {
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
+
                                                                         {/* Add Return Row */}
                                                                         {state.showAddReturn[product.id] && (
                                                                             <tr>
@@ -806,6 +818,7 @@ export default function PurchasedProduct({ purchaseList }) {
                                                                                     <Form.Control
                                                                                         size="sm"
                                                                                         value={addReturnForm.data.vendor_name}
+                                                                                        disabled
                                                                                         onChange={e => addReturnForm.setData('vendor_name', e.target.value)}
                                                                                     />
                                                                                 </td>
@@ -825,6 +838,7 @@ export default function PurchasedProduct({ purchaseList }) {
                                                                                         value={addReturnForm.data.unit_count}
                                                                                         onChange={e => addReturnForm.setData('unit_count', e.target.value)}
                                                                                         placeholder="Qty"
+
                                                                                         max={product.unit_count - (product.return_lists?.reduce(
                                                                                             (sum, r) => sum + parseInt(r.unit_count || 0), 0) || 0)}
                                                                                         min={1}
@@ -839,7 +853,8 @@ export default function PurchasedProduct({ purchaseList }) {
                                                                                         <InputGroup.Text>₹</InputGroup.Text>
                                                                                         <Form.Control
                                                                                             type="number"
-                                                                                            step="0.01"
+                                                                                            disabled
+
                                                                                             value={addReturnForm.data.bill_total}
                                                                                             onChange={e => addReturnForm.setData('bill_total', e.target.value)}
                                                                                             placeholder="Amount"
@@ -901,7 +916,7 @@ export default function PurchasedProduct({ purchaseList }) {
                                                                                                 <InputGroup.Text>₹</InputGroup.Text>
                                                                                                 <Form.Control
                                                                                                     type="number"
-                                                                                                    step="0.01"
+                                                                                                    disabled
                                                                                                     value={editReturnForm.data.bill_total}
                                                                                                     onChange={e => editReturnForm.setData('bill_total', e.target.value)}
                                                                                                 />
@@ -968,6 +983,7 @@ export default function PurchasedProduct({ purchaseList }) {
                                                                                 </td>
                                                                             </tr>
                                                                         )}
+
                                                                     </tbody>
                                                                 </Table>
                                                             </div>

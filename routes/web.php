@@ -12,10 +12,13 @@ use App\Http\Controllers\Admin\AdminModuleController;
 use App\Http\Controllers\Admin\AdminProformaController;
 use App\Http\Controllers\Admin\AdminPurchasedProductController;
 use App\Http\Controllers\Admin\AdminPurchaseListController;
+use App\Http\Controllers\Admin\AdminPurchaseManagmentController;
 use App\Http\Controllers\Admin\AdminReturnListController;
 use App\Http\Controllers\Admin\AdminUsersController;
+use App\Http\Controllers\Admin\AdminVendorController;
 use App\Http\Controllers\AdminAdminCompanyProfile;
 use App\Http\Controllers\AdminInvoiceController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -32,9 +35,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
     // Route For Viewing Dashbaord
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
+
+
 
     // Route For Updating User Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -87,6 +90,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Route For Challan
     Route::resource('/challan', AdminChallanController::class);
     Route::get('create/challanpdf/{id}', [AdminChallanController::class, 'createChallanPdf'])->name('create.challanpdf');
+
+
+    // Route For Vendor Model
+    Route::resource('/vendor', AdminVendorController::class);
+
+    // Route For Purchase Managment
+    Route::resource('/purchase-managment', AdminPurchaseManagmentController::class);
+
+    
+
+    
 });
 
 

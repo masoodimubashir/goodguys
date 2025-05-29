@@ -31,8 +31,6 @@ export default function CreateInvoice({ client, modules, inventories }) {
         ],
     });
 
-    
-
     // Toggle all prices visibility
     const toggleAllPricesVisibility = (isVisible) => {
         setData("show_all_prices", isVisible);
@@ -229,16 +227,18 @@ export default function CreateInvoice({ client, modules, inventories }) {
 
     return (
 
-        <Container className="py-2 col-lg-6 col-md-10">
-            <Link href={route("clients.show", [client.id])} className="btn btn-link mb-4 text-decoration-none">
-                ← Back to Client
+        <Container className="py-2 col-lg-8 col-md-10 mt-4">
+
+            <Link href={route("clients.show", [client.id])} className="btn btn-link text-decoration-none">
+                ← Back
             </Link>
 
             <Card className="p-4 shadow-sm rounded-4 border-0">
+
                 <h2 className="text-center text-primary mb-5 fw-bold">Create Invoice</h2>
 
                 <Form onSubmit={handleSubmit}>
-                    <Row className="g-4 mb-4">
+                    <Row className="g-4 ">
                         <Col md={4}>
                             <Form.Group>
                                 <Form.Label className="fw-semibold">Client Name</Form.Label>
@@ -288,7 +288,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
 
                     {/* Products Section */}
                     {data.products.map((product, productIndex) => (
-                        <Card key={productIndex} className="mb-4 p-4 shadow-md rounded-3 bg-light-subtle">
+                        <Card key={productIndex}>
                             <Row className="align-items-center mb-3">
                                 <Col md={6}>
                                     <Form.Group>
@@ -308,14 +308,14 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                         onClick={() => removeProduct(productIndex)}
                                         className="me-2"
                                     >
-                                        <i className="ti ti-trash"></i> Remove Product
+                                        <i className="ti ti-trash"></i> Remove
                                     </Button>
                                     <Button
                                         variant="outline-success"
                                         size="sm"
                                         onClick={() => addItem(productIndex)}
                                     >
-                                        <i className="ti ti-plus"></i> Add Module
+                                        <i className="ti ti-plus"></i> Add
                                     </Button>
                                 </Col>
                             </Row>
@@ -474,7 +474,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                     size="sm"
                                                     onClick={() => addDimension(productIndex, itemIndex)}
                                                 >
-                                                    + Add Dimension
+                                                    + Add
                                                 </Button>
                                             )}
                                         </Col>
@@ -485,7 +485,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                 size="sm"
                                                 onClick={() => removeItem(productIndex, itemIndex)}
                                             >
-                                                <i className="ti ti-trash"></i> Remove Module
+                                                <i className="ti ti-trash"></i> Remove
                                             </Button>
                                         </Col>
                                     </Row>
@@ -493,6 +493,9 @@ export default function CreateInvoice({ client, modules, inventories }) {
                             ))}
                         </Card>
                     ))}
+
+
+                    <hr />
 
                     <div className="d-flex justify-content-end mb-5">
                         <Button variant="primary btn-sm" onClick={addProduct}>
@@ -523,8 +526,8 @@ export default function CreateInvoice({ client, modules, inventories }) {
                     </Card>
 
                     <div className="text-end">
-                        <Button type="submit" variant="success" size="lg" disabled={processing}>
-                            Create Invoice
+                        <Button type="submit" variant="success" size="sm" disabled={processing}>
+                            Create
                         </Button>
                     </div>
                 </Form>

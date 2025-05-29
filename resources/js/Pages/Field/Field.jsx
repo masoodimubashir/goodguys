@@ -6,6 +6,8 @@ import { ShowMessage } from '@/Components/ShowMessage';
 import $ from 'jquery';
 import 'datatables.net';
 import 'datatables.net-responsive';
+import Breadcrumb from "@/Components/BreadCrumbHeader";
+import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
 
 export default function Field({ fields: initialFields }) {
 
@@ -65,6 +67,12 @@ export default function Field({ fields: initialFields }) {
         });
     };
 
+    const breadcrumbs = [
+        { href: '/module', label: 'Back', active: true }
+    ];
+
+
+
     return (
         <AuthenticatedLayout>
 
@@ -73,27 +81,15 @@ export default function Field({ fields: initialFields }) {
 
             <div className="row g-4 mt-4">
                 <div className="d-flex justify-content-between align-items-center">
-                 
-                    <div className="row m-1">
-                        <div className="col-12">
-                            <ul className="app-line-breadcrumbs mb-3">
-                                <li>
-                                    <Link href={route('module.index')} className="f-s-14 f-w-500">
-                                        <span><i className="iconoir-home-alt"></i></span>
-                                    </Link>
-                                </li>
-                                <li className="active">
-                                    <Link href={route('module.index')} className="f-s-14 f-w-500">Back</Link>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
 
-                    {auth.user.role === 'admin' && (
-                        <Link href={route('field.create')} className="btn btn-sm btn-primary">
-                            <i className="ti ti-plus me-1"></i> Add Field
-                        </Link>
-                    )}
+                    <BreadCrumbHeader
+                        homeHref="/module"
+                        breadcrumbs={breadcrumbs}
+                    />
+
+                    <Link href={route('field.create')} className="btn btn-sm btn-primary">
+                        <i className="ti ti-plus me-1"></i> Add Field
+                    </Link>
                 </div>
                 <div className="col-12">
                     <div className="card">

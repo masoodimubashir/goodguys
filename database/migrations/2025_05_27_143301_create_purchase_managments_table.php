@@ -11,19 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('return_lists', function (Blueprint $table) {
+        Schema::create('purchase_managments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('purchase_list_id')->constrained('purchase_lists')->onDelete('cascade');
-            $table->string('item_name');
-            $table->date('return_date');
-            $table->integer('price');
-            $table->text('narration');
+            $table->integer('amount');
+            $table->string('narration');
+            $table->date('transaction_date');
             $table->tinyInteger('created_by')->nullable();
-            $table->tinyInteger('updated_by')->nullable();            
+            $table->tinyInteger('updated_by')->nullable();
             $table->timestamps();
         });
-
-
     }
 
     /**
@@ -31,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('return_lists');
+        Schema::dropIfExists('purchase_managments');
     }
 };

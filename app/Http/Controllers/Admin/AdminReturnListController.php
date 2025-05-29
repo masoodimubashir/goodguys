@@ -36,11 +36,11 @@ class AdminReturnListController extends Controller
 
             $validated = $request->validated();
 
-            if ($request->hasFile('bill')) {
-                $validated['bill'] = $request->file('bill')->store('purchase-lists', 'public');
-            }
+            // dd($validated);
 
-            ReturnList::create($validated);
+            ReturnList::create(array_merge($validated, [
+                'created_by' => auth()->id(),
+            ]));
 
             return redirect()->back()->with('message', 'Return list created successfully');
         } catch (\Exception $e) {
@@ -74,19 +74,9 @@ class AdminReturnListController extends Controller
             // Get validated data from the form request
             $validated = $request->validated();
 
-            // Handle file upload
-            if ($request->hasFile('bill')) {
-                // Delete old file if it exists
-                if ($returnList->bill) {
-                    Storage::disk('public')->delete($returnList->bill);
-                }
-                $validated['bill'] = $request->file('bill')->store('purchase-lists', 'public');
-            } else {
-                // Keep the existing bill if no new file was uploaded
-                $validated['bill'] = $returnList->bill;
-            }
-
-            $returnList->update($validated);
+            $returnList->update(array_merge($validated, [
+                'updated_by' => auth()->id(),
+            ]));
 
             return redirect()->back()->with('message', 'Return updated successfully');
         } catch (\Exception $e) {

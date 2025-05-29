@@ -5,10 +5,11 @@ import { ShowMessage } from '@/Components/ShowMessage';
 import $ from 'jquery';
 import 'datatables.net';
 import 'datatables.net-responsive';
+import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 
 export default function Client({ clients: initialClients }) {
-    
-    
+
+
 
     const [clients, setClients] = useState(initialClients);
     const tableHead = [
@@ -19,7 +20,7 @@ export default function Client({ clients: initialClients }) {
     const { flash, auth } = usePage().props;
     const { delete: destroy } = useForm();
 
-    
+
 
 
     useEffect(() => {
@@ -70,18 +71,30 @@ export default function Client({ clients: initialClients }) {
         });
     };
 
+    const breadcrumbs = [
+        { href: '/clients', label: 'Back', active: true }
+    ];
+
     return (
         <AuthenticatedLayout>
             <Head title="Clients" />
 
             <div className="row g-4 mb-3 mt-3">
-                <div className="d-flex justify-content-end align-items-center">
+
+                <div className="d-flex justify-content-between align-items-center">
+
+                    <BreadCrumbHeader
+                        breadcrumbs={breadcrumbs}
+                    />
+                    
                     {auth.user.role === 'admin' && (
                         <Link href={route('clients.create')} className="btn btn-sm btn-primary me-2">
                             <i className="ti ti-plus me-1"></i> Add Client
                         </Link>
                     )}
+
                 </div>
+
                 <div className="col-12">
                     <div className="card">
                         <div className="card-body p-3">
@@ -103,41 +116,41 @@ export default function Client({ clients: initialClients }) {
                                                             {client.client_name}
                                                         </Link>
                                                     </td>
-                                                    
+
                                                     <td>{client.client_type}</td>
 
                                                     <td>{client.site_name ?? 'NA'}</td>
 
                                                     <td>{client.client_email}</td>
-                                                    
+
                                                     <td>{client.client_phone}</td>
-                                                    
+
                                                     <td>{client.client_address}</td>
-                                                    
+
                                                     <td>{client.service_charge?.service_charge || 0}</td>
-                                                    
-                                                    
-                                                        <td>
-                                                            <div className="btn-group dropdown-icon-none">
-                                                                <button className="border-0 icon-btn dropdown-toggle active"
-                                                                    type="button" data-bs-toggle="dropdown"
-                                                                    data-bs-auto-close="true" aria-expanded="false">
-                                                                    <i className="ti ti-dots"></i>
-                                                                </button>
-                                                                <ul className="dropdown-menu">
-                                                                    <li>
-                                                                        <Link className="dropdown-item" href={route('clients.edit', client.id)}>
-                                                                            <i className="ti ti-edit"></i> Edit
-                                                                        </Link>
-                                                                    </li>
-                                                                    <li>
-                                                                        <button className="dropdown-item" onClick={() => handleDelete(client.id)}>
-                                                                            <i className="ti ti-trash"></i> Delete
-                                                                        </button>
-                                                                    </li>
-                                                                </ul>
-                                                            </div>
-                                                        </td>
+
+
+                                                    <td>
+                                                        <div className="btn-group dropdown-icon-none">
+                                                            <button className="border-0 icon-btn dropdown-toggle active"
+                                                                type="button" data-bs-toggle="dropdown"
+                                                                data-bs-auto-close="true" aria-expanded="false">
+                                                                <i className="ti ti-dots"></i>
+                                                            </button>
+                                                            <ul className="dropdown-menu">
+                                                                <li>
+                                                                    <Link className="dropdown-item" href={route('clients.edit', client.id)}>
+                                                                        <i className="ti ti-edit"></i> Edit
+                                                                    </Link>
+                                                                </li>
+                                                                <li>
+                                                                    <button className="dropdown-item" onClick={() => handleDelete(client.id)}>
+                                                                        <i className="ti ti-trash"></i> Delete
+                                                                    </button>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                             ))
                                         ) : (

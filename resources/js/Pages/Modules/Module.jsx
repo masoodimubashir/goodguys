@@ -6,6 +6,7 @@ import { ShowMessage } from "@/Components/ShowMessage";
 import $ from "jquery";
 import "datatables.net";
 import "datatables.net-responsive";
+import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
 
 export default function Module({ modules: initialModules }) {
     const [modules, setModules] = useState(initialModules);
@@ -60,6 +61,10 @@ export default function Module({ modules: initialModules }) {
         });
     };
 
+    const breadcrumbs = [
+        { href: '/module', label: 'Back', active: true }
+    ];
+
     return (
 
 
@@ -70,25 +75,25 @@ export default function Module({ modules: initialModules }) {
 
             <div className="row g-4 mt-4">
 
-                <div className="d-flex justify-content-end align-items-center mb-3 gap-2">
+                <div className="d-flex justify-content-between align-items-center">
 
-                    {auth.user.role === "admin" && (
+                    <BreadCrumbHeader
+                        homeHref="/module"
+                        breadcrumbs={breadcrumbs}
+                    />
 
-                        <>
-                          
-                            <div className="d-flex gap-2">
-                                <Link href={route("module.create")} className="btn btn-sm btn-primary">
-                                    <i className="ti ti-plus me-1"></i> Add Module
-                                </Link>
+                    <div className="d-flex gap-2">
+                        <Link href={route("module.create")} className="btn btn-sm btn-primary">
+                            <i className="ti ti-plus me-1"></i> Add Module
+                        </Link>
 
-                                <Link href={route('field.index')} className="btn btn-sm btn-primary">
-                                    <i className="ti ti-eye me-1"></i> View Fields
-                                </Link>
-                            </div>
-                        
-                        </>
+                        <Link href={route('field.index')} className="btn btn-sm btn-primary">
+                            <i className="ti ti-eye me-1"></i> View Fields
+                        </Link>
+                    </div>
 
-                    )}
+
+
                 </div>
                 <div className="col-12">
                     <div className="card shadow-sm">
@@ -168,6 +173,6 @@ export default function Module({ modules: initialModules }) {
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </AuthenticatedLayout >
     );
 }

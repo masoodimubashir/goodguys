@@ -179,17 +179,19 @@ const styles = StyleSheet.create({
   }
 });
 
-const ChallanToPdf = ({ client, challans }) => {
+const ChallanToPdf = ({ client, challans, company_profile }) => {
+
+
   // Calculate totals across all challans
   let combinedSubtotal = 0;
   let combinedServiceCharge = 0;
   let combinedTotal = 0;
-  
+
   const processedChallans = challans.map(challan => {
     const items = challan.challans || [];
     const serviceCharge = parseFloat(challan.service_charge) || 0;
     const hasVisiblePrices = items.some(item => item.is_price_visible);
-    
+
     let challanSubtotal = 0;
     const processedItems = items.map(item => {
       const quantity = parseFloat(item.unit_count) || 0;
@@ -212,7 +214,7 @@ const ChallanToPdf = ({ client, challans }) => {
 
     const serviceChargeAmount = (challanSubtotal * serviceCharge / 100);
     const challanTotal = challanSubtotal + serviceChargeAmount;
-    
+
     if (hasVisiblePrices) {
       combinedSubtotal += challanSubtotal;
       combinedServiceCharge += serviceChargeAmount;
@@ -234,27 +236,32 @@ const ChallanToPdf = ({ client, challans }) => {
   return (
 
     <Document>
-      
+
       <Page size="A4" style={styles.page}>
+
         {/* Watermark */}
-        <Text style={styles.watermark}>COMBINED CHALLAN</Text>
+        <Text style={styles.watermark}>
+          {company_profile?.company_name || 'Company Name'}
+        </Text>
 
         {/* Header */}
         <View style={styles.header}>
           <View>
             <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.primary }}>
-              {client?.site_name || 'Company Name'}
+              {company_profile?.company_name || 'Company Name'}
             </Text>
             <Text style={styles.companyInfo}>
-              Combined Delivery Challan {"\n"}
-              Contact: {client?.client_phone || '-'} {"\n"}
-              Email: {client?.client_email || '-'}
+              Invoice {"\n"}
+              Contact: {company_profile?.company_contact_no || '-'} {"\n"}
+              Email: {company_profile?.company_email || '-'}
+              Address: {company_profile?.company_address || '-'}
             </Text>
           </View>
           <View>
-            <Text style={{ fontSize: 24, fontWeight: 'black', color: colors.secondary }}>COMBINED CHALLAN</Text>
+            <Text style={{ fontSize: 24, fontWeight: 'black', color: colors.secondary }}>Invoice</Text>
           </View>
         </View>
+
 
         {/* Client Summary */}
         <View style={styles.challanHeader}>
@@ -280,6 +287,8 @@ const ChallanToPdf = ({ client, challans }) => {
           </View>
         </View>
 
+
+
         {/* Individual Challan Sections */}
         {processedChallans.map((challan, index) => (
           <View key={challan.id} style={styles.section}>
@@ -294,7 +303,7 @@ const ChallanToPdf = ({ client, challans }) => {
                   </Text>
                 )}
               </View>
-              
+
               <View style={styles.table}>
                 <View style={styles.tableHeader}>
                   <Text style={styles.col1}>ITEM NAME</Text>
@@ -307,7 +316,7 @@ const ChallanToPdf = ({ client, challans }) => {
                     </>
                   )}
                 </View>
-                
+
                 {challan.processedItems.map((item, itemIndex) => (
                   <View
                     style={[
@@ -316,7 +325,7 @@ const ChallanToPdf = ({ client, challans }) => {
                     ]}
                     key={itemIndex}
                   >
-                    <Text style={styles.col1}>{item.product_name}</Text>
+                    <Text style={styles.col1}>{item.item_name}</Text>
                     <Text style={styles.col2}>{item.description || '-'}</Text>
                     <Text style={styles.col3}>{item.quantity}</Text>
                     {item.is_price_visible && challan.hasVisiblePrices && (
@@ -341,7 +350,7 @@ const ChallanToPdf = ({ client, challans }) => {
                   </View>
                   <View style={[styles.serviceChargeRow, { backgroundColor: colors.primary }]}>
                     <Text style={[styles.label, { color: 'white', fontWeight: 'bold' }]}>Challan Total:</Text>
-                    <Text style={[styles.value, { color: 'white', fontWeight: 'bold' }]}>₹{challan.challanTotal.toFixed(2)}</Text>
+                    <Text style={[styles.value, { color: 'white', fontWeight: 'bold' }]}>₹{challans.length.toFixed(2)}</Text>
                   </View>
                 </>
               )}

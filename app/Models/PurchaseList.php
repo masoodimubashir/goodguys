@@ -11,8 +11,9 @@ class PurchaseList extends Model
 
     protected $fillable = [
         'client_id',
-        'vendor_name',
+        'vendor_id',
         'purchase_date',
+        'list_name',
         'bill',
         'bill_total',
         'bill_description',
@@ -56,7 +57,35 @@ class PurchaseList extends Model
     {
         return $this->belongsTo(Client::class);
     }
-  
 
-    
+
+    /**
+     * Get the vendor that owns the PurchaseList
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class);
+    }
+
+    /**
+     * Get all of the purchasemanagments for the PurchaseList
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function purchaseManagments(): HasMany
+    {
+        return $this->hasMany(PurchaseManagment::class);
+    }
+
+    /**
+     * Get all of the returnLists for the PurchaseList
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function returnLists(): HasMany
+    {
+        return $this->hasMany(ReturnList::class);
+    }
 }

@@ -6,6 +6,7 @@ import TextInput from "@/Components/TextInput";
 import InputError from "@/Components/InputError";
 import Button from "@/Components/Button";
 import { useState } from "react";
+import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
 
 export default function CreateModule({ fields }) {
     const [touched, setTouched] = useState({
@@ -24,7 +25,7 @@ export default function CreateModule({ fields }) {
         dimension_value: field.dimension_value,
     }));
 
-   
+
 
     const { data, setData, post, processing, errors } = useForm({
         module_name: '',
@@ -41,7 +42,7 @@ export default function CreateModule({ fields }) {
             }
         ]
     });
-    
+
 
     const handleChange = (index, key, value) => {
         const updated = [...data.attributes];
@@ -99,7 +100,7 @@ export default function CreateModule({ fields }) {
     };
 
     const handleSubmit = (e) => {
-        
+
         e.preventDefault();
 
         setTouched({
@@ -132,10 +133,13 @@ export default function CreateModule({ fields }) {
                 fields: formattedFields,
             },
         });
-        
+
     };
 
 
+    const breadcrumbs = [
+        { href: '/module', label: 'Back', active: true }
+    ];
 
 
 
@@ -145,6 +149,7 @@ export default function CreateModule({ fields }) {
             <Head title="Create Module" />
 
             <div className="container-fluid">
+
                 <div className="row m-1">
                     <div className="col-12">
                         <ul className="app-line-breadcrumbs mb-3">
@@ -159,6 +164,8 @@ export default function CreateModule({ fields }) {
                         </ul>
                     </div>
                 </div>
+
+               
 
                 <div className="row">
                     <div className="col-12">
@@ -399,7 +406,7 @@ export default function CreateModule({ fields }) {
                                                                 className="btn btn-danger btn-sm"
                                                                 onClick={() => removeRow(index)}
                                                             >
-                                                               <i class="ti ti-trash"></i>
+                                                                <i class="ti ti-trash"></i>
                                                             </button>
                                                         )}
                                                     </div>

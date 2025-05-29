@@ -13,6 +13,7 @@ import CostIncurredTab from '@/Components/CostIncurredTab';
 import $ from 'jquery';
 import 'datatables.net';
 import 'datatables.net-responsive';
+import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 
 export default function ShowClient({ client, modules = [], inventoryOptions = [], vendors = [], company_profile = null }) {
 
@@ -208,7 +209,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         }
     };
 
-    // Delete handler
     const handleDelete = (itemId, type) => {
         const url = type + '.' + 'destroy';
         destroy(route(url, itemId), {
@@ -223,7 +223,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         });
     };
 
-    // Inventory/module change handlers
     const handleSourceChange = (type, e) => {
         setState(prev => ({ ...prev, isLoading: true }));
         const source = type === 'inventory'
@@ -244,9 +243,23 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         setState(prev => ({ ...prev, isLoading: false }));
     };
 
+    const breadcrumbs = [
+        { href: '/clients', label: 'Back', active: true }
+    ];
+
     return (
         <AuthenticatedLayout>
             <Head title={`Client - ${client.client_name}`} />
+
+
+            <div className="d-flex justify-content-between align-items-center">
+
+                <BreadCrumbHeader
+                    breadcrumbs={breadcrumbs}
+                />
+
+
+            </div>
 
             {/* Main Content */}
             <div className="container-fluid py-4">
@@ -417,6 +430,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 handleSubmit={(e) => handleSubmit('cost-incurred', e)}
             />
         </AuthenticatedLayout>
+
     );
 }
 
@@ -437,10 +451,10 @@ const BankAccountCard = ({ BankProfile }) => {
                     <h5 className="card-title mb-0">Bank Account</h5>
                     <div className="d-flex gap-2">
                         <Link href={route('bank-account.edit', BankProfile.id)} className="btn btn-sm btn-outline-primary">
-                            <i className="ti ti-edit me-1"></i> Edit
+                            <i className="ti ti-edit"></i>
                         </Link>
                         <button onClick={handleDelete} className="btn btn-sm btn-outline-danger">
-                            <i className="ti ti-trash me-1"></i> Delete
+                            <i className="ti ti-trash"></i>
                         </button>
                     </div>
                 </div>
@@ -490,7 +504,7 @@ const ClientInfoCard = ({ client }) => {
                 <div className="card-header  d-flex justify-content-between align-items-center">
                     <h5 className="card-title mb-0">Client Information</h5>
                     <Link href={route('clients.edit', client.id)} className="btn btn-sm btn-outline-primary">
-                        <i className="ti ti-edit me-1"></i> Edit
+                        <i className="ti ti-edit"></i>
                     </Link>
                 </div>
                 <div className="card-body">

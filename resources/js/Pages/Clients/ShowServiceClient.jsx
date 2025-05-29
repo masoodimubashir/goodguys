@@ -9,8 +9,11 @@ import PurchaseListTab from '@/Components/PurchaseListTab';
 import $ from 'jquery';
 import 'datatables.net';
 import 'datatables.net-responsive';
+import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 
-export default function ShowClient({ client, modules = [], inventoryOptions = [], vendors = [], company_profile = null }) {
+export default function ShowClient({ client, modules = [], inventoryOptions = [], vendors = [], company_profile = null, client_vendors = [] }) {
+
+    console.log(vendors);
 
 
     const { delete: destroy } = useForm();
@@ -32,8 +35,9 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
     };
 
     const purchaseListForm = useInertiaForm({
+        vendor_id: '',
         client_id: client.id || '',
-        vendor_name: client.client_name,
+        list_name: '',
         purchase_date: new Date().toISOString().split('T')[0],
         bill: null,
         bill_total: '',
@@ -75,6 +79,8 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         if (flash.message) ShowMessage('success', flash.message);
         if (flash.error) ShowMessage('error', flash.error);
     }, [flash]);
+
+
 
     // Modal handlers
     const openModal = (type, item = null) => {
@@ -165,11 +171,22 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         });
     };
 
-
+    const breadcrumbs = [
+        { href: '/clients', label: 'Back', active: true }
+    ];
 
     return (
         <AuthenticatedLayout>
             <Head title={`Client - ${client.client_name}`} />
+
+            <div className="d-flex justify-content-between align-items-center">
+
+                <BreadCrumbHeader
+                    breadcrumbs={breadcrumbs}
+                />
+
+
+            </div>
 
             {/* Main Content */}
             <div className="container-fluid py-4">
@@ -186,7 +203,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                     <i className="ti ti-file-invoice me-2"></i> Invoice
                                 </Link>
                             </li>
-                          
+
                             <li>
                                 <Link href={route('bank-account.create', { client_id: client.id })} className="dropdown-item">
                                     <i className="ti ti-building-bank me-2"></i> Bank Account
@@ -218,12 +235,13 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
 
                 {/* Tabs Section */}
 
-                        <PurchaseListTab
-                            client={client}
-                            tableRef={refs.purchaseListRef}
-                            handleEditAccount={(purchase_list) => openModal('purchase-list', purchase_list)}
-                            handleDeleteItem={handleDelete}
-                        />
+                <PurchaseListTab
+                    client={client}
+                    tableRef={refs.purchaseListRef}
+                    handleEditAccount={(purchase_list) => openModal('purchase-list', purchase_list)}
+                    handleDeleteItem={handleDelete}
+                    clientVendors={client_vendors}
+                />
 
             </div>
 
@@ -263,10 +281,10 @@ const BankAccountCard = ({ BankProfile }) => {
                     <h5 className="card-title mb-0">Bank Account</h5>
                     <div className="d-flex gap-2">
                         <Link href={route('bank-account.edit', BankProfile.id)} className="btn btn-sm btn-outline-primary">
-                            <i className="ti ti-edit me-1"></i> Edit
+                            <i className="ti ti-edit"></i>
                         </Link>
                         <button onClick={handleDelete} className="btn btn-sm btn-outline-danger">
-                            <i className="ti ti-trash me-1"></i> Delete
+                            <i className="ti ti-trash"></i>
                         </button>
                     </div>
                 </div>
@@ -316,7 +334,7 @@ const ClientInfoCard = ({ client }) => {
                 <div className="card-header  d-flex justify-content-between align-items-center">
                     <h5 className="card-title mb-0">Client Information</h5>
                     <Link href={route('clients.edit', client.id)} className="btn btn-sm btn-outline-primary">
-                        <i className="ti ti-edit me-1"></i> Edit
+                        <i className="ti ti-edit"></i>
                     </Link>
                 </div>
                 <div className="card-body">
@@ -388,17 +406,44 @@ const PurchaseListModal = ({
             <Form onSubmit={handleSubmit} encType='multipart/form-data'>
                 <Modal.Body className="pt-0">
                     <div className="row">
+
+
+
                         <div className="col-md-6">
                             <Form.Group className="mb-3">
                                 <Form.Label>Vendor Name</Form.Label>
-                                <Form.Control
-                                    value={form.data.vendor_name}
-                                    onChange={(e) => form.setData('vendor_name', e.target.value)}
-                                    isInvalid={!!errors.vendor_name}
-                                />
-                                <Form.Control.Feedback type="invalid">{errors.vendor_name}</Form.Control.Feedback>
+                                <Form.Select
+                                    value={form.data.vendor_id}
+                                    onChange={e => {
+                                        const selectedVendor = vendors.find(v => v.id === parseInt(e.target.value));
+                                        form.setData('vendor_id', e.target.value);
+                                        form.setData('vendor_name', selectedVendor ? selectedVendor.vendor_name : '');
+                                    }}
+                                    isInvalid={!!errors.vendor_id}
+                                >
+                                    <option value="">Select Vendor</option>
+                                    {vendors.map(vendor => (
+                                        <option key={vendor.id} value={vendor.id}>{vendor.vendor_name}</option>
+                                    ))}
+                                </Form.Select>
+                                <Form.Control.Feedback type="invalid">{errors.vendor_id}</Form.Control.Feedback>
                             </Form.Group>
                         </div>
+
+                        
+                        <div className="col-md-6">
+                            <Form.Group className="mb-3">
+                                <Form.Label>List Name</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={form.data.list_name}
+                                    onChange={(e) => form.setData('list_name', e.target.value)}
+                                    isInvalid={!!errors.list_name}
+                                />
+                                <Form.Control.Feedback type="invalid">{errors.list_name}</Form.Control.Feedback>
+                            </Form.Group>
+                        </div>
+
                         <div className="col-md-6">
                             <Form.Group className="mb-3">
                                 <Form.Label>Purchase Date</Form.Label>
@@ -426,7 +471,7 @@ const PurchaseListModal = ({
                         </div>
 
 
-                        <div className="col-md-6">
+                        <div className="col-12">
                             <Form.Group className="mb-3">
                                 <Form.Label>Bill</Form.Label>
                                 <Form.Control

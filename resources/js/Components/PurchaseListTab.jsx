@@ -1,8 +1,14 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Link } from '@inertiajs/react';
+import { CreditCard, Edit, Eye, Trash } from 'lucide-react';
 import React from 'react';
+import { Table } from 'react-bootstrap';
 
-const PurchaseListTab = ({ client, tableRef, handleEditAccount, handleDeleteItem }) => {
+const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
+
+    console.log('Client Vendors', clientVendors);
+
+
 
     const isImageFile = (filename) => {
         return /\.(jpg|jpeg|png|gif)$/i.test(filename);
@@ -12,26 +18,28 @@ const PurchaseListTab = ({ client, tableRef, handleEditAccount, handleDeleteItem
         return filename.split('.').pop().toLowerCase();
     };
 
+    const cal_total_with_service_charge = (total, service_charge) => {
+        return (total + (total * service_charge / 100));
+    }
+
     return (
 
         <>
-            <table ref={tableRef} className="table table-striped text-start align-middle">
+            {/* <Table bordered size='sm' ref={tableRef} className="table table-striped text-start align-middle">
                 <thead>
                     <tr>
-                        <th className="text-start align-middle">Bill</th>
-
+                        <th className="text-start align-middle">Bill Proof</th>
                         <th className="text-start align-middle">Vendor Name</th>
+                        <th className="text-start align-middle">List Name</th>
                         <th className="text-start align-middle">Purchase Date</th>
                         <th className="text-start align-middle">Bill Total</th>
+                        <th className="text-start align-middle">Total with Service Charge</th>
                         <th className='text-start align-middle'>View</th>
                         <th className="text-start align-middle">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {client.purchase_lists.map(entry => ({
-                        ...entry,
-                        type: 'purchase-list'
-                    })).map((entry) => {
+                    {client_vendors.map(entry => ({ ...entry, type: 'purchase-list' })).map((entry) => {
                         const fileExtension = entry.bill ? getFileExtension(entry.bill) : null;
 
                         return (
@@ -84,12 +92,20 @@ const PurchaseListTab = ({ client, tableRef, handleEditAccount, handleDeleteItem
                                 </td>
 
                                 <td className="text-start align-middle">
+                                    {entry.vendor.vendor_name}
+                                </td>
+                                <td className="text-start align-middle">
                                     <div className="fw-medium">
                                         <Link href={route('purchase-list.show', entry.id)} className="text-decoration-none">
-                                            {entry.vendor_name}
+                                            {entry.list_name}
                                         </Link>
                                     </div>
                                 </td>
+
+
+
+
+
 
                                 <td className="text-start align-middle">
                                     {entry.purchase_date ? (
@@ -114,6 +130,10 @@ const PurchaseListTab = ({ client, tableRef, handleEditAccount, handleDeleteItem
                                 </td>
 
 
+                                <td>
+                                    {cal_total_with_service_charge(entry.bill_total, client.service_charge.service_charge)}
+                                </td>
+
 
                                 <td className="text-start align-middle">
 
@@ -123,7 +143,10 @@ const PurchaseListTab = ({ client, tableRef, handleEditAccount, handleDeleteItem
 
                                 </td>
 
+
                                 <td className="text-start align-middle">
+
+
                                     <div className="btn-group dropdown-icon-none">
                                         <button
                                             className="border-0 icon-btn dropdown-toggle"
@@ -139,7 +162,12 @@ const PurchaseListTab = ({ client, tableRef, handleEditAccount, handleDeleteItem
                                                     className="dropdown-item"
                                                     href={route('challan.show', entry.id)}
                                                 >
-                                                    <i className="ti ti-eye"></i> Challans
+                                                    <Eye size={14}/> Challans
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <Link href={route('purchase-managment.index', ({ purchase_list_id: entry.id }))} className="dropdown-item">
+                                                    <CreditCard size={14}/>  View Purchases
                                                 </Link>
                                             </li>
                                             <li>
@@ -147,7 +175,7 @@ const PurchaseListTab = ({ client, tableRef, handleEditAccount, handleDeleteItem
                                                     className="dropdown-item"
                                                     onClick={() => handleEditAccount(entry)}
                                                 >
-                                                    <i className="ti ti-edit"></i> Edit
+                                                    <Edit size={14}/> Edit
                                                 </button>
                                             </li>
                                             <li>
@@ -155,9 +183,10 @@ const PurchaseListTab = ({ client, tableRef, handleEditAccount, handleDeleteItem
                                                     className="dropdown-item"
                                                     onClick={() => handleDeleteItem(entry.id, entry.type)}
                                                 >
-                                                    <i className="ti ti-trash"></i> Delete
+                                                    <Trash size={14}/> Delete
                                                 </button>
                                             </li>
+                                            
                                         </ul>
                                     </div>
                                 </td>
@@ -166,7 +195,62 @@ const PurchaseListTab = ({ client, tableRef, handleEditAccount, handleDeleteItem
                     }
                     )}
                 </tbody>
-            </table>
+            </Table> */}
+
+
+            <Table bordered size='md' ref={tableRef} className="table table-striped text-start align-middle">
+                <thead>
+                    <tr>
+                        <th className="text-start align-middle">Vendor Name</th>
+                        <th className="text-start align-middle">Contact Number</th>
+                        <th className="text-start align-middle">Email</th>
+                        <th className="text-start align-middle">Description</th>
+                        <th className="text-start align-middle">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {clientVendors.map(entry => {
+                        const fileExtension = entry.bill ? getFileExtension(entry.bill) : null;
+
+                        return (
+                            <tr key={`purchase-list-${entry.id}`} className="align-middle">
+
+
+                                <td className="text-start align-middle">
+                                    {entry.vendor_name}
+                                </td>
+
+                                <td className="text-start align-middle">
+                                    <div className="fw-medium">
+                                        <Link href={route('purchase-list.show', entry.id)} className="text-decoration-none">
+                                            {entry.contact_number}
+                                        </Link>
+                                    </div>
+                                </td>
+
+                                {/* <Link href={route('purchase-list.show', entry.id)} className="text-decoration-none">
+                                    <i className="ti ti-eye fs-4"></i>
+                                </Link> */}
+
+                                <td className="text-start align-middle">
+                                    {entry.email}
+                                </td>
+
+                                <td className="text-start align-middle">
+                                    {entry.description}
+                                </td>
+
+                                <td className="text-start align-middle">
+                                    <Link href={route('purchase-list.index', ({ vendor_id: entry.id }))}>
+                                        <Eye className='text-success' size={20} />
+                                    </Link>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </Table>
+
 
         </>
 

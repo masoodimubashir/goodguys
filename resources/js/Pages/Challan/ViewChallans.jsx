@@ -7,8 +7,10 @@ import ChallanPdf from '../PDF/ChallanPdf';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import ChallanToPdf from '../PDF/ChallanToPdf';
 
-const ViewChallans = ({ product_list }) => {
+const ViewChallans = ({ product_list, company_profile }) => {
 
+    console.log(company_profile);
+    
 
     const [deleteId, setDeleteId] = useState(null);
     const [selectedChallans, setSelectedChallans] = useState([]);
@@ -37,9 +39,6 @@ const ViewChallans = ({ product_list }) => {
             setSelectedChallans([]);
         }
     };
-
-    console.log(selectedChallans);
-    
 
     const getChallanTotals = (challanRef) => {
         const items = challanRef.challans || [];
@@ -111,11 +110,12 @@ const ViewChallans = ({ product_list }) => {
                                 <PDFDownloadLink
                                     document={
                                         <ChallanToPdf
+                                            company_profile={company_profile}
                                             client={product_list.client}
                                             challans={getSelectedChallanData()}
                                         />
                                     }
-                                    fileName={`combined-challans-${Date.now()}.pdf`}
+                                    fileName={`${Date.now()}.pdf`}
                                 >
                                     {({ loading }) => (
                                         <Button variant="primary" disabled={loading}>

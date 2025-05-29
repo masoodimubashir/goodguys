@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateChallanRequest;
 use App\Models\Challan;
 use App\Models\ChallanRefrence;
 use App\Models\Client;
+use App\Models\CompanyProfile;
 use App\Models\PurchasedProduct;
 use App\Models\PurchaseList;
 use App\Models\ReturnList;
@@ -26,7 +27,8 @@ class AdminChallanController extends Controller
      */
     public function index()
     {
-        //
+        
+
     }
 
     /**
@@ -43,7 +45,6 @@ class AdminChallanController extends Controller
 
         $validated = $request->validated();
 
-
         DB::beginTransaction();
 
 
@@ -54,8 +55,6 @@ class AdminChallanController extends Controller
                 'service_charge' => $validated['service_charge'],
                 'challan_number' => uniqid('CH'),
             ]);
-
-            // dd($challanReference);
 
             // Create Challan Items
             $challanItems = [];
@@ -102,6 +101,7 @@ class AdminChallanController extends Controller
 
         return Inertia::render("Challan/ViewChallans", [
             'product_list' => $product_list,
+            'company_profile' => CompanyProfile::first()
         ]);
     }
 

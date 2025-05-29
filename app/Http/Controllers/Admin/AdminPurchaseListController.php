@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePurchaseListRequest;
 use App\Http\Requests\UpdatePurchaseListRequest;
 use App\Models\PurchaseList;
+use App\Models\Vendor;
 use Exception;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -17,9 +18,19 @@ class AdminPurchaseListController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+         return Inertia::render("PurchaseManagment/purchases", [
+            'vendor' => Vendor::with([
+                'purchaseLists' => function ($query) {
+                    $query->with([
+                        'purchaseManagments',
+                        'returnLists',
+                        'client',
+                    ]);
+                }
+            ])->find($request->vendor_id),
+        ]);
     }
 
     /**
@@ -35,6 +46,7 @@ class AdminPurchaseListController extends Controller
         try {
 
             $validated = $request->validated();
+
 
             if ($request->hasFile('bill')) {
                 $validated['bill'] = $request->file('bill')->store('purchase-lists', 'public');
@@ -106,20 +118,28 @@ class AdminPurchaseListController extends Controller
     public function update(UpdatePurchaseListRequest $request, PurchaseList $purchaseList)
     {
         try {
-            $validated = $request->validated();
 
+
+            $validated = $request->validated();
+            
             // Handle file upload
             if ($request->hasFile('bill')) {
-                // Delete old file if needed
-                Storage::disk('public')->delete($purchaseList->bill);
+                // Delete old file if it exists
+                if ($purchaseList->bill) {
+                    Storage::disk('public')->delete($purchaseList->bill);
+                }
                 $validated['bill'] = $request->file('bill')->store('purchase-lists', 'public');
+            } else {
+                // If no new file uploaded, keep the existing bill
+                $validated['bill'] = $purchaseList->bill;
             }
 
-            $purchaseList->update($validated);
+            $purchaseList->update(array_merge($validated, [
+                'updated_by' => auth()->id(),
+            ]));
 
             return redirect()->back()->with('message', 'Purchase list updated successfully');
-        } catch (\Throwable $e) {
-            Log::error('Error updating purchase list: ' . $e->getMessage());
+        } catch (Exception $e) {
             return redirect()->back()->with('error', 'Failed to update purchase list');
         }
     }
@@ -130,14 +150,15 @@ class AdminPurchaseListController extends Controller
     public function destroy($id)
     {
         try {
-
             $purchaseList = PurchaseList::findOrFail($id);
-
+            // Delete the bill file if it exists
+            if ($purchaseList->bill) {
+                Storage::disk('public')->delete($purchaseList->bill);
+            }
             $purchaseList->delete();
 
             return redirect()->back()->with('message', 'Purchase list deleted successfully');
         } catch (Exception $e) {
-
             return redirect()->back()->with('error', 'Failed to delete purchase list');
         }
     }
