@@ -71,7 +71,7 @@ export default function User({ users: initialUsers }) {
                             <i className="ti ti-plus me-1"></i> Add User
                         </Link>
                     )}
-                    
+
                 </div>
                 <div className="col-12">
                     <div className="card">
@@ -94,31 +94,16 @@ export default function User({ users: initialUsers }) {
                                                     <td>{user.name}</td>
                                                     <td>{user.email}</td>
                                                     {auth.user.role === 'admin' && (
-                                                        <td className="text-end">
-                                                            <div className="btn-group dropdown-icon-none">
-                                                                <button
-                                                                    className="border-0 icon-btn dropdown-toggle active"
-                                                                    type="button"
-                                                                    data-bs-toggle="dropdown"
-                                                                    data-bs-auto-close="true"
-                                                                    aria-expanded="false"
-                                                                >
-                                                                
-                                                                    <i class="ti ti-dots"></i>
+                                                        <td className="">
+                                                            <div className='d-flex gap-4'>
+                                                                <Link  href={route('users.edit', user.id)} title='Edit'>
+                                                                    <i className="ti ti-edit"></i> 
+                                                                </Link>
+                                                                <button className="dropdown-item" onClick={() => handleDelete(user.id)} title='Delete'>
+                                                                    <i className="ti ti-trash text-danger"></i>
                                                                 </button>
-                                                                <ul className="dropdown-menu dropdown-menu-end">
-                                                                    <li>
-                                                                        <Link className="dropdown-item" href={route('users.edit', user.id)}>
-                                                                            <i className="ti ti-edit"></i> Edit
-                                                                        </Link>
-                                                                    </li>
-                                                                    <li>
-                                                                        <button className="dropdown-item" onClick={() => handleDelete(user.id)}>
-                                                                            <i className="ti ti-trash"></i> Delete
-                                                                        </button>
-                                                                    </li>
-                                                                </ul>
                                                             </div>
+
                                                         </td>
                                                     )}
                                                     {auth.user.role !== 'admin' && <td></td>}

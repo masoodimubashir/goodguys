@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInventoryRequest;
+use App\Http\Requests\UpdateInventoryRequest;
 use App\Models\Inventory;
 use Exception;
 use Illuminate\Support\Facades\Log;
@@ -67,7 +68,7 @@ class AdminInventoryController extends Controller
         ]);
     }
 
-    public function update(StoreInventoryRequest $request, Inventory $inventory)
+    public function update(UpdateInventoryRequest $request, Inventory $inventory)
     {
         try {
             $request->merge([

@@ -131,24 +131,13 @@ export default function Client({ clients: initialClients }) {
 
 
                                                     <td>
-                                                        <div className="btn-group dropdown-icon-none">
-                                                            <button className="border-0 icon-btn dropdown-toggle active"
-                                                                type="button" data-bs-toggle="dropdown"
-                                                                data-bs-auto-close="true" aria-expanded="false">
-                                                                <i className="ti ti-dots"></i>
-                                                            </button>
-                                                            <ul className="dropdown-menu">
-                                                                <li>
-                                                                    <Link className="dropdown-item" href={route('clients.edit', client.id)}>
-                                                                        <i className="ti ti-edit"></i> Edit
+                                                        <div className="d-flex">
+                                                                    <Link className="dropdown-item" href={route('clients.edit', client.id)} title='Edit'>
+                                                                        <i className="ti ti-edit"></i>
                                                                     </Link>
-                                                                </li>
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => handleDelete(client.id)}>
-                                                                        <i className="ti ti-trash"></i> Delete
+                                                                    <button className="dropdown-item" onClick={() => handleDelete(client.id)} title='Delete'>
+                                                                        <i className="ti ti-trash text-danger"></i>
                                                                     </button>
-                                                                </li>
-                                                            </ul>
                                                         </div>
                                                     </td>
                                                 </tr>

@@ -11,6 +11,8 @@ import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
 import { Row, Form } from "react-bootstrap";
 
 export default function Vendor({ vendors: initialVendors }) {
+
+
     const [vendors, setVendors] = useState(initialVendors);
     const [showModal, setShowModal] = useState(false);
     const [currentVendor, setCurrentVendor] = useState(null);
@@ -176,30 +178,21 @@ export default function Vendor({ vendors: initialVendors }) {
                                                     <td>{vendor.description || <span className="text-muted">N/A</span>}</td>
                                                     <td>{new Date(vendor.created_at).toLocaleString()}</td>
                                                     <td>
-                                                        <div className="btn-group dropdown-icon-none">
-                                                            <button className="border-0 icon-btn b-r-4 dropdown-toggle active"
-                                                                type="button" data-bs-toggle="dropdown"
-                                                                data-bs-auto-close="true" aria-expanded="false">
-                                                                <i className="ti ti-dots"></i>
-                                                            </button>
-                                                            <ul className="dropdown-menu">
-                                                                <li>
+                                                        <div className="d-flex">
                                                                     <button
                                                                         className="dropdown-item"
+                                                                        title="Edit"
                                                                         onClick={() => openEditModal(vendor)}
                                                                     >
-                                                                        <i className="ti ti-edit me-2"></i> Edit
+                                                                        <i className="ti ti-edit me-2"></i>
                                                                     </button>
-                                                                </li>
-                                                                <li>
                                                                     <button
                                                                         className="dropdown-item text-danger"
+                                                                        title="Delete"
                                                                         onClick={() => handleDelete(vendor.id)}
                                                                     >
-                                                                        <i className="ti ti-trash me-2"></i> Delete
+                                                                        <i className="ti ti-trash me-2"></i>
                                                                     </button>
-                                                                </li>
-                                                            </ul>
                                                         </div>
                                                     </td>
                                                 </tr>

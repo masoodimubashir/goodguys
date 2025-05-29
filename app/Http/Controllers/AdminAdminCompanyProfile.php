@@ -4,10 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCompanyProfileRequest;
 use App\Http\Requests\UpdateCompanyProfileRequest;
-use App\Models\Client;
 use App\Models\CompanyProfile;
 use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -81,30 +79,33 @@ class AdminAdminCompanyProfile extends Controller
      */
     public function update(UpdateCompanyProfileRequest $request, string $id)
     {
-
-
         try {
-
-            $company_profile = CompanyProfile::find($id);
+            
+            $company_profile = CompanyProfile::findOrFail($id);
 
             $validated = $request->validated();
 
-            // Handle file upload
             if ($request->hasFile('logo')) {
+                // Delete old logo
+                Storage::disk('public')->delete($company_profile->logo);
 
-                Storage::disk('public')->delete(paths: $company_profile->logo);
-
-                $validated['bill'] = $request->file('logo')->store('company-info', 'public');
+                // Store new logo and update path
+                $validated['logo'] = $request->file('logo')->store('company-info', 'public');
+            } else {
+                // Preserve existing logo path if no new file uploaded
+                $validated['logo'] = $company_profile->logo;
             }
 
-            $company_profile->update($validated);
+            $company_profile->update(array_merge($validated, [
+                'updated_by' => auth()->id(),
+            ]));
 
             return redirect()->back()->with('message', 'Profile updated successfully');
         } catch (\Throwable $e) {
-            Log::error('Error updating purchase list: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed To Update Profile');
         }
     }
+
 
     /**
      * Remove the specified resource from storage.

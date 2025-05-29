@@ -32,7 +32,7 @@ class UpdateInventoryRequest extends FormRequest
             'item_dimensions'                 => ['bail', 'required', 'array', 'min:1', 'max:3'],
             'item_dimensions.*.type'          => ['required', 'string', 'min:1', 'max:50'],
             'item_dimensions.*.value'         => ['required', 'numeric', 'min:0.1'],
-            'item_dimensions.*.unit'          => ['required', 'string', 'in:mm,cm,m,in,ft'],
+            'item_dimensions.*.unit'          => ['required', 'string'],
         ];
     }
 

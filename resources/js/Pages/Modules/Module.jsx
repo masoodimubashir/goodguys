@@ -130,28 +130,13 @@ export default function Module({ modules: initialModules }) {
 
                                                         {auth.user.role === "admin" && (
                                                             <td>
-                                                                <div className="btn-group dropdown-icon-none">
-                                                                    <button
-                                                                        className="border-0 icon-btn b-r-4 dropdown-toggle active"
-                                                                        type="button"
-                                                                        data-bs-toggle="dropdown"
-                                                                        data-bs-auto-close="true"
-                                                                        aria-expanded="false"
-                                                                    >
-                                                                        <i className="ti ti-dots"></i>
+                                                                <div className="d-flex">
+                                                                    <Link className="dropdown-item" href={route("module.edit", module.id)} title="Edit">
+                                                                        <i className="ti ti-edit me-2"></i>
+                                                                    </Link>
+                                                                    <button className="dropdown-item text-danger" onClick={() => handleDelete(module.id)} title="Delete" >
+                                                                        <i className="ti ti-trash me-2"></i>
                                                                     </button>
-                                                                    <ul className="dropdown-menu">
-                                                                        <li>
-                                                                            <Link className="dropdown-item" href={route("module.edit", module.id)}>
-                                                                                <i className="ti ti-edit me-2"></i> Edit
-                                                                            </Link>
-                                                                        </li>
-                                                                        <li>
-                                                                            <button className="dropdown-item text-danger" onClick={() => handleDelete(module.id)}>
-                                                                                <i className="ti ti-trash me-2"></i> Delete
-                                                                            </button>
-                                                                        </li>
-                                                                    </ul>
                                                                 </div>
                                                             </td>
                                                         )}

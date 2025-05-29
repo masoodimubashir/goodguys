@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\AdminPurchaseManagmentController;
 use App\Http\Controllers\Admin\AdminReturnListController;
 use App\Http\Controllers\Admin\AdminUsersController;
 use App\Http\Controllers\Admin\AdminVendorController;
+use App\Http\Controllers\Admin\PurchasesItemController;
 use App\Http\Controllers\AdminAdminCompanyProfile;
 use App\Http\Controllers\AdminInvoiceController;
 use App\Http\Controllers\DashboardController;
@@ -98,7 +99,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Route For Purchase Managment
     Route::resource('/purchase-managment', AdminPurchaseManagmentController::class);
 
-    
+    // Route For Purchased Item
+    Route::resource('/purchased-item', PurchasesItemController::class);
+
+
 
     
 });

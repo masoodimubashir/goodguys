@@ -26,7 +26,7 @@ class Client extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-     public function accounts(): HasMany
+    public function accounts(): HasMany
     {
         return $this->hasMany(Account::class);
     }
@@ -76,7 +76,7 @@ class Client extends Model
     {
         return $this->hasMany(CostIncurred::class);
     }
-    
+
 
     /**
      * Get the bankAccount associated with the Client
@@ -86,6 +86,16 @@ class Client extends Model
     public function bankAccount(): HasOne
     {
         return $this->hasOne(BankAccount::class);
+    }
+
+    /**
+     * Get all of the purchaseItems for the Client
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function purchaseItems(): HasMany
+    {
+        return $this->hasMany(PurchasedItem::class);
     }
 
 

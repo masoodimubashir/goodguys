@@ -10,10 +10,6 @@ export default function AuthenticatedLayout({ children }) {
 
             <div className="app-wrapper">
 
-                {/* <div className="loader-wrapper">
-                        <div className="loader_16"></div>
-                    </div> */}
-
                 <SideBar/>
 
                 <div className="app-content">
@@ -28,11 +24,11 @@ export default function AuthenticatedLayout({ children }) {
 
                 </div>
 
-                <div className="go-top">
+                {/* <div className="go-top">
                     <span className="progress-value">
                         <i className="ti ti-chevron-up"></i>
                     </span>
-                </div>
+                </div> */}
 
                 <Footer />
 

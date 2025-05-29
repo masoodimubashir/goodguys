@@ -73,7 +73,8 @@ class AdminClientsController extends Controller
             'costIncurreds',
             'accounts',
             'serviceCharge',
-            'bankAccount'
+            'bankAccount',
+            'purchaseItems'
         ]);
 
         $groupedPurchaseLists = $client->purchaseLists->groupBy('vendor_id');
@@ -116,11 +117,12 @@ class AdminClientsController extends Controller
         try {
 
 
+            // dd($request->all());
             $data = $request->validated();
 
             $data['updated_by'] = auth()->id();
 
-            if ($data['client_type'] === 'SERVICE') {
+            if ($data['client_type'] === 'Service Client') {
 
                 $serviceChargeValue = $data['service_charge'] ?? null;
                 unset($data['service_charge']);

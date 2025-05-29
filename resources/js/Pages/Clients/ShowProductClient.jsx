@@ -375,12 +375,12 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                             </div>
 
                             <div className="tab-pane fade" id="purchase-list-tab" role="tabpanel">
-                                <PurchaseListTab
+                                {/* <PurchaseListTab
                                     client={client}
                                     tableRef={refs.purchaseListRef}
                                     handleEditAccount={(purchase_list) => openModal('purchase-list', purchase_list)}
                                     handleDeleteItem={handleDelete}
-                                />
+                                /> */}
                             </div>
 
                             <div className="tab-pane fade" id="cost-incurred-tab" role="tabpanel">

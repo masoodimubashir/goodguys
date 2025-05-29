@@ -108,31 +108,18 @@ export default function Field({ fields: initialFields }) {
                                             fields.map((item) => (
                                                 <tr key={item.id}>
                                                     <td>{item.field_name}</td>
-                                                    <td>{item.dimension_value}</td>
                                                     <td>{item.si_unit}</td>
-                                                    {auth.user.role === 'admin' && (
+                                                    <td>{item.dimension_value}</td>
                                                         <td>
-                                                            <div className="btn-group dropdown-icon-none">
-                                                                <button className="border-0 icon-btn b-r-4 dropdown-toggle active"
-                                                                    type="button" data-bs-toggle="dropdown"
-                                                                    data-bs-auto-close="true" aria-expanded="false">
-                                                                    <i className="ti ti-dots"></i>
+                                                            <div className="d-flex gap-4" title="Edit">
+                                                                <Link href={route('field.edit', item.id)}>
+                                                                    <i className="ti ti-edit"></i>
+                                                                </Link>
+                                                                <button className="dropdown-item" onClick={() => handleDelete(item.id)} title="Delete">
+                                                                    <i className="ti ti-trash text-danger"></i>
                                                                 </button>
-                                                                <ul className="dropdown-menu">
-                                                                    <li>
-                                                                        <Link className="dropdown-item" href={route('field.edit', item.id)}>
-                                                                            <i className="ti ti-edit"></i> Edit
-                                                                        </Link>
-                                                                    </li>
-                                                                    <li>
-                                                                        <button className="dropdown-item" onClick={() => handleDelete(item.id)}>
-                                                                            <i className="ti ti-trash"></i> Delete
-                                                                        </button>
-                                                                    </li>
-                                                                </ul>
                                                             </div>
                                                         </td>
-                                                    )}
                                                 </tr>
                                             ))
                                         ) : (

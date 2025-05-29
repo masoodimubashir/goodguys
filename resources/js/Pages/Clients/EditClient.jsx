@@ -127,7 +127,7 @@ export default function EditClient({ client }) {
                   <InputError message={errors.client_address} />
                 </div>
 
-                {data.client_type === 'SERVICE' && (
+                {data.client_type === 'Service Client' && (
                   <div className="mb-3">
                     <label className="form-label">Service Charge (%)</label>
                     <TextInput

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Package, Users,  DollarSign, Eye, Plus, } from 'lucide-react';
+import { Package, Users,  DollarSign, Eye, Plus, User, } from 'lucide-react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Table } from 'react-bootstrap';
 import { Link } from '@inertiajs/react';
 
-const Dashboard = ({ clients, total_service_client_revenue, total_clients, total_inventory_items, users }) => {
+const Dashboard = ({ clients, total_service_client_revenue, total_clients, total_inventory_items, users, total_vendors }) => {
 
 
     const StatCard = ({ title, value, icon: Icon,  bgColor = "primary", text }) => (
@@ -66,8 +66,18 @@ const Dashboard = ({ clients, total_service_client_revenue, total_clients, total
                             change={5}
                             changeType="increase"
                         />
+
+                         <StatCard
+                            title="Total Vendors"
+                            value={total_vendors}
+                            icon={User}
+                            change={5}
+                            changeType="increase"
+                        />
                       
                     </div>
+
+                    
 
 
 
@@ -136,10 +146,10 @@ const Dashboard = ({ clients, total_service_client_revenue, total_clients, total
                                 <div className="card-header bg-white border-bottom">
                                     <div className="d-flex justify-content-between align-items-center">
                                         <h5 className="card-title mb-0 fw-semibold">Create User</h5>
-                                        <button className="btn btn-sm btn-outline-primary d-flex align-items-center">
+                                        <Link href={route('register')} className="btn btn-sm btn-outline-primary d-flex align-items-center">
                                             <Plus size={16} />
                                             Add
-                                        </button>
+                                        </Link>
                                     </div>
                                 </div>
                                 <div className="card-body p-0">

@@ -228,9 +228,7 @@ const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
                                     </div>
                                 </td>
 
-                                {/* <Link href={route('purchase-list.show', entry.id)} className="text-decoration-none">
-                                    <i className="ti ti-eye fs-4"></i>
-                                </Link> */}
+                           
 
                                 <td className="text-start align-middle">
                                     {entry.email}
