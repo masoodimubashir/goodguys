@@ -16,14 +16,18 @@ return new class extends Migration
             $table->foreignId('challan_refrence_id')->constrained('challan_refrences')->cascadeOnDelete();
             $table->boolean('is_price_visible');
             $table->integer('price')->default(0);
-            $table->integer('unit_count')->default(0);
+            $table->integer('qty')->default(0);
+            $table->integer('total')->default(0);
             $table->longText('description');
-            $table->string('item_name');
+            $table->longText('narration');
+            $table->string('unit_type');
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->timestamps();
         });
     }
+
+
 
     /**
      * Reverse the migrations.

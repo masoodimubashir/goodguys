@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ChallanRefrence extends Model
 {
 
     protected $fillable = [
-        'purchase_list_id',
+        'client_id',
         'challan_number',
         'service_charge',
     ];
@@ -22,5 +23,15 @@ class ChallanRefrence extends Model
     public function purchaseList()
     {
         return $this->belongsTo(PurchaseList::class);
+    }
+
+    /**
+     * Get the client that owns the ChallanRefrence
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
     }
 }

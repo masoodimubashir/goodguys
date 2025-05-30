@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import React, { useEffect, useState } from 'react';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import React, { useEffect } from 'react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
@@ -8,15 +8,10 @@ import Button from '@/Components/Button';
 import { ShowMessage } from '@/Components/ShowMessage';
 
 const CompanyProfile = ({ companyProfile = {} }) => {
-
-
-    console.log(companyProfile);
-    
-
     const { flash } = usePage().props;
 
-
-    const { data, setData, post, put, errors, processing } = useForm({
+    const { data, setData, errors, processing } = useForm({
+        id: companyProfile?.id || '',
         company_name: companyProfile?.company_name || '',
         company_address: companyProfile?.company_address || '',
         company_contact_no: companyProfile?.company_contact_no || '',
@@ -32,12 +27,29 @@ const CompanyProfile = ({ companyProfile = {} }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        const formData = new FormData();
+        formData.append('company_name', data.company_name);
+        formData.append('company_address', data.company_address);
+        formData.append('company_contact_no', data.company_contact_no);
+        formData.append('company_email', data.company_email);
+
+        if (data.logo) {
+            formData.append('logo', data.logo);
+        }
+
         if (companyProfile?.id) {
-            put(route("company-profile.update", companyProfile?.id), {
+            // Spoof PUT for updating
+            formData.append('_method', 'PUT');
+            router.post(route("company-profile.update", companyProfile.id), formData, {
                 preserveScroll: true,
+                forceFormData: true,
             });
         } else {
-            post(route('company-profile.store'));
+            // Create new profile
+            router.post(route("company-profile.store"), formData, {
+                preserveScroll: true,
+                forceFormData: true,
+            });
         }
     };
 
@@ -127,6 +139,18 @@ const CompanyProfile = ({ companyProfile = {} }) => {
                                                 onChange={handleFileChange}
                                             />
                                             <InputError message={errors.logo} />
+                                            
+                                            {companyProfile?.logo && !data.logo && (
+                                                <div className="mt-3">
+                                                    <p className="mb-1">Current Logo:</p>
+                                                    <img 
+                                                        src={`/storage/${companyProfile.logo}`} 
+                                                        alt="Company Logo"
+                                                        className="img-thumbnail"
+                                                        style={{ maxWidth: '150px' }}
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 

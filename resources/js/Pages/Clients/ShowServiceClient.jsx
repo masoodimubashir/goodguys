@@ -9,23 +9,27 @@ import 'datatables.net';
 import 'datatables.net-responsive';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import {
-    Card, Table, Button, Badge, ProgressBar, Row, Col, Form, Tabs, Tab
+    Card, Table, Button, Badge, ProgressBar, Row, Col, Form, Tabs, Tab, InputGroup
 } from 'react-bootstrap';
 import {
     ShoppingCart, Plus, Edit, Trash2, Save, XCircle, ChevronDown, ChevronRight,
     FileText, Calendar, IndianRupee, Activity, Package, RotateCcw, Eye, EyeOff,
     Download, RefreshCw, HandCoins, Undo2, BarChart3, Zap, Building2, User2,
     Phone, Mail, MapPin, Percent, TrendingUp, Banknote, Wallet, Receipt,
-    Text, Box, Layers, PieChart, ShoppingBag, CreditCard, Database, ArrowRight
+    Text, Box, Layers, PieChart, ShoppingBag, CreditCard, Database, ArrowRight,
+    Check, Search
 } from 'lucide-react';
 import { ClientInfoCard } from '@/Components/ClientInfoCard';
 import { BankAccountCard } from '@/Components/BankAccountCard';
 import { PurchaseListModal } from '@/Components/PurchaseListModal';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 export default function ShowClient({ client, modules = [], inventoryOptions = [], vendors = [], company_profile = null, client_vendors = [] }) {
     // State management
-    const [activeTab, setActiveTab] = useState('overview');
+    const [activeTab, setActiveTab] = useState('purchase-items');
     const [purchaseItems, setPurchaseItems] = useState(client.purchase_items || []);
+    const [filteredItems, setFilteredItems] = useState(client.purchase_items || []);
     const [expandedItems, setExpandedItems] = useState([]);
     const [editingItemId, setEditingItemId] = useState(null);
     const [editedItems, setEditedItems] = useState({});
@@ -41,6 +45,24 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
     const [showAnalytics, setShowAnalytics] = useState(true);
     const [animatingCards, setAnimatingCards] = useState(new Set());
     const [isCreating, setIsCreating] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [dateRange, setDateRange] = useState([null, null]);
+    const [startDate, endDate] = dateRange;
+
+    // Challan state
+    const [challanState, setChallanState] = useState({
+        showChallanForm: false,
+        selectedProducts: {}
+    });
+
+    const challanForm = useForm({
+        client_id: client.id,
+        service_charge: client.service_charge?.service_charge || 0,
+        challan: [],
+        challan_number: '',
+        challan_date: new Date().toISOString().split('T')[0],
+        is_price_visible: true,
+    });
 
     // Animation classes
     const animationClasses = {
@@ -57,14 +79,45 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         }).format(amount || 0);
     };
 
-    // Calculate analytics
+    // Filter items based on search term and date range
+    useEffect(() => {
+        let results = purchaseItems;
+
+        // Apply search filter
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            results = results.filter(item =>
+                item.description.toLowerCase().includes(term) ||
+                item.unit_type.toLowerCase().includes(term) ||
+                item.narration?.toLowerCase().includes(term) ||
+                item.id.toString().includes(term)
+            );
+        }
+
+        // Apply date range filter if both dates are selected
+        if (startDate && endDate) {
+            results = results.filter(item => {
+                const itemDate = new Date(item.created_at);
+                return itemDate >= startDate && itemDate <= endDate;
+            });
+        }
+
+        setFilteredItems(results);
+    }, [searchTerm, dateRange, purchaseItems]);
+
+    // Calculate analytics based on filtered items
     const calculateAnalytics = () => {
-        const totalValue = purchaseItems.reduce((sum, item) => sum + (parseFloat(item.price) * parseInt(item.qty)), 0);
-        const averagePrice = purchaseItems.length > 0 ?
-            purchaseItems.reduce((sum, item) => sum + parseFloat(item.price), 0) / purchaseItems.length : 0;
+        const totalValue = filteredItems.reduce((sum, item) => {
+            const qty = parseInt(item.qty);
+            const price = parseFloat(item.price);
+            return qty > 0 ? sum + (price * qty) : item.price;
+        }, 0);
+
+        const averagePrice = filteredItems.length > 0 ?
+            filteredItems.reduce((sum, item) => sum + parseFloat(item.price), 0) / filteredItems.length : 0;
 
         const categories = {};
-        purchaseItems.forEach(item => {
+        filteredItems.forEach(item => {
             const category = item.unit_type || 'Uncategorized';
             categories[category] = (categories[category] || 0) + 1;
         });
@@ -75,12 +128,12 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         return {
             totalValue,
             averagePrice,
-            totalItems: purchaseItems.length,
-            totalQuantity: purchaseItems.reduce((sum, item) => sum + parseInt(item.qty), 0),
+            totalItems: filteredItems.length,
+            totalQuantity: filteredItems.reduce((sum, item) => sum + parseInt(item.qty), 0),
             topCategory,
             topCategoryCount,
-            topCategoryPercentage: purchaseItems.length > 0
-                ? Math.round((topCategoryCount / purchaseItems.length) * 100)
+            topCategoryPercentage: filteredItems.length > 0
+                ? Math.round((topCategoryCount / filteredItems.length) * 100)
                 : 0
         };
     };
@@ -201,7 +254,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         }
     };
 
-    // Create new item - FIXED VERSION
+    // Create new item
     const createItem = () => {
         setIsCreating(true);
         const itemData = {
@@ -215,7 +268,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
 
         router.post('/purchased-item', itemData, {
             onSuccess: (response) => {
-                // Try multiple ways to get the created item from response
                 const createdItem = response.props?.item ||
                     response.props?.purchase_item ||
                     response.props?.data?.item ||
@@ -226,7 +278,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                     setPurchaseItems(prev => [...prev, createdItem]);
                     ShowMessage('Success', 'Item created successfully');
                 } else {
-                    // If we can't find the item in response, refresh the data
                     router.reload({
                         only: ['client'],
                         onSuccess: (updated) => {
@@ -236,7 +287,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                     });
                 }
 
-                // Reset the form
                 setNewItem({
                     client_id: client.id,
                     unit_type: '',
@@ -271,7 +321,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         { href: `/clients/${client.id}`, label: 'Back', active: true }
     ];
 
-
     const { delete: destroy } = useForm();
     const flash = usePage().props.flash;
 
@@ -300,15 +349,12 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         bill_description: '',
     });
 
-
-
     useEffect(() => {
         const initializeDataTables = () => {
-            // Only initialize DataTables on table elements
             const tables = [
                 refs.tableRef.current?.querySelector('table'),
                 refs.purchaseListRef.current?.querySelector('table'),
-            ].filter(Boolean); // Remove null/undefined
+            ].filter(Boolean);
 
             tables.forEach(table => {
                 if ($.fn.DataTable.isDataTable(table)) {
@@ -324,7 +370,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
 
         initializeDataTables();
 
-        // Cleanup function to destroy DataTables when component unmounts
         return () => {
             $('.dataTable').DataTable().destroy().clear();
         };
@@ -336,12 +381,9 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         if (flash.error) ShowMessage('error', flash.error);
     }, [flash]);
 
-
-
     // Modal handlers
     const openModal = (type, item = null) => {
         switch (type) {
-
             case 'purchase-list':
                 setState(prev => ({
                     ...prev,
@@ -352,7 +394,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 purchaseListForm.reset();
                 if (item) purchaseListForm.setData(item);
                 break;
-
             default:
                 break;
         }
@@ -360,19 +401,16 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
 
     // Form submission handlers
     const handleSubmit = async (type, e) => {
-
         e.preventDefault();
 
         let form, isEditing, currentId;
 
         switch (type) {
-
             case 'purchase-list':
                 form = purchaseListForm;
                 isEditing = state.isEditingPurchaseList;
                 currentId = state.currentPurchaseListId;
                 break;
-
             default:
                 return;
         }
@@ -402,8 +440,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
             }
         };
 
-
-
         if (isEditing && currentId) {
             formData.append('_method', 'PUT');
             router.post(route(`${type}.update`, currentId), formData, options);
@@ -427,6 +463,78 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         });
     };
 
+    // Calculate remaining quantity for challan
+    const calculateRemainingQuantity = (product) => {
+        // Implement logic to calculate remaining quantity if needed
+        return product.qty;
+    };
+
+    // Toggle product selection for challan
+    const toggleProductSelection = (id) => {
+        setChallanState(prev => ({
+            ...prev,
+            selectedProducts: {
+                ...prev.selectedProducts,
+                [id]: !prev.selectedProducts[id]
+            }
+        }));
+    };
+
+    // Open challan creation form
+    const openChallanForm = () => {
+        const hasSelectedItems = Object.values(challanState.selectedProducts).some(selected => selected);
+        if (!hasSelectedItems) {
+            ShowMessage('Warning', 'Please select at least one item to create a challan');
+            return;
+        }
+        setChallanState(prev => ({ ...prev, showChallanForm: true }));
+    };
+
+    // Handle challan creation
+    const handleCreateChallan = (e) => {
+        e.preventDefault();
+
+        // Prepare items data from selected products
+        const selectedItems = purchaseItems
+            .filter(product => challanState.selectedProducts[product.id])
+            .map(product => ({
+                item_id: product.id,
+                description: product.description,
+                unit_type: product.unit_type,
+                price: product.price,
+                narration: product.narration || '',
+                is_price_visible: challanForm.data.is_price_visible,
+                qty: product.qty,
+                total: product.total,
+            }));
+
+
+        challanForm.setData('challan', selectedItems);
+
+        console.log(selectedItems);
+
+
+        challanForm.post(route('challan.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setChallanState(prev => ({
+                    ...prev,
+                    selectedProducts: {},
+                    showChallanForm: false
+                }));
+                ShowMessage('success', 'Challan created successfully');
+            },
+            onError: (errors) => {
+                console.error('Error creating challan:', errors);
+                ShowMessage('error', 'Failed to create challan');
+            }
+        });
+    };
+
+    // Reset date filter
+    const resetDateFilter = () => {
+        setDateRange([null, null]);
+    };
 
     return (
         <AuthenticatedLayout>
@@ -443,8 +551,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                         <RefreshCw size={14} />
                     </Button>
 
-                  
-
                     <div className="dropdown">
                         <button className="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                             Create
@@ -455,34 +561,109 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                     <i className="ti ti-file-invoice me-2"></i> Invoice
                                 </Link>
                             </li>
-
                             <li>
                                 <Link href={route('bank-account.create', { client_id: client.id })} className="dropdown-item">
                                     <i className="ti ti-building-bank me-2"></i> Bank Account
                                 </Link>
                             </li>
-
                             <li>
                                 <Link href={route('purchased-item.index', { client_id: client.id })} className="dropdown-item">
                                     <i className="ti ti-building-bank me-2"></i> Purchase Item
                                 </Link>
                             </li>
-
+                            <li>
+                                <Link href={route('challan.show', client.id)} className="dropdown-item">
+                                    <i className="ti ti-building-bank me-2"></i> Challans
+                                </Link>
+                            </li>
                             <li><hr className="dropdown-divider" /></li>
-
                             <li>
                                 <button className="dropdown-item" onClick={() => openModal('purchase-list')}>
                                     <i className="ti ti-shopping-cart me-2"></i> Purchase List
                                 </button>
                             </li>
-
                         </ul>
                     </div>
-
                 </div>
             </div>
 
+            <div className="container-fluid py-4">
+                {/* Client Summary */}
+                <Row className="mb-4">
+                    <ClientInfoCard client={client} />
+                    {client.bank_account && <BankAccountCard BankProfile={client.bank_account} />}
+                </Row>
 
+                {/* Analytics Cards */}
+                <Row className="g-3 mb-4">
+                    <Col md={3}>
+                        <Card className={`border-0 shadow-sm h-100 card-hover gradient-bg ${animatingCards.has('total-value') ? 'pulse-animation' : ''}`}>
+                            <Card.Body className="p-3">
+                                <div className="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h6 className="mb-1">Total Inventory Value</h6>
+                                        <h6 className="mb-0 fw-bold ">{formatCurrency(analytics.totalValue)}</h6>
+                                        <small className="">
+                                            <TrendingUp size={12} className="me-1" />
+                                            Avg: {formatCurrency(analytics.averagePrice)} per unit
+                                        </small>
+                                    </div>
+                                    <div className="bg-white bg-opacity-20 p-3 rounded-circle">
+                                        <Receipt size={28} className="" />
+                                    </div>
+                                </div>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                    <Col md={3}>
+                        <Card className={`border-0 shadow-sm h-100 card-hover gradient-success ${animatingCards.has('total-items') ? 'pulse-animation' : ''}`}>
+                            <Card.Body className="p-3">
+                                <div className="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h6 className="mb-1">Total Items</h6>
+                                        <h6 className="mb-0 fw-bold">{analytics.totalItems}</h6>
+                                        <small>
+                                            <Percent size={12} className="me-1" />
+                                            {analytics.totalQuantity} Total Quantity
+                                        </small>
+                                    </div>
+                                    <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
+                                        <Package size={28} className="" />
+                                    </div>
+                                </div>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                    <Col md={6}>
+                        <Card className="border-0 shadow-sm h-100">
+                            <Card.Body className="p-3">
+                                <h6 className="mb-3 d-flex align-items-center gap-2">
+                                    <BarChart3 size={18} className="text-primary" />
+                                    Quick Stats
+                                </h6>
+                                <div className="d-flex justify-content-between">
+                                    <div className="text-center">
+                                        <h6 className="mb-1 fw-bold">{analytics.totalItems}</h6>
+                                        <small className="text-muted">Total Items</small>
+                                    </div>
+                                    <div className="text-center">
+                                        <h6 className="mb-1 fw-bold">{analytics.totalQuantity}</h6>
+                                        <small className="text-muted">Total Quantity</small>
+                                    </div>
+                                    <div className="text-center">
+                                        <h6 className="mb-1 fw-bold">{formatCurrency(analytics.averagePrice)}</h6>
+                                        <small className="text-muted">Avg. Price</small>
+                                    </div>
+                                    <div className="text-center">
+                                        <h6 className="mb-1 fw-bold">{formatCurrency(analytics.totalValue)}</h6>
+                                        <small className="text-muted">Total Value</small>
+                                    </div>
+                                </div>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+            </div>
 
             {/* Tab Navigation */}
             <Tabs
@@ -491,233 +672,118 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 className="mb-4"
                 fill
             >
-                <Tab eventKey="overview" title={
-                    <span className="d-flex align-items-center gap-1">
-                        <BarChart3 size={16} /> Overview
-                    </span>
-                }>
-                    <div className="container-fluid py-4">
-                        {/* Client Summary */}
-                        <Row className="mb-4">
-                            <ClientInfoCard client={client} />
-                            {client.bank_account && <BankAccountCard BankProfile={client.bank_account} />}
-                        </Row>
-
-                        {/* Analytics Cards */}
-                        <Row className="g-3 mb-4">
-                            <Col md={3}>
-                                <Card className={`border-0 shadow-sm h-100 card-hover gradient-bg ${animatingCards.has('total-value') ? 'pulse-animation' : ''}`}>
-                                    <Card.Body className="p-3">
-                                        <div className="d-flex align-items-center justify-content-between">
-                                            <div>
-                                                <h6 className="mb-1">Total Inventory Value</h6>
-                                                <h6 className="mb-0 fw-bold ">{formatCurrency(analytics.totalValue)}</h6>
-                                                <small className="">
-                                                    <TrendingUp size={12} className="me-1" />
-                                                    Avg: {formatCurrency(analytics.averagePrice)} per unit
-                                                </small>
-                                            </div>
-                                            <div className="bg-white bg-opacity-20 p-3 rounded-circle">
-                                                <Receipt size={28} className="" />
-                                            </div>
-                                        </div>
-                                    </Card.Body>
-                                </Card>
-                            </Col>
-                            <Col md={3}>
-                                <Card className={`border-0 shadow-sm h-100 card-hover gradient-success ${animatingCards.has('total-items') ? 'pulse-animation' : ''}`}>
-                                    <Card.Body className="p-3">
-                                        <div className="d-flex align-items-center justify-content-between">
-                                            <div>
-                                                <h6 className="mb-1">Total Items</h6>
-                                                <h6 className="mb-0 fw-bold">{analytics.totalItems}</h6>
-                                                <small>
-                                                    <Percent size={12} className="me-1" />
-                                                    {analytics.totalQuantity} Total Quantity
-                                                </small>
-                                            </div>
-                                            <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
-                                                <Package size={28} className="" />
-                                            </div>
-                                        </div>
-                                    </Card.Body>
-                                </Card>
-                            </Col>
-
-
-                            <Col md={6}>
-                                <Card className="border-0 shadow-sm h-100">
-                                    <Card.Body className="p-3">
-                                        <h6 className="mb-3 d-flex align-items-center gap-2">
-                                            <BarChart3 size={18} className="text-primary" />
-                                            Quick Stats
-                                        </h6>
-                                        <div className="d-flex justify-content-between">
-                                            <div className="text-center">
-                                                <h6 className="mb-1 fw-bold">{analytics.totalItems}</h6>
-                                                <small className="text-muted">Total Items</small>
-                                            </div>
-                                            <div className="text-center">
-                                                <h6 className="mb-1 fw-bold">{analytics.totalQuantity}</h6>
-                                                <small className="text-muted">Total Quantity</small>
-                                            </div>
-                                            <div className="text-center">
-                                                <h6 className="mb-1 fw-bold">{formatCurrency(analytics.averagePrice)}</h6>
-                                                <small className="text-muted">Avg. Price</small>
-                                            </div>
-                                            <div className="text-center">
-                                                <h6 className="mb-1 fw-bold">{formatCurrency(analytics.totalValue)}</h6>
-                                                <small className="text-muted">Total Value</small>
-                                            </div>
-                                        </div>
-                                    </Card.Body>
-                                </Card>
-                            </Col>
-
-
-                        </Row>
-
-
-                        {/* Mini Preview Tables */}
-                        <Row className="g-3">
-                            <Col md={6}>
-                                <Card className="border-0 shadow-sm h-100">
-                                    <Card.Header className="bg-white border-0">
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <h6 className="mb-0 d-flex align-items-center gap-2">
-                                                <ShoppingCart size={18} /> Recent Purchase Items
-                                            </h6>
-                                            <Button
-                                                variant="link"
-                                                size="sm"
-                                                onClick={() => setActiveTab('purchase-items')}
-                                            >
-                                                View All <ArrowRight size={16} />
-                                            </Button>
-                                        </div>
-                                    </Card.Header>
-                                    <Card.Body className="p-0">
-                                        <Table hover className="mb-0">
-                                            <thead className="table-light">
-                                                <tr>
-                                                    <th>Item</th>
-                                                    <th>Price</th>
-                                                    <th>Qty</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {purchaseItems.slice(0, 3).map(item => (
-                                                    <tr key={item.id}>
-                                                        <td className="text-truncate" style={{ maxWidth: '150px' }}>
-                                                            {item.description}
-                                                        </td>
-                                                        <td>{formatCurrency(item.price)}</td>
-                                                        <td>{item.qty}</td>
-                                                    </tr>
-                                                ))}
-                                                {purchaseItems.length === 0 && (
-                                                    <tr>
-                                                        <td colSpan={3} className="text-center py-4 text-muted">
-                                                            No purchase items found
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </Table>
-                                    </Card.Body>
-                                </Card>
-                            </Col>
-
-                            <Col md={6}>
-                                <Card className="border-0 shadow-sm h-100">
-                                    <Card.Header className="bg-white border-0">
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <h6 className="mb-0 d-flex align-items-center gap-2">
-                                                <CreditCard size={18} /> Recent Purchase Lists
-                                            </h6>
-                                            <Button
-                                                variant="link"
-                                                size="sm"
-                                                onClick={() => setActiveTab('purchase-lists')}
-                                            >
-                                                View All <ArrowRight size={16} />
-                                            </Button>
-                                        </div>
-                                    </Card.Header>
-                                    <Card.Body className="p-0">
-                                        <Table hover className="mb-0">
-                                            <thead className="table-light">
-                                                <tr>
-                                                    <th>List</th>
-                                                    <th>Date</th>
-                                                    <th>Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {client.purchase_lists?.slice(0, 3).map(list => (
-                                                    <tr key={list.id}>
-                                                        <td className="text-truncate" style={{ maxWidth: '150px' }}>
-                                                            {list.list_name}
-                                                        </td>
-                                                        <td>{new Date(list.purchase_date).toLocaleDateString()}</td>
-                                                        <td>{formatCurrency(list.bill_total)}</td>
-                                                    </tr>
-                                                ))}
-                                                {(!client.purchase_lists || client.purchase_lists.length === 0) && (
-                                                    <tr>
-                                                        <td colSpan={3} className="text-center py-4 text-muted">
-                                                            No purchase lists found
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </Table>
-                                    </Card.Body>
-                                </Card>
-                            </Col>
-                        </Row>
-                    </div>
-                </Tab>
-
                 <Tab eventKey="purchase-items" title={
                     <span className="d-flex align-items-center gap-1">
-                        <Package size={16} /> Purchase Items
+                        <Package size={16} /> Ledger
                     </span>
                 }>
                     <div className="">
-
                         <Card className="border-0 shadow-sm">
                             <Card.Header className="bg-white border-0 p-3">
                                 <div className="d-flex justify-content-between align-items-center">
                                     <div className="d-flex align-items-center gap-2">
-                                        <h5 className="mb-0 fw-bold">Purchase Items</h5>
                                         <Badge bg="primary" pill>
-                                            {purchaseItems.length} items
+                                            {filteredItems.length} items
                                         </Badge>
                                     </div>
-                                    <div className="d-flex gap-2 mb-2">
+                                    <div className="d-flex gap-2">
                                         <Button
                                             variant="primary"
                                             className="d-flex align-items-center gap-2"
                                             size="sm"
-                                            onClick={() => setNewItem(prev => ({
-                                                ...prev,
-                                                show: true
-                                            }))}
+                                            onClick={() => setNewItem(prev => ({ ...prev, show: true }))}
                                         >
-                                            <Plus size={14} /> Add Item
+                                            <Plus size={16} /> Add Entry
                                         </Button>
-
+                                        <Button
+                                            variant="success"
+                                            className="d-flex align-items-center gap-2"
+                                            size="sm"
+                                            onClick={openChallanForm}
+                                            disabled={!Object.values(challanState.selectedProducts).some(selected => selected)}
+                                        >
+                                            <ShoppingCart size={16} /> Create Challan
+                                        </Button>
                                     </div>
                                 </div>
                             </Card.Header>
 
 
+                            {/* Insert From Here */}
 
-                            <Card.Body className="p-0">
-                                <Table hover bordered responsive size='sm' className="mb-0">
+
+
+                            <Card.Body className="p-2">
+                                {/* Search and Filter Section */}
+                                <div className="mb-3 d-flex gap-3">
+                                    <div className="flex-grow-1">
+                                        <InputGroup>
+                                            <InputGroup.Text>
+                                                <Search size={14} />
+                                            </InputGroup.Text>
+                                            <Form.Control
+                                                type="text"
+                                                placeholder="Search items..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                            />
+                                        </InputGroup>
+                                    </div>
+                                    <div className="d-flex gap-2">
+                                        <div className="d-flex align-items-center gap-2">
+                                            <DatePicker
+                                                selectsRange={true}
+                                                startDate={startDate}
+                                                endDate={endDate}
+                                                onChange={(update) => setDateRange(update)}
+                                                isClearable={true}
+                                                placeholderText="Filter by date range"
+                                                className="form-control form-control-sm"
+                                            />
+                                            {(startDate || endDate) && (
+                                                <Button
+                                                    variant="outline-secondary"
+                                                    size="sm"
+                                                    onClick={resetDateFilter}
+                                                    title="Clear date filter"
+                                                >
+                                                    <XCircle size={14} />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+
+
+                                <Table hover responsive size='sm' className="mb-0">
                                     <thead className="table-light">
                                         <tr>
+                                            <th>
+                                                <Button
+                                                    variant="link"
+                                                    className="p-0"
+                                                    onClick={() => {
+                                                        const allSelected = purchaseItems.every(item => challanState.selectedProducts[item.id]);
+                                                        const newSelection = {};
+                                                        purchaseItems.forEach(item => {
+                                                            newSelection[item.id] = !allSelected;
+                                                        });
+                                                        setChallanState(prev => ({
+                                                            ...prev,
+                                                            selectedProducts: newSelection
+                                                        }));
+                                                    }}
+                                                    title="Select all for challan"
+                                                >
+                                                    <Check
+                                                        size={18}
+                                                        className={purchaseItems.length > 0 && purchaseItems.every(item => challanState.selectedProducts[item.id])
+                                                            ? "text-danger"
+                                                            : "text-muted"}
+                                                    />
+                                                </Button>
+                                            </th>
                                             <th>
                                                 <div className="d-flex align-items-center gap-2">
                                                     <FileText size={14} />
@@ -787,7 +853,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                                         type="number"
                                                         min="1"
                                                         placeholder="Quantity"
-                                                        value={newItem.qty}
+                                                        value={newItem.qty > 0 ? newItem.qty : newItem.qty}
                                                         onChange={e => handleNewItemChange('qty', e.target.value)}
                                                     />
                                                 </td>
@@ -801,9 +867,9 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                                         onChange={e => handleNewItemChange('price', e.target.value)}
                                                     />
                                                 </td>
-
                                                 <td>
-                                                    {formatCurrency((parseFloat(newItem.price) || 0) * (parseInt(newItem.qty) || 1))}
+                                                    {newItem.qty > 0 ?
+                                                        formatCurrency((parseFloat(newItem.price) || 0) * (parseInt(newItem.qty) || 1)) : newItem.qty}
                                                 </td>
                                                 <td>
                                                     <Form.Control
@@ -838,7 +904,8 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                                                     description: '',
                                                                     qty: '',
                                                                     price: '',
-                                                                    narration: ''
+                                                                    narration: '',
+                                                                    show: false
                                                                 }))}
                                                             >
                                                                 <XCircle size={12} />
@@ -849,15 +916,27 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                             </tr>
                                         )}
 
-                                        {purchaseItems.map((item, index) => {
+                                        {filteredItems.map((item, index) => {
                                             const isExpanded = expandedItems.includes(item.id);
                                             const isEditing = editingItemId === item.id;
-                                            const totalValue = (parseFloat(item.price) || 0) * (parseInt(item.qty) || 1);
+                                            const totalValue = item.qty > 0 ? (parseFloat(item.price) || 0) * (parseInt(item.qty) || 1) : item.price;
 
                                             return (
                                                 <React.Fragment key={item.id}>
                                                     <tr className={`align-middle`}>
-                                                       
+                                                        <td>
+                                                            <Button
+                                                                variant="link"
+                                                                className="p-0"
+                                                                onClick={() => toggleProductSelection(item.id)}
+                                                                title="Select for challan"
+                                                            >
+                                                                <Check
+                                                                    size={18}
+                                                                    className={challanState.selectedProducts[item.id] ? "text-danger" : "text-muted"}
+                                                                />
+                                                            </Button>
+                                                        </td>
                                                         <td>
                                                             {isEditing ? (
                                                                 <Form.Control
@@ -904,7 +983,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                                                     placeholder="Enter quantity"
                                                                 />
                                                             ) : (
-                                                                <span className="fw-bold">{item.qty}</span>
+                                                                <span className="fw-bold">{item.qty > 0 ? item.qty : 'NA'}</span>
                                                             )}
                                                         </td>
                                                         <td>
@@ -924,15 +1003,15 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                                                     placeholder="Enter price"
                                                                 />
                                                             ) : (
-                                                                <span 
-                                                                className="fw-bold text-primary">
+                                                                <span
+                                                                    className="fw-bold text-primary">
                                                                     {formatCurrency(item.price)}
                                                                 </span>
                                                             )}
                                                         </td>
                                                         <td>
-                                                            <span 
-                                                            className="fw-bold text-success">
+                                                            <span
+                                                                className="fw-bold text-success">
                                                                 {formatCurrency(totalValue)}
                                                             </span>
                                                         </td>
@@ -956,7 +1035,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                                             ) : (
                                                                 <div
                                                                     className={`text-truncate ${!item.narration ? 'text-muted' : ''}`}
-                                                                   
                                                                 >
                                                                     {item.narration || (
                                                                         <small className="d-flex align-items-center gap-1 text-muted">
@@ -1034,19 +1112,22 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                                                             )}
                                                         </td>
                                                     </tr>
-
-                                                  
                                                 </React.Fragment>
                                             );
                                         })}
 
                                         {/* Empty State for Purchase Items */}
-                                        {purchaseItems.length === 0 && !newItem.show && (
+                                        {filteredItems.length === 0 && !newItem.show && (
                                             <tr>
                                                 <td colSpan={8} className="text-center py-5">
                                                     <div className="text-muted">
                                                         <Package size={20} className="mb-3 opacity-50" />
-                                                        <h5 className="mb-2">No Purchase Items Found</h5>
+                                                        <h5 className="mb-2">No Items Found</h5>
+                                                        {searchTerm || (startDate || endDate) ? (
+                                                            <p>No items match your search criteria</p>
+                                                        ) : (
+                                                            <p>No items available for this client</p>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -1060,7 +1141,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
 
                 <Tab eventKey="purchase-lists" title={
                     <span className="d-flex align-items-center gap-1">
-                        <ShoppingBag size={16} /> Purchase Lists
+                        <ShoppingBag size={16} /> Vendor List
                     </span>
                 }>
                     <div className="container-fluid py-4">
@@ -1075,8 +1156,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 </Tab>
             </Tabs>
 
-            {/* ... (your existing modals) ... */}
-
+            {/* Purchase List Modal */}
             <PurchaseListModal
                 show={state.showPurchaseListModal}
                 onHide={() => setState(prev => ({ ...prev, showPurchaseListModal: false }))}
@@ -1086,6 +1166,124 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 handleSubmit={(e) => handleSubmit('purchase-list', e)}
                 vendors={vendors}
             />
+
+            {/* Challan Creation Modal */}
+            <Modal
+                show={challanState.showChallanForm}
+                onHide={() => setChallanState(prev => ({ ...prev, showChallanForm: false }))}
+                size="lg"
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Create New Challan</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form onSubmit={handleCreateChallan}>
+                        <Row className="g-3 mb-4">
+                            <Col md={6}>
+                                <Form.Group controlId="challanNumber">
+                                    <Form.Label>Challan Number</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Will be auto-generated if empty"
+                                        value={challanForm.data.challan_number}
+                                        onChange={(e) => challanForm.setData('challan_number', e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group controlId="challanDate">
+                                    <Form.Label>Challan Date</Form.Label>
+                                    <Form.Control
+                                        type="date"
+                                        value={challanForm.data.challan_date}
+                                        onChange={(e) => challanForm.setData('challan_date', e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={12}>
+                                <Form.Group controlId="serviceCharge">
+                                    <Form.Label>Service Charge (₹)</Form.Label>
+                                    <InputGroup>
+                                        <InputGroup.Text>₹</InputGroup.Text>
+                                        <Form.Control
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={challanForm.data.service_charge}
+                                            onChange={(e) => challanForm.setData('service_charge', e.target.value)}
+                                        />
+                                    </InputGroup>
+                                </Form.Group>
+                            </Col>
+                            <Col md={12}>
+                                <Form.Check
+                                    type="switch"
+                                    id="showPrices"
+                                    label="Show prices on challan"
+                                    checked={challanForm.data.is_price_visible}
+                                    onChange={(e) => challanForm.setData('is_price_visible', e.target.checked)}
+                                />
+                            </Col>
+                        </Row>
+
+                        <div className="mt-4">
+                            <h6 className="mb-3">Selected Items ({Object.values(challanState.selectedProducts).filter(Boolean).length})</h6>
+                            <div className="table-responsive">
+                                <Table bordered hover size="sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Unit Type</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {purchaseItems
+                                            .filter(item => challanState.selectedProducts[item.id])
+                                            .map(item => (
+                                                <tr key={item.id}>
+                                                    <td>{item.description}</td>
+                                                    <td>{item.unit_type}</td>
+                                                    <td>
+                                                        {
+                                                            item.qty > 0 ? item.qty : 'NA'
+                                                        }
+                                                    </td>
+                                                    <td>{formatCurrency(item.price)}</td>
+                                                    <td>
+                                                        {
+                                                            item.qty > 0 ?
+                                                                formatCurrency(item.price * item.qty) : item.price
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                    </tbody>
+                                </Table>
+                            </div>
+                        </div>
+
+                        <div className="d-flex justify-content-end gap-2 mt-4">
+                            <Button
+                                variant="secondary"
+                                onClick={() => setChallanState(prev => ({ ...prev, showChallanForm: false }))}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="primary"
+                                type="submit"
+                                disabled={challanForm.processing}
+                            >
+                                {challanForm.processing ? 'Creating...' : 'Create Challan'}
+                            </Button>
+                        </div>
+                    </Form>
+                </Modal.Body>
+            </Modal>
 
             <style jsx>{`
                 .gradient-total-value {
@@ -1115,9 +1313,30 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                 .animate__pulse {
                     animation-duration: 1s;
                 }
+                .react-datepicker-wrapper {
+                    width: 100%;
+                }
+                .tooltip-custom {
+                    visibility: hidden;
+                    width: 120px;
+                    background-color: #555;
+                    color: #fff;
+                    text-align: center;
+                    border-radius: 6px;
+                    padding: 5px;
+                    position: absolute;
+                    z-index: 1;
+                    bottom: 125%;
+                    left: 50%;
+                    margin-left: -60px;
+                    opacity: 0;
+                    transition: opacity 0.3s;
+                }
+                .position-relative:hover .tooltip-custom {
+                    visibility: visible;
+                    opacity: 1;
+                }
             `}</style>
         </AuthenticatedLayout>
     );
 }
-
-

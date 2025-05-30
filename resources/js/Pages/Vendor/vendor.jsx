@@ -1,4 +1,4 @@
-import { Link, router } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
 import React, { useEffect, useRef, useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -65,6 +65,7 @@ export default function Vendor({ vendors: initialVendors }) {
     }, [vendors]);
 
     const handleSubmit = (e) => {
+
         e.preventDefault();
 
         const options = {
@@ -73,7 +74,7 @@ export default function Vendor({ vendors: initialVendors }) {
                 setShowModal(false);
                 reset();
                 setVendors(page.props.vendors);
-                ShowMessage('success', currentVendor ? 'Vendor updated successfully' : 'Vendor created successfully');
+                ShowMessage('success', currentVendor ? 'Updated successfully' : 'Created successfully');
             },
             onError: () => {
                 ShowMessage('error', 'Please check the form for errors');
@@ -105,10 +106,10 @@ export default function Vendor({ vendors: initialVendors }) {
                             $(tableRef.current).DataTable().destroy();
                         }
                         setVendors(page.props.vendors);
-                        ShowMessage('success', 'Vendor deleted successfully');
+                        ShowMessage('success', 'Vendor deleted');
                     },
                     onError: () => {
-                        ShowMessage('error', 'Error deleting vendor');
+                        ShowMessage('error', 'Error deleting');
                     },
                 });
             }
@@ -150,9 +151,10 @@ export default function Vendor({ vendors: initialVendors }) {
             <div className="row g-4 mt-4">
                 <div className="d-flex justify-content-between align-items-center">
                     <BreadCrumbHeader breadcrumbs={breadcrumbs} />
-                    <button onClick={openCreateModal} className="btn btn-sm btn-primary">
-                        <i className="ti ti-plus me-1"></i> Add Vendor
-                    </button>
+
+                    <Link href={route('vendor.create')} className="btn btn-sm btn-primary">
+                        {'Add Vendor'}
+                    </Link>
                 </div>
 
                 <div className="col-12">
@@ -179,20 +181,20 @@ export default function Vendor({ vendors: initialVendors }) {
                                                     <td>{new Date(vendor.created_at).toLocaleString()}</td>
                                                     <td>
                                                         <div className="d-flex">
-                                                                    <button
-                                                                        className="dropdown-item"
-                                                                        title="Edit"
-                                                                        onClick={() => openEditModal(vendor)}
-                                                                    >
-                                                                        <i className="ti ti-edit me-2"></i>
-                                                                    </button>
-                                                                    <button
-                                                                        className="dropdown-item text-danger"
-                                                                        title="Delete"
-                                                                        onClick={() => handleDelete(vendor.id)}
-                                                                    >
-                                                                        <i className="ti ti-trash me-2"></i>
-                                                                    </button>
+                                                            <Link
+                                                                className="dropdown-item"
+                                                                title="Edit"
+                                                                href={route('vendor.edit', vendor.id)}
+                                                            >
+                                                                <i className="ti ti-edit me-2"></i>
+                                                            </Link>
+                                                            <button
+                                                                className="dropdown-item text-danger"
+                                                                title="Delete"
+                                                                onClick={() => handleDelete(vendor.id)}
+                                                            >
+                                                                <i className="ti ti-trash me-2"></i>
+                                                            </button>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -210,87 +212,7 @@ export default function Vendor({ vendors: initialVendors }) {
                 </div>
             </div>
 
-            {/* Modal */}
-            <div className={`modal fade ${showModal ? 'show d-block' : ''}`} tabIndex="-1" aria-hidden="true">
-                <div className="modal-dialog modal-dialog-centered modal-lg">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title">
-                                {currentVendor ? 'Edit Vendor' : 'Add New Vendor'}
-                            </h5>
-                            <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
-                        </div>
-                        <form onSubmit={handleSubmit}>
-                            <div className="modal-body">
-                                <Row>
-                                    <div className="mb-3 col-md-6">
-                                        <label className="form-label">Vendor Name <span className="text-danger">*</span></label>
-                                        <input
-                                            type="text"
-                                            className={`form-control ${errors.vendor_name ? 'is-invalid' : ''}`}
-                                            value={data.vendor_name}
-                                            onChange={(e) => setData('vendor_name', e.target.value)}
-                                        />
-                                        {errors.vendor_name && <div className="invalid-feedback">{errors.vendor_name}</div>}
-                                    </div>
-                                    <div className="mb-3 col-md-6">
-                                        <label className="form-label">Contact Number <span className="text-danger">*</span></label>
-                                        <input
-                                            type="text"
-                                            className={`form-control ${errors.contact_number ? 'is-invalid' : ''}`}
-                                            value={data.contact_number}
-                                            onChange={(e) => setData('contact_number', e.target.value)}
-                                        />
-                                        {errors.contact_number && <div className="invalid-feedback">{errors.contact_number}</div>}
-                                    </div>
-                                </Row>
-                                <Row>
-                                    <div className="mb-3 col-md-6">
-                                        <label className="form-label">Email</label>
-                                        <input
-                                            type="email"
-                                            className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                                            value={data.email}
-                                            onChange={(e) => setData('email', e.target.value)}
-                                        />
-                                        {errors.email && <div className="invalid-feedback">{errors.email}</div>}
-                                    </div>
-                                    <div className="mb-3 col-md-6">
-                                        <label className="form-label">Address</label>
-                                        <input
-                                            type="text"
-                                            className={`form-control ${errors.address ? 'is-invalid' : ''}`}
-                                            value={data.address}
-                                            onChange={(e) => setData('address', e.target.value)}
-                                        />
-                                        {errors.address && <div className="invalid-feedback">{errors.address}</div>}
-                                    </div>
-                                </Row>
-                                <div className="mb-3">
-                                    <label className="form-label">Description</label>
-                                    <textarea
-                                        className={`form-control ${errors.description ? 'is-invalid' : ''}`}
-                                        value={data.description}
-                                        onChange={(e) => setData('description', e.target.value)}
-                                        rows="3"
-                                        placeholder="Optional description..."
-                                    />
-                                    {errors.description && (
-                                        <div className="invalid-feedback">{errors.description}</div>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary" disabled={processing}>
-                                    {processing ? 'Saving...' : (currentVendor ? 'Update Vendor' : 'Create Vendor')}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            {showModal && <div className="modal-backdrop fade show"></div>}
+
         </AuthenticatedLayout>
     );
 }

@@ -99,6 +99,17 @@ class Client extends Model
     }
 
 
+    /**
+     * Get all of the challanRefrences for the Client
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function challanRefrences(): HasMany
+    {
+        return $this->hasMany(ChallanRefrence::class);
+    }
+
+
     protected function casts(): array
     {
         return [

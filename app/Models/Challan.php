@@ -13,15 +13,15 @@ class Challan extends Model
         'challan_refrence_id',
         'is_price_visible',
         'price',
-        'unit_count',
+        'qty',
         'description',
-        'item_name',
+        'unit_type',
         'created_by',
-        'updated_by'
+        'updated_by',
+        'total',
+        'narration',
     ];
-
-
-
+              
     public function challanRefrence(): BelongsTo
     {
         return $this->belongsTo(ChallanRefrence::class);

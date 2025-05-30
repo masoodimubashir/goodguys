@@ -83,6 +83,7 @@ class AdminAdminCompanyProfile extends Controller
             
             $company_profile = CompanyProfile::findOrFail($id);
 
+
             $validated = $request->validated();
 
             if ($request->hasFile('logo')) {

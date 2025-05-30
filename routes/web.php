@@ -38,8 +38,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Route For Viewing Dashbaord
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
 
-
-
     // Route For Updating User Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

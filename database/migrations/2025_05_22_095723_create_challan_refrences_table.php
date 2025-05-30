@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('challan_refrences', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('purchase_list_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('client_id')->constrained()->cascadeOnDelete();
             $table->string('challan_number');
             $table->integer('service_charge');
             $table->timestamps();

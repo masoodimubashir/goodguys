@@ -24,10 +24,11 @@ class StoreChallanRequest extends FormRequest
         return [
 
             "client_id"=> "required|exists:clients,id",
-            "purchase_list_id" => 'required|exists:purchase_lists,id',
             "service_charge" => 'required|numeric|min:1',
             "challan" => "array|min:1",
 
         ];
+        
     }
+
 }

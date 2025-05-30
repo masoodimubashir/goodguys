@@ -1,29 +1,43 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import React, { useState } from 'react';
-import { Button, Card, Table, Badge, Form } from 'react-bootstrap';
-import { Trash2, Eye, FileText, Edit } from 'lucide-react';
-import ChallanPdf from '../PDF/ChallanPdf';
+import { Button, Card, Table, Badge, Form, Modal, Row, Col, ProgressBar } from 'react-bootstrap';
+import { Trash2, FileText, Edit, Plus, User, Mail, Phone, MapPin, Calendar, CreditCard } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
-import ChallanToPdf from '../PDF/ChallanToPdf';
+import ChallanPdf from '../PDF/ChallanPdf';
+import ChallanToInvoice from '../PDF/ChallanToPdf';
 
-const ViewChallans = ({ product_list, company_profile }) => {
+const ViewChallans = ({ client, company_profile,  }) => {
 
-    console.log(company_profile);
+    console.log(client);
     
 
-    const [deleteId, setDeleteId] = useState(null);
     const [selectedChallans, setSelectedChallans] = useState([]);
+    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+    const [invoiceData, setInvoiceData] = useState({
+        invoice_number: '',
+        invoice_date: new Date().toISOString().split('T')[0],
+        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    });
 
-    const handleDelete = (id) => {
-        router.delete(route('challan.destroy', id), {
-            onSuccess: () => {
-                setDeleteId(null);
-                setSelectedChallans(selectedChallans.filter(challanId => challanId !== id));
-            }
-        });
+    // Calculate client statistics
+    const clientStats = {
+        totalChallans: client.challan_refrences.length,
+        totalInvoices: client.invoices?.length || 0,
+        totalAmount: client.challan_refrences.reduce((sum, ref) => {
+            const items = ref.challans || [];
+            const subtotal = items.reduce((sum, item) => {
+                return item.qty > 0 ? sum + (item.price * item.qty) : item.price;
+            }, 0);
+            return sum + subtotal + (subtotal * (ref.service_charge || 0) / 100);
+        }, 0),
+
+
+        paidAmount: client.invoices?.reduce((sum, inv) => sum + (inv.paid_amount || 0), 0) || 0,
+        pendingAmount: client.invoices?.reduce((sum, inv) => sum + (inv.total - (inv.paid_amount || 0)), 0) || 0
     };
 
+    // Handle checkbox selection
     const handleCheckboxChange = (challanId) => {
         setSelectedChallans(prev =>
             prev.includes(challanId)
@@ -32,195 +46,303 @@ const ViewChallans = ({ product_list, company_profile }) => {
         );
     };
 
+    // Select all/deselect all
     const handleSelectAll = (e) => {
         if (e.target.checked) {
-            setSelectedChallans(product_list.challan_refrences.map(ref => ref.id));
+            setSelectedChallans(client.challan_refrences.map(ref => ref.id));
         } else {
             setSelectedChallans([]);
         }
     };
 
-    const getChallanTotals = (challanRef) => {
-        const items = challanRef.challans || [];
-        const totalAmount = items.reduce((sum, item) => sum + (item.price * item.unit_count), 0);
-        const grandTotal = totalAmount + (totalAmount * (challanRef.service_charge || 0) / 100);
-        return { totalAmount, grandTotal };
-    };
-
-    const getSelectedChallanData = () => {
-        return product_list.challan_refrences
+    // Calculate totals for selected challans
+    const calculateSelectedTotals = () => {
+        return client.challan_refrences
             .filter(ref => selectedChallans.includes(ref.id))
-            .map(ref => ({
-                ...ref,
-                ...getChallanTotals(ref)
-            }));
+            .reduce((acc, ref) => {
+                const items = ref.challans || [];
+                const subtotal = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+                const serviceCharge = subtotal * (ref.service_charge || 0) / 100;
+                const total = subtotal + serviceCharge;
+
+                return {
+                    subtotal: acc.subtotal + subtotal,
+                    serviceCharge: acc.serviceCharge + serviceCharge,
+                    total: acc.total + total,
+                    items: [...acc.items, ...items.map(item => ({
+                        ...item,
+                        challan_number: ref.challan_number,
+                        service_charge: ref.service_charge
+                    }))]
+                };
+            }, { subtotal: 0, serviceCharge: 0, total: 0, items: [] });
     };
 
-    
+    // Prepare invoice data
+    const prepareInvoiceData = () => {
+        const selectedRefs = client.challan_refrences.filter(ref => selectedChallans.includes(ref.id));
+        return {
+            client_id: client.id,
+            invoice_number: invoiceData.invoice_number,
+            invoice_date: invoiceData.invoice_date,
+            due_date: invoiceData.due_date,
+            items: selectedRefs.flatMap(ref =>
+                ref.challans.map(item => ({
+                    description: item.description,
+                    quantity: item.qty,
+                    price: item.price,
+                    challan_reference: ref.challan_number,
+                    is_price_visible: item.is_price_visible,
+                    challan_refrence_id: ref.id,
+                    unit_type: item.unit_type,
+                    created_by: client.created_by,
+                    updated_by: client.updated_by,
+                    total: item.price * item.qty,
+                    narration: item.narration,
+                }))
+            ),
+            subtotal: calculateSelectedTotals().subtotal,
+            tax: calculateSelectedTotals().serviceCharge,
+            total: calculateSelectedTotals().total
+        };
+    };
 
-    let totalAmount = 0;
-    let totalServiceCharges = 0;
-    let productsCount = 0;
-
-    product_list.challan_refrences?.forEach(ref => {
-        const items = ref.challans || [];
-        const challanTotal = items.reduce((sum, item) => sum + (item.price * item.unit_count), 0);
-        totalAmount += challanTotal;
-        totalServiceCharges += (challanTotal * ref.service_charge) / 100;
-        productsCount += items.reduce((sum, item) => sum + item.unit_count, 0);
-    });
+    // Create invoice
+    const createInvoice = () => {
+        router.post(route('invoices.store'), prepareInvoiceData(), {
+            onSuccess: () => {
+                setShowInvoiceModal(false);
+                setSelectedChallans([]);
+            }
+        });
+    };
 
     return (
         <AuthenticatedLayout>
-            <Head title="View Challans" />
+            <Head title={`${client.client_name} - Challans`} />
             <div className="container-fluid py-4">
-
-
-                {/* Challan Stats Cards */}
-                <div className="row g-4 mb-4">
-                    {/* Total Challans */}
-                    <div className="col-12 col-sm-6 col-lg-2">
-                        <div className="card border-0 shadow-sm card-hover h-100">
-                            <div className="card-body p-4">
-                                <div className="d-flex align-items-center">
-                                    <div className="stats-icon bg-blue-light me-3">
-                                        <FileText className="text-blue-600" />
+                {/* Client Information Card */}
+                <Card className="mb-4">
+                    <Card.Body>
+                        <Row>
+                            <Col md={8}>
+                                <div className="d-flex align-items-center mb-3">
+                                    <div className="bg-primary bg-opacity-10 p-3 rounded me-3">
+                                        <User size={24} className="text-white" />
                                     </div>
                                     <div>
-                                        <p className="small text-slate-600 mb-1">Total Challans</p>
-                                        <h6 className="fw-bold text-slate-800 mb-0">
-                                            {product_list.challan_refrences?.length || 0}
-                                        </h6>
+                                        <h4 className="mb-0">{client.client_name}</h4>
+                                        <p className="text-muted mb-0">Client since {new Date(client.created_at).toLocaleDateString()}</p>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                <Row className="g-3">
+                                    <Col xs={6} md={4}>
+                                        <div className="d-flex align-items-center">
+                                            <Mail size={16} className="me-2 text-muted" />
+                                            <span>{client.client_email || 'No email'}</span>
+                                        </div>
+                                    </Col>
+                                    <Col xs={6} md={4}>
+                                        <div className="d-flex align-items-center">
+                                            <Phone size={16} className="me-2 text-muted" />
+                                            <span>{client.client_phone || 'No phone'}</span>
+                                        </div>
+                                    </Col>
+                                    <Col xs={12} md={4}>
+                                        <div className="d-flex align-items-center">
+                                            <MapPin size={16} className="me-2 text-muted" />
+                                            <span>{client.client_address || 'No address'}</span>
+                                        </div>
+                                    </Col>
+                                </Row>
+                            </Col>
 
-                <Card.Body className="p-0">
+                        </Row>
+                    </Card.Body>
+                </Card>
 
-                    <Card.Header>
-                        {/* Action Bar for Selected Challans */}
-                        {selectedChallans.length > 0 && (
-                            <div className="mb-3 rounded d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span className="fw-bold">{selectedChallans.length}</span> challan(s) selected
+                {/* Client Analytics */}
+                <Row className="mb-4">
+                    <Col md={4}>
+                        <Card className="border-0 shadow-sm">
+                            <Card.Body>
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 className="text-muted mb-2">Total Challans</h6>
+                                        <h3 className="mb-0">{clientStats.totalChallans}</h3>
+                                    </div>
+                                    <div className="bg-primary bg-opacity-10 p-3 rounded">
+                                        <FileText size={20} className="text-white" />
+                                    </div>
                                 </div>
-                                <PDFDownloadLink
-                                    document={
-                                        <ChallanToPdf
-                                            company_profile={company_profile}
-                                            client={product_list.client}
-                                            challans={getSelectedChallanData()}
-                                        />
-                                    }
-                                    fileName={`${Date.now()}.pdf`}
-                                >
-                                    {({ loading }) => (
-                                        <Button variant="primary" disabled={loading}>
-                                            <FileText size={16} className="me-2" />
-                                            {loading ? 'Generating PDF...' : 'Create Invoice'}
-                                        </Button>
-                                    )}
-                                </PDFDownloadLink>
-                            </div>
-                        )}
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                    <Col md={4}>
+                        <Card className="border-0 shadow-sm">
+                            <Card.Body>
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 className="text-muted mb-2">Total Invoices</h6>
+                                        <h3 className="mb-0">{clientStats.totalInvoices}</h3>
+                                    </div>
+                                    <div className="bg-success bg-opacity-10 p-3 rounded">
+                                        <CreditCard size={20} className="text-white" />
+                                    </div>
+                                </div>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                    <Col md={4}>
+                        <Card className="border-0 shadow-sm">
+                            <Card.Body>
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 className="text-muted mb-2">Total Billed</h6>
+                                        <h3 className="mb-0">₹{clientStats.totalAmount.toLocaleString('en-IN')}</h3>
+                                    </div>
+                                    <div className="bg-info bg-opacity-10 p-3 rounded">
+                                        <Calendar size={20} className="text-white" />
+                                    </div>
+                                </div>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+
+                </Row>
+
+                {/* Challans Table */}
+                <Card className='p-2'>
+                    <Card.Header className="d-flex justify-content-between align-items-center">
+                        <h6>Challan Records 
+                            ({selectedChallans.length})
+                        </h6>
+                        <div className="d-flex gap-2 mb-2">
+                            {selectedChallans.length > 0 && (
+                                <>
+                                 
+                                    <PDFDownloadLink
+                                        document={
+                                            <ChallanToInvoice
+                                                company_profile={company_profile}
+                                                challans={client.challan_refrences.filter(ref => selectedChallans.includes(ref.id))}
+                                                client={client}
+
+                                            />
+                                        }
+                                        fileName={`${client.client_name}.pdf`}
+                                    >
+                                        {({ loading }) => (
+                                            <Button variant="secondary" disabled={loading} size='sm'>
+                                                <FileText size={16} className="me-2" />
+                                                {loading ? 'Generating...' : 'Download Invoice'}
+                                            </Button>
+                                        )}
+                                    </PDFDownloadLink>
+                                </>
+                            )}
+
+                        </div>
                     </Card.Header>
 
-                    <div className="table-responsive">
-                        <Card.Body>
-                            {product_list.challan_refrences?.length > 0 ? (
-                                <div className="table-responsive">
-                                    <Table hover bordered className="table-centered mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>
+                        <Table hover responsive >
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <Form.Check
+                                            type="checkbox"
+                                            onChange={handleSelectAll}
+                                            checked={
+                                                selectedChallans.length > 0 &&
+                                                selectedChallans.length === client.challan_refrences.length
+                                            }
+                                        />
+                                    </th>
+                                    <th>Challan No.</th>
+                                    <th>Date</th>
+                                    <th className="text-end">Items</th>
+                                    <th className="text-end">Subtotal</th>
+                                    <th className="text-end">Service Charge</th>
+                                    <th className="text-end">Total</th>
+                                    <th className="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {client.challan_refrences.map((ref) => {
+                                    const items = ref.challans || [];
+                                    const subtotal = items.reduce((sum, item) => {
+                                        return item.qty > 0 ? sum + (item.price * item.qty) : item.price;
+                                    }, 0);
+                                    const serviceRate = Number(ref.service_charge) || 0;
+                                    const serviceCharge = subtotal * serviceRate / 100;
+                                    const total = subtotal + serviceCharge;
+                                    const isInvoiced = ref.invoice_id !== null;
+
+                                    return (
+                                        <tr key={ref.id}>
+                                            <td>
+                                                {!isInvoiced && (
                                                     <Form.Check
                                                         type="checkbox"
-                                                        onChange={handleSelectAll}
-                                                        checked={
-                                                            selectedChallans.length > 0 &&
-                                                            selectedChallans.length === product_list.challan_refrences.length
-                                                        }
+                                                        checked={selectedChallans.includes(ref.id)}
+                                                        onChange={() => handleCheckboxChange(ref.id)}
+                                                        disabled={isInvoiced}
                                                     />
-                                                </th>
-                                                <th>Challan No.</th>
-                                                <th className="text-end">Service Charge</th>
-                                                <th className="text-end">Total Amount</th>
-                                                <th className="text-end">Grand Total</th>
-                                                <th>Created At</th>
-                                                <th className="text-center">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {product_list.challan_refrences.map((ref) => {
-                                                const { totalAmount, grandTotal } = getChallanTotals(ref);
-                                                return (
-                                                    <tr key={ref.id}>
-                                                        <td>
-                                                            <Form.Check
-                                                                type="checkbox"
-                                                                checked={selectedChallans.includes(ref.id)}
-                                                                onChange={() => handleCheckboxChange(ref.id)}
-                                                            />
-                                                        </td>
-                                                        <td className="fw-semibold">{ref.challan_number}</td>
-                                                        <td className="text-end">
-                                                            <Badge bg="warning" text="dark">
-                                                                {ref.service_charge}%
-                                                            </Badge>
-                                                        </td>
-                                                        <td className="text-end">
-                                                            ₹{totalAmount.toLocaleString('en-IN')}
-                                                        </td>
-                                                        <td className="text-end text-success fw-bold">
-                                                            ₹{grandTotal.toLocaleString('en-IN')}
-                                                        </td>
-                                                        <td>
-                                                            {new Date(ref.created_at).toLocaleDateString()}
-                                                        </td>
-                                                        <td className="text-center">
-                                                            <div className="d-flex justify-content-center gap-2">
-                                                                <Link href={route('challan.edit', ref.id)}>
-                                                                    <Button variant="white" size="sm" title="View Details">
-                                                                        <Edit size={16} className="text-primary" />
-                                                                    </Button>
-                                                                </Link>
-                                                                <Button
-                                                                    variant="white"
-                                                                    size="sm"
-                                                                    title="Delete"
-                                                                    onClick={() => handleDelete(ref.id)}
-                                                                >
-                                                                    <Trash2 size={16} className="text-danger" />
-                                                                </Button>
+                                                )}
+                                            </td>
+                                            <td>
+                                                {ref.challan_number}
 
-                                                                <PDFDownloadLink
-                                                                    document={
-                                                                        <ChallanPdf client={product_list.client} challan_refrence={ref} />
-                                                                    }
-                                                                    fileName={`${ref.id}.pdf`}
-                                                                    className="dropdown-item d-flex align-items-center"
-                                                                >
-                                                                    <FileText size={16} className="text-primary" />
-                                                                </PDFDownloadLink>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </Table>
-                                </div>
-                            ) : (
-                                <div className="text-center py-5">
-                                    <p className="text-muted">No challans found for this purchase.</p>
-                                </div>
-                            )}
-                        </Card.Body>
-                    </div>
-                </Card.Body>
+                                            </td>
+                                            <td>{new Date(ref.created_at).toLocaleDateString()}</td>
+
+                                            <td className="text-end">{items.length}</td>
+                                            <td className="text-end">₹{subtotal.toLocaleString('en-IN')}</td>
+                                            <td className="text-end">
+                                                <Badge bg="warning" text="dark">
+                                                    ₹{serviceCharge.toLocaleString('en-IN')} ({ref.service_charge}%)
+                                                </Badge>
+                                            </td>
+                                            <td className="text-end fw-bold">₹{total.toLocaleString('en-IN')}</td>
+                                            <td className="text-center">
+                                                <div className="d-flex justify-content-center gap-2">
+
+                                                    <Link href={route('challan.edit', ref.id)}>
+                                                        <Edit size={20} />
+                                                    </Link>
+
+                                                    <Trash2 size={20} className="text-danger" title="Delete"
+                                                        onClick={() => {
+                                                            if (confirm('Are you sure you want to delete this challan?')) {
+                                                                router.delete(route('challan.destroy', ref.id));
+                                                            }
+                                                        }}
+                                                    />
+
+                                                    <PDFDownloadLink
+                                                        document={
+                                                            <ChallanPdf
+                                                                company_profile={company_profile}
+                                                                challan={ref}
+                                                                client={client}
+                                                            />
+                                                        }
+                                                        fileName={`${client.client_name}.pdf`}
+                                                    >
+                                                        {({ loading }) => (
+                                                            <FileText size={20} className="me-2" />
+                                                        )}
+                                                    </PDFDownloadLink>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </Table>
+                </Card>
+
+
             </div>
         </AuthenticatedLayout>
     );

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePurchaseListRequest;
 use App\Http\Requests\UpdatePurchaseListRequest;
+use App\Models\PurchasedItem;
 use App\Models\PurchaseList;
 use App\Models\Vendor;
 use Exception;
@@ -20,7 +21,7 @@ class AdminPurchaseListController extends Controller
      */
     public function index(Request $request)
     {
-         return Inertia::render("PurchaseManagment/purchases", [
+        return Inertia::render("PurchaseManagment/purchases", [
             'vendor' => Vendor::with([
                 'purchaseLists' => function ($query) {
                     $query->with([
@@ -52,14 +53,23 @@ class AdminPurchaseListController extends Controller
                 $validated['bill'] = $request->file('bill')->store('purchase-lists', 'public');
             }
 
-            PurchaseList::create($validated);
+
+            $purchase_list = PurchaseList::create($validated);
+
+            PurchasedItem::create([
+                'client_id' => $purchase_list->client_id,
+                'unit_type' => $purchase_list->list_name,
+                'description' => $purchase_list->vendor->vendor_name,
+                'qty' => 0,
+                'price' => $purchase_list->bill_total,
+                'narration' => $purchase_list->bill_description,
+                'total' => $purchase_list->bill_total,
+                'created_by' => auth()->id(),
+            ]);
 
             return redirect()->back()->with('message', 'Purchase list created successfully');
         } catch (\Throwable $e) {
-            Log::error('Error creating purchase list: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-
+          
             return redirect()->back()->with('error', 'Failed to create purchase list');
         }
     }
@@ -121,7 +131,7 @@ class AdminPurchaseListController extends Controller
 
 
             $validated = $request->validated();
-            
+
             // Handle file upload
             if ($request->hasFile('bill')) {
                 // Delete old file if it exists

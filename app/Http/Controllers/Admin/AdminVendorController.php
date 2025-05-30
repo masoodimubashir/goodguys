@@ -5,10 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreVendorRequest;
 use App\Http\Requests\UpdateVendorRequest;
-use App\Models\Client;
 use App\Models\Vendor;
-use Exception;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class AdminVendorController extends Controller
@@ -18,11 +15,7 @@ class AdminVendorController extends Controller
      */
     public function index()
     {
-
-
-
         return Inertia::render("Vendor/vendor", [
-            'clients' => Client::orderBy('client_name')->get(),
             'vendors' => Vendor::orderBy('vendor_name')->get(),
         ]);
     }
@@ -30,7 +23,10 @@ class AdminVendorController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create() {}
+    public function create()
+    {
+        return Inertia::render('Vendor/CreateVendor');
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -38,8 +34,6 @@ class AdminVendorController extends Controller
     public function store(StoreVendorRequest $request)
     {
         $validated = $request->validated();
-
-
 
         Vendor::create(array_merge($validated, [
             'created_by' => auth()->user()->id,
@@ -93,7 +87,11 @@ class AdminVendorController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $vendor = Vendor::findOrFail($id);
+
+        return Inertia::render('Vendor/EditVendor', [
+            'vendor' => $vendor,
+        ]);
     }
 
     /**

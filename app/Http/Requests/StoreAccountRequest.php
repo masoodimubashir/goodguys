@@ -28,7 +28,6 @@ class StoreAccountRequest extends FormRequest
             'selling_price' => ['required', 'integer', 'min:1'],
             'buying_price' => ['required', 'integer', 'min:1'],
             'count' => ['required', 'integer', 'min:1'],
-            'service_charge' => ['required', 'integer', 'min:1', 'max:100'],
             'description' => ['required'],
 
         ];

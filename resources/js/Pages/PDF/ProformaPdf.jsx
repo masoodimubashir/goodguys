@@ -180,6 +180,8 @@ const styles = StyleSheet.create({
 });
 
 export const ProformaPdf = ({ client, CompanyProfile, data }) => {
+
+  
   const proforma = data || {};
   const products = proforma.products || [];
   const bankAccount = client?.bank_account || null;

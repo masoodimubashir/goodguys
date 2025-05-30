@@ -25,11 +25,7 @@ class AdminChallanController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        
-
-    }
+    public function index() {}
 
     /**
      * Show the form for creating a new resource.
@@ -51,7 +47,7 @@ class AdminChallanController extends Controller
         try {
             // Create Challan Reference
             $challanReference = ChallanRefrence::create([
-                'purchase_list_id' => $validated['purchase_list_id'],
+                'client_id' => $validated['client_id'],
                 'service_charge' => $validated['service_charge'],
                 'challan_number' => uniqid('CH'),
             ]);
@@ -61,15 +57,18 @@ class AdminChallanController extends Controller
             foreach ($validated['challan'] as $item) {
                 $challanItems[] = [
                     'challan_refrence_id' => $challanReference->id,
-                    'item_name' => $item['item_name'],
+                    'unit_type' => $item['unit_type'],
                     'price' => $item['price'],
-                    'unit_count' => $item['unit_count'],
+                    'qty' => $item['qty'],
                     'description' => $item['description'],
                     'is_price_visible' => $item['is_price_visible'],
+                    'narration' => $item['narration'],
+                    'total' => $item['total'],
                     'created_by' => auth()->user()->id,
                     'created_at' => now(),
                 ];
             }
+
 
             // Bulk insert for better performance
             Challan::insert($challanItems);
@@ -77,11 +76,9 @@ class AdminChallanController extends Controller
             DB::commit();
 
             return redirect()->route('clients.show', $validated['client_id'])->with('success', 'Challan created successfully.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
 
-            Log::error($e->getMessage());
             DB::rollBack();
-
             return redirect()->back()->with('error', 'Failed to create Challan. Please try again.');
         }
     }
@@ -91,16 +88,14 @@ class AdminChallanController extends Controller
      */
     public function show(string $id)
     {
-        $product_list = PurchaseList::with([
-            'ChallanRefrences' => function ($query) {
-                $query->with(['challans']);
-            },
-            'client'
+
+        $client = Client::with([
+            'challanRefrences.challans',
+            'bankAccount'
         ])->find($id);
 
-
         return Inertia::render("Challan/ViewChallans", [
-            'product_list' => $product_list,
+            'client' => $client,
             'company_profile' => CompanyProfile::first()
         ]);
     }
