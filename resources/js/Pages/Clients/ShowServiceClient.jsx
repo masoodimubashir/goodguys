@@ -25,7 +25,7 @@ import { PurchaseListModal } from '@/Components/PurchaseListModal';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-export default function ShowClient({ client, modules = [], inventoryOptions = [], vendors = [], company_profile = null, client_vendors = [] }) {
+export default function ShowClient({ client,  vendors = [],  client_vendors = [] }) {
     // State management
     const [activeTab, setActiveTab] = useState('purchase-items');
     const [purchaseItems, setPurchaseItems] = useState(client.purchase_items || []);
@@ -463,11 +463,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         });
     };
 
-    // Calculate remaining quantity for challan
-    const calculateRemainingQuantity = (product) => {
-        // Implement logic to calculate remaining quantity if needed
-        return product.qty;
-    };
+  
 
     // Toggle product selection for challan
     const toggleProductSelection = (id) => {
@@ -510,8 +506,6 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
 
 
         challanForm.setData('challan', selectedItems);
-
-        console.log(selectedItems);
 
 
         challanForm.post(route('challan.store'), {
@@ -556,32 +550,27 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                             Create
                         </button>
                         <ul className="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <Link href={route('invoice.create', { client_id: client.id })} className="dropdown-item">
-                                    <i className="ti ti-file-invoice me-2"></i> Invoice
-                                </Link>
-                            </li>
+                           
                             <li>
                                 <Link href={route('bank-account.create', { client_id: client.id })} className="dropdown-item">
                                     <i className="ti ti-building-bank me-2"></i> Bank Account
                                 </Link>
                             </li>
-                            <li>
+                            {/* <li>
                                 <Link href={route('purchased-item.index', { client_id: client.id })} className="dropdown-item">
                                     <i className="ti ti-building-bank me-2"></i> Purchase Item
                                 </Link>
-                            </li>
+                            </li> */}
                             <li>
                                 <Link href={route('challan.show', client.id)} className="dropdown-item">
                                     <i className="ti ti-building-bank me-2"></i> Challans
                                 </Link>
                             </li>
-                            <li><hr className="dropdown-divider" /></li>
-                            <li>
+                            {/* <li>
                                 <button className="dropdown-item" onClick={() => openModal('purchase-list')}>
                                     <i className="ti ti-shopping-cart me-2"></i> Purchase List
                                 </button>
-                            </li>
+                            </li> */}
                         </ul>
                     </div>
                 </div>

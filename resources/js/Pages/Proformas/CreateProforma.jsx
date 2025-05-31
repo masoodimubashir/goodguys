@@ -10,7 +10,6 @@ export default function CreateInvoice({ client, modules, inventories }) {
         client_name: client.client_name,
         client_address: client.client_address,
         service_charge: client?.service_charge?.service_charge ?? 0,
-        tax: client.tax || 0,
         show_all_prices: true,
         products: [
             {
@@ -23,7 +22,6 @@ export default function CreateInvoice({ client, modules, inventories }) {
                         description: "",
                         price: '',
                         quantity: '',
-                        tax: client.tax || '',
                         item_dimensions: [],
                     },
                 ],
@@ -61,7 +59,6 @@ export default function CreateInvoice({ client, modules, inventories }) {
                         description: "",
                         price: '',
                         quantity: '',
-                        tax: client.tax || '',
                         item_dimensions: [],
                     },
                 ],
@@ -79,7 +76,6 @@ export default function CreateInvoice({ client, modules, inventories }) {
             description: "",
             price: '',
             quantity: '',
-            tax: client.tax || '',
             item_dimensions: [],
         });
         setData("products", newProducts);
@@ -123,7 +119,6 @@ export default function CreateInvoice({ client, modules, inventories }) {
             description: "",
             price: '',
             quantity: '',
-            tax: data.tax,
             item_dimensions: [],
         };
         setData("products", newProducts);
@@ -250,17 +245,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                 />
                             </Form.Group>
                         </Col>
-                        <Col md={4}>
-                            <Form.Group>
-                                <Form.Label className="fw-semibold">Service Charge (%)</Form.Label>
-                                <Form.Control
-                                    type="number"
-                                    value={data.service_charge}
-                                    onChange={(e) => setData("service_charge", parseFloat(e.target.value))}
-                                    isInvalid={!!errors.service_charge}
-                                />
-                            </Form.Group>
-                        </Col>
+                       
                         <Col md={4}>
                             <Form.Group>
                                 <Form.Label className="fw-semibold">Price Visibility</Form.Label>
@@ -393,16 +378,6 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             </Form.Group>
                                         </Col>
 
-                                        <Col md={1}>
-                                            <Form.Group>
-                                                <Form.Label>Tax (%)</Form.Label>
-                                                <Form.Control
-                                                    type="text"
-                                                    value={item.tax}
-                                                    onChange={(e) => updateItem(productIndex, itemIndex, "tax", parseFloat(e.target.value) || 0)}
-                                                />
-                                            </Form.Group>
-                                        </Col>
 
                                         <Col md={2}>
                                             <Form.Group>
@@ -505,14 +480,8 @@ export default function CreateInvoice({ client, modules, inventories }) {
                             <Col>Subtotal</Col>
                             <Col className="text-end">₹{subtotal.toFixed(2)}</Col>
                         </Row>
-                        <Row className="mb-2">
-                            <Col>Total Tax</Col>
-                            <Col className="text-end">₹{taxAmount.toFixed(2)}</Col>
-                        </Row>
-                        <Row className="mb-2">
-                            <Col>Service Charge ({data.service_charge}%)</Col>
-                            <Col className="text-end">₹{serviceChargeAmount.toFixed(2)}</Col>
-                        </Row>
+                       
+                       
                         <hr />
                         <Row className="fw-bold">
                             <Col>Total</Col>

@@ -72,7 +72,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('purchase-list', AdminPurchaseListController::class);
 
     // Route For Cost Incurred
-    Route::resource('cost-incurred', AdminCostIncurredController::class);
+    Route::resource('cost-incurreds', AdminCostIncurredController::class);
 
     // Route For Compnay Profile
     Route::resource('company-profile', AdminAdminCompanyProfile::class);

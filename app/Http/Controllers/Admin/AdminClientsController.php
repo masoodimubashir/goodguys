@@ -77,21 +77,20 @@ class AdminClientsController extends Controller
             'purchaseItems'
         ]);
 
-        $groupedPurchaseLists = $client->purchaseLists->groupBy('vendor_id');
-
         $clientVendorIds = $client->purchaseLists->pluck('vendor_id')->unique();
 
         $clientVendors = Vendor::whereIn('id', $clientVendorIds)->orderBy('vendor_name')->get();
 
-
         if ($client->client_type === 'Service Client') {
+            
             return Inertia::render('Clients/ShowServiceClient', [
                 'client' => $client,
-                'groupedPurchaseLists' => $groupedPurchaseLists,
                 'client_vendors' => $clientVendors,
                 'vendors' => Vendor::orderBy('vendor_name')->get(),
             ]);
+
         } else {
+            
             return Inertia::render('Clients/ShowProductClient', [
                 'client' => $client,
                 'modules' => Module::latest()->get(),

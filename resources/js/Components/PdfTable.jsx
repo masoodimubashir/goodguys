@@ -4,13 +4,16 @@ import { Link, router } from '@inertiajs/react';
 import { InvoicePdf } from '@/Pages/PDF/InvoicePdf';
 import { ProformaPdf } from '@/Pages/PDF/ProformaPdf';
 import Swal from 'sweetalert2';
+import { Table } from 'react-bootstrap';
+import { Download, Edit, FileText, RefreshCw, Trash2 } from 'lucide-react';
 
 export default function PdfTable({ client, pdfRef, CompanyProfile }) {
+
+    
 
     const [convertingId, setConvertingId] = useState(null);
 
     const mergedData = useMemo(() => {
-
         const entries = [];
 
         if (client?.invoice_refrences?.length > 0) {
@@ -44,155 +47,206 @@ export default function PdfTable({ client, pdfRef, CompanyProfile }) {
     }, [client]);
 
     const handleDeleteItem = (id, type) => {
-        const routeName = type === 'Invoice' ? 'invoice.destroy' : 'proforma.destroy';
-        router.delete(route(routeName, { id }), {
-            onSuccess: () => {
-                Swal.fire('Deleted!', `${type} has been deleted.`, 'success');
-            },
-            onError: () => {
-                Swal.fire('Failed!', `Failed to delete the ${type.toLowerCase()}.`, 'error');
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `This will permanently delete the ${type.toLowerCase()}`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const routeName = type === 'Invoice' ? 'invoice.destroy' : 'proforma.destroy';
+                router.delete(route(routeName, { id }), {
+                    onSuccess: () => {
+                        Swal.fire('Deleted!', `${type} has been deleted.`, 'success');
+                    },
+                    onError: () => {
+                        Swal.fire('Failed!', `Failed to delete the ${type.toLowerCase()}.`, 'error');
+                    }
+                });
             }
         });
     };
 
     const handleConvertToInvoice = (id) => {
-        if (confirm('Are you sure you want to convert this proforma to an invoice?')) {
-            setConvertingId(id);
-            router.post(route('create-invoice-from-pdf', { id: id }), {
-                onSuccess: () => {
-                    Swal.fire('Success!', 'Invoice created from proforma successfully.', 'success');
-                    setConvertingId(null);
-                },
-                onError: () => {
-                    Swal.fire('Error!', 'Failed to create invoice from proforma.', 'error');
-                    setConvertingId(null);
-                },
-                onFinish: () => {
-                    setConvertingId(null);
-                }
-            });
-        }
+        Swal.fire({
+            title: 'Convert to Invoice?',
+            text: 'This will create a new invoice from the proforma',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Convert'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                setConvertingId(id);
+                router.post(route('create-invoice-from-pdf', { id }), {
+                    onSuccess: () => {
+                        Swal.fire('Success!', 'Invoice created from proforma successfully.', 'success');
+                        setConvertingId(null);
+                    },
+                    onError: () => {
+                        Swal.fire('Error!', 'Failed to create invoice from proforma.', 'error');
+                        setConvertingId(null);
+                    }
+                });
+            }
+        });
     };
 
     return (
-        <div className="table-responsive">
-            <table className="table table-striped text-start align-middle" ref={pdfRef}>
-                <thead>
-                    <tr>
-                        <th>Created At</th>
-                        <th>Type</th>
-                        <th>Reference </th>
-                        <th>Actions</th>
-                        <th>Options</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {mergedData.length > 0 ? (
-                        mergedData.map(entry => (
-                            <tr key={`${entry.type}-${entry.id}`} className="align-middle">
+        <>
+            <div className="table-responsive">
 
-                                <td>
-                                    <div className="d-flex flex-column">
-                                        <span>{new Date(entry.created_at).toLocaleDateString("en-US", {
-                                            year: "numeric", month: "long", day: "numeric"
-                                        })}</span>
-                                        <small className="text-muted">
-                                            {new Date(entry.created_at).toLocaleTimeString("en-US", {
-                                                hour: "2-digit", minute: "2-digit", hour12: true
-                                            })}
-                                        </small>
-                                    </div>
-                                </td>
+                <div className="d-flex justify-content-end align-items-center mb-3">
+                    <div className='d-flex align-items-center gap-2 mt-2 mb-2'>
+                        <Link
+                            href={route('invoice.create', { client_id: client.id })}
+                            className="btn btn-sm btn-primary d-flex align-items-center gap-2"
+                        >
+                           Create  Invoice
+                        </Link>
+                        <Link
+                            href={route('proforma.create', { client_id: client.id })}
+                            className="btn btn-sm btn-primary d-flex align-items-center gap-2"
+                        >
+                            Create Proforma
+                        </Link>
+                    </div>
+                </div>
 
-                                <td>
-                                    <span className={`badge ${entry.type === 'Invoice' ? 'bg-primary' : 'bg-info'} text-white`}>
-                                        {entry.type}
-                                    </span>
-                                </td>
+                <Table size="sm" bordered hover className="mb-0">
+                    <thead>
+                        <tr>
+                            <th className="text-start">Date</th>
+                            <th className="text-start">Type</th>
+                            <th className="text-start">Reference</th>
+                            <th className="text-start">Status</th>
+                            <th className="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {mergedData.length > 0 ? (
+                            mergedData.map(entry => (
+                                <tr key={`${entry.type}-${entry.id}`} className="align-middle">
+                                    <td className="text-start">
+                                        <div className="d-flex flex-column">
+                                            <span className="small">
+                                                {new Date(entry.created_at).toLocaleDateString("en-US", {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    year: 'numeric'
+                                                })}
+                                            </span>
+                                            <small className="text-muted">
+                                                {new Date(entry.created_at).toLocaleTimeString("en-US", {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </small>
+                                        </div>
+                                    </td>
 
-                                <td>{entry.reference_number}</td>
+                                    <td className="text-start">
+                                        <span className={`badge ${entry.type === 'Invoice' ? 'bg-primary' : 'bg-info'} text-white d-flex align-items-center gap-1`}>
+                                            {entry.type}
+                                        </span>
+                                    </td>
 
-                                <td>
-                                    {entry.type === 'Proforma' && !entry.is_converted_to_invoice && (
-                                        <button
-                                            onClick={() => handleConvertToInvoice(entry.id)}
-                                            className={`btn btn-sm ${convertingId === entry.id ? 'btn-secondary' : 'btn-primary'} position-relative`}
-                                            disabled={convertingId === entry.id}
-                                            title="Convert to Invoice"
-                                        >
-                                            Convert To Invoice
-                                        </button>
-                                    )}
-                                </td>
+                                    <td className="text-start">
+                                        <span className="font-monospace">{entry.reference_number}</span>
+                                    </td>
 
+                                    <td className="text-start">
+                                        {entry.type === 'Proforma' && (
+                                            <span className={`badge ${entry.is_converted_to_invoice ? 'bg-success' : 'bg-warning text-dark'}`}>
+                                                {entry.is_converted_to_invoice ? 'Converted' : 'Pending'}
+                                            </span>
+                                        )}
+                                    </td>
 
-                                <td>
-                                    <div className="btn-group dropdown-icon-none">
-                                        <button
-                                            className="btn btn-sm btn-light-subtle border-0 rounded-circle icon-btn"
-                                            type="button"
-                                            data-bs-toggle="dropdown"
-                                            aria-expanded="false"
-                                        >
-                                            <i className="ti ti-dots"></i>
-                                        </button>
-                                        <ul className="dropdown-menu dropdown-menu-end shadow-sm">
-                                            <li>
-                                                <Link
-                                                    className="dropdown-item d-flex align-items-center"
-                                                    href={
-                                                        entry.type === 'Invoice' ? (
-                                                            route(`invoice.edit`, { id: entry.id })
-                                                        ) : (
-                                                            route(`proforma.edit`, { id: entry.id })
-                                                        )
-                                                    }
-                                                >
-                                                    <i className="ti ti-edit me-2 text-primary"></i> Edit
-                                                </Link>
-                                            </li>
-                                            <li>
+                                    <td className="text-end">
+                                        <div className="d-flex gap-2 justify-content-end">
+                                            {entry.type === 'Proforma' && !entry.is_converted_to_invoice && (
                                                 <button
-                                                    className="dropdown-item d-flex align-items-center"
-                                                    onClick={() => handleDeleteItem(entry.id, entry.type)}
+                                                    onClick={() => handleConvertToInvoice(entry.id)}
+                                                    className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+                                                    disabled={convertingId === entry.id}
+                                                    title="Convert to Invoice"
                                                 >
-                                                    <i className="ti ti-trash me-2 text-danger"></i> Delete
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <PDFDownloadLink
-                                                    document={
-                                                        entry.type === 'Invoice' ? (
-                                                            <InvoicePdf client={client} CompanyProfile={CompanyProfile} data={entry} />
-                                                        ) : (
-                                                            <ProformaPdf client={client} CompanyProfile={CompanyProfile} data={entry} is_price_visible={entry.is_price_visible} />
-                                                        )
-                                                    }
-                                                    fileName={`${entry.type.toLowerCase()}-${entry.id}.pdf`}
-                                                    className="dropdown-item d-flex align-items-center"
-                                                >
-                                                    {({ loading }) => (
+                                                    {convertingId === entry.id ? (
+                                                        <RefreshCw size={16} className="animate-spin" />
+                                                    ) : (
                                                         <>
-                                                            <i className="ti ti-download me-2 text-success"></i>
-                                                            {loading ? 'Preparing PDF...' : 'Download PDF'}
+                                                            <Download size={16} />
+                                                            <span className="d-none d-md-inline">Convert</span>
                                                         </>
                                                     )}
-                                                </PDFDownloadLink>
-                                            </li>
-                                        </ul>
-                                    </div>
+                                                </button>
+                                            )}
+
+                                            <Link
+                                                href={entry.type === 'Invoice'
+                                                    ? route('invoice.edit', { id: entry.id })
+                                                    : route('proforma.edit', { id: entry.id })
+                                                }
+                                                className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+                                            >
+                                                <Edit size={16} />
+                                                <span className="d-none d-md-inline">Edit</span>
+                                            </Link>
+
+                                            <button
+                                                onClick={() => handleDeleteItem(entry.id, entry.type)}
+                                                className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
+                                            >
+                                                <Trash2 size={16} />
+                                                <span className="d-none d-md-inline">Delete</span>
+                                            </button>
+
+                                            <PDFDownloadLink
+                                                document={
+                                                    entry.type === 'Invoice' ? (
+                                                        <InvoicePdf client={client} CompanyProfile={CompanyProfile} data={entry} />
+                                                    ) : (
+                                                        <ProformaPdf client={client} CompanyProfile={CompanyProfile} data={entry} />
+                                                    )
+                                                }
+                                                fileName={`${entry.type.toLowerCase()}-${entry.reference_number}.pdf`}
+                                                className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
+                                            >
+                                                {({ loading }) => (
+                                                    <>
+                                                        {loading ? (
+                                                            <RefreshCw size={16} className="animate-spin" />
+                                                        ) : (
+                                                            <>
+                                                                <Download size={16} />
+                                                                <span className="d-none d-md-inline">PDF</span>
+                                                            </>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </PDFDownloadLink>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="5" className="text-center py-4 text-muted">
+                                    No invoices or proformas found
                                 </td>
                             </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan="5" className="text-center text-muted">
-                                No Invoices or Proformas Found
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
-        </div>
+                        )}
+                    </tbody>
+                </Table>
+            </div>
+        </>
     );
 }
+
+
+

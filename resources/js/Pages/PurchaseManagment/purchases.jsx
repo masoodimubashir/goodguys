@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import {
     Edit, Trash2, Plus, Save, ChevronDown, ChevronRight,
-     Wallet, IndianRupee, Phone, Mail, MapPin, FileText, Building2,
+    Wallet, IndianRupee, Phone, Mail, MapPin, FileText, Building2,
     User2, Package, RefreshCw, HandCoins, Undo2,
-    TrendingUp,  Calendar,  Activity, BarChart3, XCircle, Eye, EyeOff, Download, Percent, Receipt, 
-    Zap,  ShoppingCart, Banknote, RotateCcw
+    TrendingUp, Calendar, Activity, BarChart3, XCircle, Eye, EyeOff, Download, Percent, Receipt,
+    Zap, ShoppingCart, Banknote, RotateCcw
 } from 'lucide-react';
 import { Card, Table, Form, Button, Badge, ProgressBar, Row, Col, Tooltip, OverlayTrigger } from 'react-bootstrap';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
 import { router } from '@inertiajs/react';
+import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 
 const Purchases = ({ vendor }) => {
     // Extract data from vendor prop
@@ -85,7 +86,7 @@ const Purchases = ({ vendor }) => {
         }, 1000);
     };
 
- 
+
 
 
     const handleAllocationChange = (purchaseId, allocationId, field, value) => {
@@ -278,7 +279,7 @@ const Purchases = ({ vendor }) => {
         }).format(amount).replace('₹', '₹ ');
     };
 
- 
+
 
     // Custom tooltip component
     const CustomTooltip = ({ children, text }) => (
@@ -289,6 +290,10 @@ const Purchases = ({ vendor }) => {
             {children}
         </OverlayTrigger>
     );
+
+    const breadcrumbs = [
+        { href: `/clients/${client.id} `, label: 'Back', active: true }
+    ];
 
     return (
         <AuthenticatedLayout>
@@ -388,6 +393,16 @@ const Purchases = ({ vendor }) => {
             `}</style>
 
             <div className="container-fluid py-3">
+
+                <div className="d-flex justify-content-between align-items-center">
+
+                    <BreadCrumbHeader
+                        breadcrumbs={breadcrumbs}
+                    />
+
+                   
+
+                </div>
                 {/* Enhanced Header with Analytics Toggle */}
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <div className="d-flex align-items-center gap-3">
@@ -697,6 +712,7 @@ const Purchases = ({ vendor }) => {
                         <thead className="table-light">
                             <tr>
                                 <th style={{ width: '40px' }}></th>
+                                <th>Bill Proof</th>
                                 <th>
                                     <div className="d-flex align-items-center gap-2">
                                         <FileText size={14} />
@@ -753,50 +769,80 @@ const Purchases = ({ vendor }) => {
                                                 </Button>
                                             </td>
                                             <td>
-                                               
-                                                    <div>
-                                                        <span className="fw-bold">{purchase.list_name}</span>
-                                                        <br />
-                                                        <small className="text-muted">
-                                                            ID: #{purchase.id}
-                                                        </small>
+
+                                                <div className="position-relative">
+                                                    <img
+                                                        src={`/storage/${purchase.bill}`}
+                                                        alt="Bill Proof"
+                                                        className="rounded"
+                                                        style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                                                    />
+                                                    <div
+                                                        className="position-absolute top-0 start-0 d-flex align-items-center justify-content-center rounded"
+                                                        style={{
+                                                            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                                                            opacity: 0,
+                                                            transition: 'opacity 0.2s ease',
+                                                            height: '50px',
+                                                            width: '50px'
+                                                        }}
+                                                        onMouseEnter={(e) => e.target.style.opacity = 1}
+                                                        onMouseLeave={(e) => e.target.style.opacity = 0}
+                                                    >
+                                                        <a
+                                                            href={`/storage/${purchase.bill}`}
+                                                            download={`bill-${purchase.id}.jpg`}
+                                                        >
+                                                            <Download size={20} className='text-white' />
+                                                        </a>
                                                     </div>
+                                                </div>
                                             </td>
                                             <td>
-                                               
-                                                    <div>
-                                                        <span className="fw-medium">
-                                                            {new Date(purchase.purchase_date).toLocaleDateString()}
-                                                        </span>
-                                                        <br />
-                                                        <small className="text-muted">
-                                                            {Math.floor((new Date() - new Date(purchase.purchase_date)) / (1000 * 60 * 60 * 24))} days ago
-                                                        </small>
-                                                    </div>
+
+                                                <div>
+                                                    <span className="fw-bold">{purchase.list_name}</span>
+                                                    <br />
+                                                    <small className="text-muted">
+                                                        ID: #{purchase.id}
+                                                    </small>
+                                                </div>
                                             </td>
                                             <td>
-                                              
-                                                    <div>
-                                                        <span className="fw-bold text-primary">
-                                                            {formatCurrency(purchase.bill_total)}
-                                                        </span>
-                                                        <br />
-                                                        <small className="text-muted">
-                                                            Remaining: {formatCurrency(remaining)}
-                                                        </small>
-                                                        <br />
-                                                        <small>
-                                                            Total Returns {formatCurrency(
-                                                                (purchase.return_lists || []).reduce((sum, r) => sum + parseFloat(r.price || 0), 0)
-                                                            )}
-                                                        </small>
-                                                        <br />
-                                                        <small>
-                                                            Total Paid  {formatCurrency(
-                                                                (purchase.purchase_managments || []).reduce((sum, a) => sum + parseFloat(a.amount || 0), 0)
-                                                            )}
-                                                        </small>
-                                                    </div>
+
+                                                <div>
+                                                    <span className="fw-medium">
+                                                        {new Date(purchase.purchase_date).toLocaleDateString()}
+                                                    </span>
+                                                    <br />
+                                                    <small className="text-muted">
+                                                        {Math.floor((new Date() - new Date(purchase.purchase_date)) / (1000 * 60 * 60 * 24))} days ago
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>
+
+                                                <div>
+                                                    <span className="fw-bold text-primary">
+                                                        {formatCurrency(purchase.bill_total)}
+                                                    </span>
+                                                    <br />
+                                                    <small className="text-muted">
+                                                        Remaining: {formatCurrency(remaining)}
+                                                    </small>
+                                                    <br />
+                                                    <small>
+                                                        Total Returns {formatCurrency(
+                                                            (purchase.return_lists || []).reduce((sum, r) => sum + parseFloat(r.price || 0), 0)
+                                                        )}
+                                                    </small>
+                                                    <br />
+                                                    <small>
+                                                        Total Paid  {formatCurrency(
+                                                            (purchase.purchase_managments || []).reduce((sum, a) => sum + parseFloat(a.amount || 0), 0)
+                                                        )}
+                                                    </small>
+                                                </div>
                                             </td>
 
                                             <td>
@@ -818,647 +864,649 @@ const Purchases = ({ vendor }) => {
                                                     />
                                                 </div>
                                             </td>
-                                           
+
                                         </tr>
 
 
 
                                         {/* Expanded Content with Enhanced Animations */}
-                                        {isExpanded && (
-                                            <>
-                                                {/* Enhanced Payments Section */}
-                                                <tr className="fade-in">
-                                                    <td colSpan={7} className="p-0">
-                                                        <div className="p-4">
-                                                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                                                <h6 className="mb-0 fw-bold d-flex align-items-center gap-2">
-                                                                    <Banknote size={16} className="text-black" />
-                                                                    Payment History
-                                                                    <Badge>
-                                                                        {purchase.purchase_managments?.length || 0} payments
-                                                                    </Badge>
-                                                                </h6>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="success"
-                                                                    className="d-flex align-items-center gap-2 bounce-in"
-                                                                    onClick={() => {
-                                                                        setNewAllocations(prev => ({
-                                                                            ...prev,
-                                                                            [purchase.id]: {
-                                                                                purchase_list_id: purchase.id,
-                                                                                transaction_date: new Date().toISOString().split('T')[0],
-                                                                                amount: '',
-                                                                                narration: ''
-                                                                            }
-                                                                        }));
-                                                                    }}
-                                                                >
-                                                                    <Plus size={12} />
-                                                                    Add Payment
-                                                                </Button>
-                                                            </div>
+                                        {
+                                            isExpanded && (
+                                                <>
+                                                    {/* Enhanced Payments Section */}
+                                                    <tr className="fade-in">
+                                                        <td colSpan={7} className="p-0">
+                                                            <div className="p-4">
+                                                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                                                    <h6 className="mb-0 fw-bold d-flex align-items-center gap-2">
+                                                                        <Banknote size={16} className="text-black" />
+                                                                        Payment History
+                                                                        <Badge>
+                                                                            {purchase.purchase_managments?.length || 0} payments
+                                                                        </Badge>
+                                                                    </h6>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="success"
+                                                                        className="d-flex align-items-center gap-2 bounce-in"
+                                                                        onClick={() => {
+                                                                            setNewAllocations(prev => ({
+                                                                                ...prev,
+                                                                                [purchase.id]: {
+                                                                                    purchase_list_id: purchase.id,
+                                                                                    transaction_date: new Date().toISOString().split('T')[0],
+                                                                                    amount: '',
+                                                                                    narration: ''
+                                                                                }
+                                                                            }));
+                                                                        }}
+                                                                    >
+                                                                        <Plus size={12} />
+                                                                        Add Payment
+                                                                    </Button>
+                                                                </div>
 
-                                                            <Card className="border-0 shadow-sm">
-                                                                <Table hover responsive className="mb-0">
-                                                                    <thead className="table-success">
-                                                                        <tr>
-                                                                            <th>
-                                                                                <div className="d-flex align-items-center gap-2">
-                                                                                    <Calendar size={14} />
-                                                                                    Date
-                                                                                </div>
-                                                                            </th>
-                                                                            <th>
-                                                                                <div className="d-flex align-items-center gap-2">
-                                                                                    <IndianRupee size={14} />
-                                                                                    Amount
-                                                                                </div>
-                                                                            </th>
-                                                                            <th>
-                                                                                <div className="d-flex align-items-center gap-2">
-                                                                                    <FileText size={14} />
-                                                                                    Narration
-                                                                                </div>
-                                                                            </th>
-                                                                            <th style={{ width: '140px' }}>Actions</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        {(purchase.purchase_managments || []).map((allocation, allocIndex) => {
-                                                                            const isEditingAllocation = editingAllocationId === allocation.id;
+                                                                <Card className="border-0 shadow-sm">
+                                                                    <Table hover responsive className="mb-0">
+                                                                        <thead className="table-success">
+                                                                            <tr>
+                                                                                <th>
+                                                                                    <div className="d-flex align-items-center gap-2">
+                                                                                        <Calendar size={14} />
+                                                                                        Date
+                                                                                    </div>
+                                                                                </th>
+                                                                                <th>
+                                                                                    <div className="d-flex align-items-center gap-2">
+                                                                                        <IndianRupee size={14} />
+                                                                                        Amount
+                                                                                    </div>
+                                                                                </th>
+                                                                                <th>
+                                                                                    <div className="d-flex align-items-center gap-2">
+                                                                                        <FileText size={14} />
+                                                                                        Narration
+                                                                                    </div>
+                                                                                </th>
+                                                                                <th style={{ width: '140px' }}>Actions</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {(purchase.purchase_managments || []).map((allocation, allocIndex) => {
+                                                                                const isEditingAllocation = editingAllocationId === allocation.id;
 
-                                                                            return (
-                                                                                <tr key={allocation.id}>
-                                                                                    <td>
-                                                                                        {isEditingAllocation ? (
-                                                                                            <Form.Control
-                                                                                                size="sm"
-                                                                                                type="date"
-                                                                                                value={editedAllocations[allocation.id]?.transaction_date || allocation.transaction_date}
-                                                                                                onChange={e => handleAllocationChange(
-                                                                                                    purchase.id,
-                                                                                                    allocation.id,
-                                                                                                    'transaction_date',
-                                                                                                    e.target.value
-                                                                                                )}
-                                                                                                className="fade-in"
-                                                                                            />
-                                                                                        ) : (
-                                                                                            <div>
-                                                                                                <span className="fw-medium">
-                                                                                                    {new Date(allocation.transaction_date).toLocaleDateString()}
+                                                                                return (
+                                                                                    <tr key={allocation.id}>
+                                                                                        <td>
+                                                                                            {isEditingAllocation ? (
+                                                                                                <Form.Control
+                                                                                                    size="sm"
+                                                                                                    type="date"
+                                                                                                    value={editedAllocations[allocation.id]?.transaction_date || allocation.transaction_date}
+                                                                                                    onChange={e => handleAllocationChange(
+                                                                                                        purchase.id,
+                                                                                                        allocation.id,
+                                                                                                        'transaction_date',
+                                                                                                        e.target.value
+                                                                                                    )}
+                                                                                                    className="fade-in"
+                                                                                                />
+                                                                                            ) : (
+                                                                                                <div>
+                                                                                                    <span className="fw-medium">
+                                                                                                        {new Date(allocation.transaction_date).toLocaleDateString()}
+                                                                                                    </span>
+                                                                                                    <br />
+                                                                                                    <small className="text-muted">
+                                                                                                        Payment #{allocIndex + 1}
+                                                                                                    </small>
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            {isEditingAllocation ? (
+                                                                                                <Form.Control
+                                                                                                    size="sm"
+                                                                                                    type="number"
+                                                                                                    min="0"
+                                                                                                    value={editedAllocations[allocation.id]?.amount || allocation.amount}
+                                                                                                    onChange={e => handleAllocationChange(
+                                                                                                        purchase.id,
+                                                                                                        allocation.id,
+                                                                                                        'amount',
+                                                                                                        e.target.value
+                                                                                                    )}
+                                                                                                    className="fade-in"
+                                                                                                />
+                                                                                            ) : (
+                                                                                                <span className="fw-bold text-success">
+                                                                                                    {formatCurrency(allocation.amount)}
                                                                                                 </span>
-                                                                                                <br />
-                                                                                                <small className="text-muted">
-                                                                                                    Payment #{allocIndex + 1}
-                                                                                                </small>
-                                                                                            </div>
-                                                                                        )}
+                                                                                            )}
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            {isEditingAllocation ? (
+                                                                                                <Form.Control
+                                                                                                    size="sm"
+                                                                                                    as="textarea"
+                                                                                                    rows={2}
+                                                                                                    value={editedAllocations[allocation.id]?.narration || allocation.narration}
+                                                                                                    onChange={e => handleAllocationChange(
+                                                                                                        purchase.id,
+                                                                                                        allocation.id,
+                                                                                                        'narration',
+                                                                                                        e.target.value
+                                                                                                    )}
+                                                                                                    className="fade-in"
+                                                                                                />
+                                                                                            ) : (
+                                                                                                <div className="text-truncate" style={{ maxWidth: '250px' }}>
+                                                                                                    {allocation.narration || 'No description'}
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            {isEditingAllocation ? (
+                                                                                                <div className="d-flex gap-1">
+                                                                                                    <CustomTooltip text="Save Payment">
+                                                                                                        <Button
+                                                                                                            size="sm"
+                                                                                                            variant="success"
+                                                                                                            onClick={() => saveAllocation(purchase.id, allocation)}
+                                                                                                            className="bounce-in"
+                                                                                                        >
+                                                                                                            <Save size={12} />
+                                                                                                        </Button>
+                                                                                                    </CustomTooltip>
+                                                                                                    <CustomTooltip text="Cancel">
+                                                                                                        <Button
+                                                                                                            size="sm"
+                                                                                                            variant="outline-secondary"
+                                                                                                            onClick={() => {
+                                                                                                                setEditingAllocationId(null);
+                                                                                                                setEditedAllocations(prev => {
+                                                                                                                    const newState = { ...prev };
+                                                                                                                    delete newState[allocation.id];
+                                                                                                                    return newState;
+                                                                                                                });
+                                                                                                            }}
+                                                                                                        >
+                                                                                                            <XCircle size={12} />
+                                                                                                        </Button>
+                                                                                                    </CustomTooltip>
+                                                                                                </div>
+                                                                                            ) : (
+                                                                                                <div className="d-flex gap-1">
+                                                                                                    <CustomTooltip text="Edit Payment">
+                                                                                                        <Button
+                                                                                                            variant="link"
+                                                                                                            className="p-1 text-success"
+                                                                                                            onClick={() => {
+                                                                                                                setEditingAllocationId(allocation.id);
+                                                                                                                setEditedAllocations(prev => ({
+                                                                                                                    ...prev,
+                                                                                                                    [allocation.id]: {
+                                                                                                                        transaction_date: allocation.transaction_date,
+                                                                                                                        amount: allocation.amount,
+                                                                                                                        narration: allocation.narration
+                                                                                                                    }
+                                                                                                                }));
+                                                                                                            }}
+                                                                                                        >
+                                                                                                            <Edit size={14} />
+                                                                                                        </Button>
+                                                                                                    </CustomTooltip>
+                                                                                                    <CustomTooltip text="Delete Payment">
+                                                                                                        <Button
+                                                                                                            variant="link"
+                                                                                                            className="p-1 text-danger"
+                                                                                                            onClick={() => deleteAllocation(allocation.id)}
+                                                                                                        >
+                                                                                                            <Trash2 size={14} />
+                                                                                                        </Button>
+                                                                                                    </CustomTooltip>
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                );
+                                                                            })}
+
+                                                                            {/* New Allocation Row */}
+                                                                            {newAllocations[purchase.id] && (
+                                                                                <tr className="table-warning bounce-in">
+                                                                                    <td>
+                                                                                        <Form.Control
+                                                                                            size="sm"
+                                                                                            type="date"
+                                                                                            value={newAllocations[purchase.id]?.transaction_date || ''}
+                                                                                            onChange={e => handleNewAllocationChange(
+                                                                                                purchase.id,
+                                                                                                'transaction_date',
+                                                                                                e.target.value
+                                                                                            )}
+                                                                                            placeholder="Select date"
+                                                                                        />
                                                                                     </td>
                                                                                     <td>
-                                                                                        {isEditingAllocation ? (
-                                                                                            <Form.Control
-                                                                                                size="sm"
-                                                                                                type="number"
-                                                                                                min="0"
-                                                                                                value={editedAllocations[allocation.id]?.amount || allocation.amount}
-                                                                                                onChange={e => handleAllocationChange(
-                                                                                                    purchase.id,
-                                                                                                    allocation.id,
-                                                                                                    'amount',
-                                                                                                    e.target.value
-                                                                                                )}
-                                                                                                className="fade-in"
-                                                                                            />
-                                                                                        ) : (
-                                                                                            <span className="fw-bold text-success">
-                                                                                                {formatCurrency(allocation.amount)}
-                                                                                            </span>
-                                                                                        )}
+                                                                                        <Form.Control
+                                                                                            size="sm"
+                                                                                            type="number"
+                                                                                            min="0"
+                                                                                            max={remaining}
+                                                                                            placeholder={`Max: ${formatCurrency(remaining)}`}
+                                                                                            value={newAllocations[purchase.id]?.amount || ''}
+                                                                                            onChange={e => handleNewAllocationChange(
+                                                                                                purchase.id,
+                                                                                                'amount',
+                                                                                                e.target.value
+                                                                                            )}
+                                                                                        />
                                                                                     </td>
                                                                                     <td>
-                                                                                        {isEditingAllocation ? (
-                                                                                            <Form.Control
-                                                                                                size="sm"
-                                                                                                as="textarea"
-                                                                                                rows={2}
-                                                                                                value={editedAllocations[allocation.id]?.narration || allocation.narration}
-                                                                                                onChange={e => handleAllocationChange(
-                                                                                                    purchase.id,
-                                                                                                    allocation.id,
-                                                                                                    'narration',
-                                                                                                    e.target.value
-                                                                                                )}
-                                                                                                className="fade-in"
-                                                                                            />
-                                                                                        ) : (
-                                                                                            <div className="text-truncate" style={{ maxWidth: '250px' }}>
-                                                                                                {allocation.narration || 'No description'}
-                                                                                            </div>
-                                                                                        )}
+                                                                                        <Form.Control
+                                                                                            size="sm"
+                                                                                            as="textarea"
+                                                                                            rows={2}
+                                                                                            placeholder="Payment description..."
+                                                                                            value={newAllocations[purchase.id]?.narration || ''}
+                                                                                            onChange={e => handleNewAllocationChange(
+                                                                                                purchase.id,
+                                                                                                'narration',
+                                                                                                e.target.value
+                                                                                            )}
+                                                                                        />
                                                                                     </td>
                                                                                     <td>
-                                                                                        {isEditingAllocation ? (
-                                                                                            <div className="d-flex gap-1">
-                                                                                                <CustomTooltip text="Save Payment">
-                                                                                                    <Button
-                                                                                                        size="sm"
-                                                                                                        variant="success"
-                                                                                                        onClick={() => saveAllocation(purchase.id, allocation)}
-                                                                                                        className="bounce-in"
-                                                                                                    >
-                                                                                                        <Save size={12} />
-                                                                                                    </Button>
-                                                                                                </CustomTooltip>
-                                                                                                <CustomTooltip text="Cancel">
-                                                                                                    <Button
-                                                                                                        size="sm"
-                                                                                                        variant="outline-secondary"
-                                                                                                        onClick={() => {
-                                                                                                            setEditingAllocationId(null);
-                                                                                                            setEditedAllocations(prev => {
-                                                                                                                const newState = { ...prev };
-                                                                                                                delete newState[allocation.id];
-                                                                                                                return newState;
-                                                                                                            });
-                                                                                                        }}
-                                                                                                    >
-                                                                                                        <XCircle size={12} />
-                                                                                                    </Button>
-                                                                                                </CustomTooltip>
-                                                                                            </div>
-                                                                                        ) : (
-                                                                                            <div className="d-flex gap-1">
-                                                                                                <CustomTooltip text="Edit Payment">
-                                                                                                    <Button
-                                                                                                        variant="link"
-                                                                                                        className="p-1 text-success"
-                                                                                                        onClick={() => {
-                                                                                                            setEditingAllocationId(allocation.id);
-                                                                                                            setEditedAllocations(prev => ({
-                                                                                                                ...prev,
-                                                                                                                [allocation.id]: {
-                                                                                                                    transaction_date: allocation.transaction_date,
-                                                                                                                    amount: allocation.amount,
-                                                                                                                    narration: allocation.narration
-                                                                                                                }
-                                                                                                            }));
-                                                                                                        }}
-                                                                                                    >
-                                                                                                        <Edit size={14} />
-                                                                                                    </Button>
-                                                                                                </CustomTooltip>
-                                                                                                <CustomTooltip text="Delete Payment">
-                                                                                                    <Button
-                                                                                                        variant="link"
-                                                                                                        className="p-1 text-danger"
-                                                                                                        onClick={() => deleteAllocation(allocation.id)}
-                                                                                                    >
-                                                                                                        <Trash2 size={14} />
-                                                                                                    </Button>
-                                                                                                </CustomTooltip>
-                                                                                            </div>
-                                                                                        )}
+                                                                                        <div className="d-flex gap-1">
+                                                                                            <CustomTooltip text="Save Payment">
+                                                                                                <Button
+                                                                                                    size="sm"
+                                                                                                    variant="success"
+                                                                                                    onClick={() => saveAllocation(purchase.id, newAllocations[purchase.id])}
+                                                                                                    disabled={!newAllocations[purchase.id]?.amount || !newAllocations[purchase.id]?.transaction_date}
+                                                                                                    className="bounce-in"
+                                                                                                >
+                                                                                                    <Save size={12} />
+                                                                                                </Button>
+                                                                                            </CustomTooltip>
+                                                                                            <CustomTooltip text="Cancel">
+                                                                                                <Button
+                                                                                                    size="sm"
+                                                                                                    variant="outline-secondary"
+                                                                                                    onClick={() => setNewAllocations(prev => {
+                                                                                                        const copy = { ...prev };
+                                                                                                        delete copy[purchase.id];
+                                                                                                        return copy;
+                                                                                                    })}
+                                                                                                >
+                                                                                                    <XCircle size={12} />
+                                                                                                </Button>
+                                                                                            </CustomTooltip>
+                                                                                        </div>
                                                                                     </td>
                                                                                 </tr>
-                                                                            );
-                                                                        })}
+                                                                            )}
 
-                                                                        {/* New Allocation Row */}
-                                                                        {newAllocations[purchase.id] && (
-                                                                            <tr className="table-warning bounce-in">
-                                                                                <td>
-                                                                                    <Form.Control
-                                                                                        size="sm"
-                                                                                        type="date"
-                                                                                        value={newAllocations[purchase.id]?.transaction_date || ''}
-                                                                                        onChange={e => handleNewAllocationChange(
-                                                                                            purchase.id,
-                                                                                            'transaction_date',
-                                                                                            e.target.value
-                                                                                        )}
-                                                                                        placeholder="Select date"
-                                                                                    />
-                                                                                </td>
-                                                                                <td>
-                                                                                    <Form.Control
-                                                                                        size="sm"
-                                                                                        type="number"
-                                                                                        min="0"
-                                                                                        max={remaining}
-                                                                                        placeholder={`Max: ${formatCurrency(remaining)}`}
-                                                                                        value={newAllocations[purchase.id]?.amount || ''}
-                                                                                        onChange={e => handleNewAllocationChange(
-                                                                                            purchase.id,
-                                                                                            'amount',
-                                                                                            e.target.value
-                                                                                        )}
-                                                                                    />
-                                                                                </td>
-                                                                                <td>
-                                                                                    <Form.Control
-                                                                                        size="sm"
-                                                                                        as="textarea"
-                                                                                        rows={2}
-                                                                                        placeholder="Payment description..."
-                                                                                        value={newAllocations[purchase.id]?.narration || ''}
-                                                                                        onChange={e => handleNewAllocationChange(
-                                                                                            purchase.id,
-                                                                                            'narration',
-                                                                                            e.target.value
-                                                                                        )}
-                                                                                    />
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="d-flex gap-1">
-                                                                                        <CustomTooltip text="Save Payment">
-                                                                                            <Button
-                                                                                                size="sm"
-                                                                                                variant="success"
-                                                                                                onClick={() => saveAllocation(purchase.id, newAllocations[purchase.id])}
-                                                                                                disabled={!newAllocations[purchase.id]?.amount || !newAllocations[purchase.id]?.transaction_date}
-                                                                                                className="bounce-in"
-                                                                                            >
-                                                                                                <Save size={12} />
-                                                                                            </Button>
-                                                                                        </CustomTooltip>
-                                                                                        <CustomTooltip text="Cancel">
-                                                                                            <Button
-                                                                                                size="sm"
-                                                                                                variant="outline-secondary"
-                                                                                                onClick={() => setNewAllocations(prev => {
-                                                                                                    const copy = { ...prev };
-                                                                                                    delete copy[purchase.id];
-                                                                                                    return copy;
-                                                                                                })}
-                                                                                            >
-                                                                                                <XCircle size={12} />
-                                                                                            </Button>
-                                                                                        </CustomTooltip>
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                        )}
-
-                                                                        {/* Empty State */}
-                                                                        {(!purchase.purchase_managments || purchase.purchase_managments.length === 0) && !newAllocations[purchase.id] && (
-                                                                            <tr>
-                                                                                <td colSpan={4} className="text-center py-4">
-                                                                                    <div className="text-muted">
-                                                                                        <HandCoins size={32} className="mb-2 opacity-50" />
-                                                                                        <p className="mb-0">No payments recorded yet</p>
-                                                                                        <small>Click "Add Payment" to get started</small>
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                        )}
-                                                                    </tbody>
-                                                                </Table>
-                                                            </Card>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-
-
-
-                                                {/* Enhanced Returns Section */}
-                                                <tr className="fade-in">
-                                                    <td colSpan={7} className="p-0">
-                                                        <div className="p-4">
-                                                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                                                <h6 className="mb-0 fw-bold d-flex align-items-center gap-2">
-                                                                    <RotateCcw size={16} className="text-black" />
-                                                                    Return History
-                                                                    <Badge bg="warning" className="ms-2">
-                                                                        {returns.length} returns
-                                                                    </Badge>
-                                                                </h6>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="warning"
-                                                                    className="d-flex align-items-center gap-2 bounce-in"
-                                                                    onClick={() => {
-                                                                        setNewReturns(prev => ({
-                                                                            ...prev,
-                                                                            [purchase.id]: {
-                                                                                purchase_list_id: purchase.id,
-                                                                                return_date: new Date().toISOString().split('T')[0],
-                                                                                item_name: '',
-                                                                                price: '',
-                                                                                narration: ''
-                                                                            }
-                                                                        }));
-                                                                    }}
-                                                                >
-                                                                    <Plus size={12} />
-                                                                    Add Return
-                                                                </Button>
-                                                            </div>
-
-                                                            <Card className="border-0 shadow-sm">
-                                                                <Table hover responsive className="mb-0">
-                                                                    <thead className="table-warning">
-                                                                        <tr>
-                                                                            <th>
-                                                                                <div className="d-flex align-items-center gap-2">
-                                                                                    <Calendar size={14} />
-                                                                                    Return Date
-                                                                                </div>
-                                                                            </th>
-                                                                            <th>
-                                                                                <div className="d-flex align-items-center gap-2">
-                                                                                    <Package size={14} />
-                                                                                    Item Name
-                                                                                </div>
-                                                                            </th>
-                                                                            <th>
-                                                                                <div className="d-flex align-items-center gap-2">
-                                                                                    <IndianRupee size={14} />
-                                                                                    Price
-                                                                                </div>
-                                                                            </th>
-                                                                            <th>
-                                                                                <div className="d-flex align-items-center gap-2">
-                                                                                    <FileText size={14} />
-                                                                                    Narration
-                                                                                </div>
-                                                                            </th>
-                                                                            <th style={{ width: '140px' }}>Actions</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        {returns.map((returnItem, returnIndex) => {
-                                                                            const isEditingReturn = editingReturnId === returnItem.id;
-
-                                                                            return (
-                                                                                <tr key={returnItem.id} >
-                                                                                    <td>
-                                                                                        {isEditingReturn ? (
-                                                                                            <Form.Control
-                                                                                                size="sm"
-                                                                                                type="date"
-                                                                                                value={editedReturns[returnItem.id]?.return_date || returnItem.return_date}
-                                                                                                onChange={e => handleReturnChange(
-                                                                                                    purchase.id,
-                                                                                                    returnItem.id,
-                                                                                                    'return_date',
-                                                                                                    e.target.value
-                                                                                                )}
-                                                                                                className="fade-in"
-                                                                                            />
-                                                                                        ) : (
-                                                                                            <div>
-                                                                                                <span className="fw-medium">
-                                                                                                    {new Date(returnItem.return_date).toLocaleDateString()}
-                                                                                                </span>
-                                                                                                <br />
-                                                                                                <small className="text-muted">
-                                                                                                    Return #{returnIndex + 1}
-                                                                                                </small>
-                                                                                            </div>
-                                                                                        )}
-                                                                                    </td>
-                                                                                    <td>
-                                                                                        {isEditingReturn ? (
-                                                                                            <Form.Control
-                                                                                                size="sm"
-                                                                                                type="text"
-                                                                                                value={editedReturns[returnItem.id]?.item_name || returnItem.item_name}
-                                                                                                onChange={e => handleReturnChange(
-                                                                                                    purchase.id,
-                                                                                                    returnItem.id,
-                                                                                                    'item_name',
-                                                                                                    e.target.value
-                                                                                                )}
-                                                                                                className="fade-in"
-                                                                                            />
-                                                                                        ) : (
-                                                                                            <div className="text-truncate fw-medium" style={{ maxWidth: '200px' }}>
-                                                                                                {returnItem.item_name}
-                                                                                            </div>
-                                                                                        )}
-                                                                                    </td>
-                                                                                    <td>
-                                                                                        {isEditingReturn ? (
-                                                                                            <Form.Control
-                                                                                                size="sm"
-                                                                                                type="number"
-                                                                                                min="0"
-                                                                                                value={editedReturns[returnItem.id]?.price || returnItem.price}
-                                                                                                onChange={e => handleReturnChange(
-                                                                                                    purchase.id,
-                                                                                                    returnItem.id,
-                                                                                                    'price',
-                                                                                                    e.target.value
-                                                                                                )}
-                                                                                                className="fade-in"
-                                                                                            />
-                                                                                        ) : (
-                                                                                            <span className="fw-bold text-warning">
-                                                                                                {formatCurrency(returnItem.price)}
-                                                                                            </span>
-                                                                                        )}
-                                                                                    </td>
-                                                                                    <td>
-                                                                                        {isEditingReturn ? (
-                                                                                            <Form.Control
-                                                                                                size="sm"
-                                                                                                as="textarea"
-                                                                                                rows={2}
-                                                                                                value={editedReturns[returnItem.id]?.narration || returnItem.narration}
-                                                                                                onChange={e => handleReturnChange(
-                                                                                                    purchase.id,
-                                                                                                    returnItem.id,
-                                                                                                    'narration',
-                                                                                                    e.target.value
-                                                                                                )}
-                                                                                                className="fade-in"
-                                                                                            />
-                                                                                        ) : (
-                                                                                            <div className="text-truncate" style={{ maxWidth: '200px' }}>
-                                                                                                {returnItem.narration || 'No description'}
-                                                                                            </div>
-                                                                                        )}
-                                                                                    </td>
-                                                                                    <td>
-                                                                                        {isEditingReturn ? (
-                                                                                            <div className="d-flex gap-1">
-                                                                                                <CustomTooltip text="Save Return">
-                                                                                                    <Button
-                                                                                                        size="sm"
-                                                                                                        variant="success"
-                                                                                                        onClick={() => saveReturn(purchase.id, returnItem)}
-                                                                                                        className="bounce-in"
-                                                                                                    >
-                                                                                                        <Save size={12} />
-                                                                                                    </Button>
-                                                                                                </CustomTooltip>
-                                                                                                <CustomTooltip text="Cancel">
-                                                                                                    <Button
-                                                                                                        size="sm"
-                                                                                                        variant="outline-secondary"
-                                                                                                        onClick={() => {
-                                                                                                            setEditingReturnId(null);
-                                                                                                            setEditedReturns(prev => {
-                                                                                                                const newState = { ...prev };
-                                                                                                                delete newState[returnItem.id];
-                                                                                                                return newState;
-                                                                                                            });
-                                                                                                        }}
-                                                                                                    >
-                                                                                                        <XCircle size={12} />
-                                                                                                    </Button>
-                                                                                                </CustomTooltip>
-                                                                                            </div>
-                                                                                        ) : (
-                                                                                            <div className="d-flex gap-1">
-                                                                                                <CustomTooltip text="Edit Return">
-                                                                                                    <Button
-                                                                                                        variant="link"
-                                                                                                        className="p-1 text-warning"
-                                                                                                        onClick={() => {
-                                                                                                            setEditingReturnId(returnItem.id);
-                                                                                                            setEditedReturns(prev => ({
-                                                                                                                ...prev,
-                                                                                                                [returnItem.id]: {
-                                                                                                                    return_date: returnItem.return_date,
-                                                                                                                    item_name: returnItem.item_name,
-                                                                                                                    price: returnItem.price,
-                                                                                                                    narration: returnItem.narration
-                                                                                                                }
-                                                                                                            }));
-                                                                                                        }}
-                                                                                                    >
-                                                                                                        <Edit size={14} />
-                                                                                                    </Button>
-                                                                                                </CustomTooltip>
-                                                                                                <CustomTooltip text="Delete Return">
-                                                                                                    <Button
-                                                                                                        variant="link"
-                                                                                                        className="p-1 text-danger"
-                                                                                                        onClick={() => deleteReturn(returnItem.id)}
-                                                                                                    >
-                                                                                                        <Trash2 size={14} />
-                                                                                                    </Button>
-                                                                                                </CustomTooltip>
-                                                                                            </div>
-                                                                                        )}
+                                                                            {/* Empty State */}
+                                                                            {(!purchase.purchase_managments || purchase.purchase_managments.length === 0) && !newAllocations[purchase.id] && (
+                                                                                <tr>
+                                                                                    <td colSpan={4} className="text-center py-4">
+                                                                                        <div className="text-muted">
+                                                                                            <HandCoins size={32} className="mb-2 opacity-50" />
+                                                                                            <p className="mb-0">No payments recorded yet</p>
+                                                                                            <small>Click "Add Payment" to get started</small>
+                                                                                        </div>
                                                                                     </td>
                                                                                 </tr>
-                                                                            );
-                                                                        })}
+                                                                            )}
+                                                                        </tbody>
+                                                                    </Table>
+                                                                </Card>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
 
-                                                                        {/* New Return Row */}
-                                                                        {newReturns[purchase.id] && (
-                                                                            <tr className="table-warning bounce-in">
-                                                                                <td>
-                                                                                    <Form.Control
-                                                                                        size="sm"
-                                                                                        type="date"
-                                                                                        value={newReturns[purchase.id]?.return_date || ''}
-                                                                                        onChange={e => handleNewReturnChange(
-                                                                                            purchase.id,
-                                                                                            'return_date',
-                                                                                            e.target.value
-                                                                                        )}
-                                                                                        placeholder="Select return date"
-                                                                                    />
-                                                                                </td>
-                                                                                <td>
-                                                                                    <Form.Control
-                                                                                        size="sm"
-                                                                                        type="text"
-                                                                                        placeholder="Item name..."
-                                                                                        value={newReturns[purchase.id]?.item_name || ''}
-                                                                                        onChange={e => handleNewReturnChange(
-                                                                                            purchase.id,
-                                                                                            'item_name',
-                                                                                            e.target.value
-                                                                                        )}
-                                                                                    />
-                                                                                </td>
-                                                                                <td>
-                                                                                    <Form.Control
-                                                                                        size="sm"
-                                                                                        type="number"
-                                                                                        min="0"
-                                                                                        placeholder="Return price"
-                                                                                        value={newReturns[purchase.id]?.price || ''}
-                                                                                        onChange={e => handleNewReturnChange(
-                                                                                            purchase.id,
-                                                                                            'price',
-                                                                                            e.target.value
-                                                                                        )}
-                                                                                    />
-                                                                                </td>
-                                                                                <td>
-                                                                                    <Form.Control
-                                                                                        size="sm"
-                                                                                        as="textarea"
-                                                                                        rows={2}
-                                                                                        placeholder="Return reason..."
-                                                                                        value={newReturns[purchase.id]?.narration || ''}
-                                                                                        onChange={e => handleNewReturnChange(
-                                                                                            purchase.id,
-                                                                                            'narration',
-                                                                                            e.target.value
-                                                                                        )}
-                                                                                    />
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="d-flex gap-1">
-                                                                                        <CustomTooltip text="Save Return">
-                                                                                            <Button
-                                                                                                size="sm"
-                                                                                                variant="success"
-                                                                                                onClick={() => saveReturn(purchase.id, newReturns[purchase.id])}
-                                                                                                disabled={!newReturns[purchase.id]?.price || !newReturns[purchase.id]?.return_date || !newReturns[purchase.id]?.item_name}
-                                                                                                className="bounce-in"
-                                                                                            >
-                                                                                                <Save size={12} />
-                                                                                            </Button>
-                                                                                        </CustomTooltip>
-                                                                                        <CustomTooltip text="Cancel">
-                                                                                            <Button
-                                                                                                size="sm"
-                                                                                                variant="outline-secondary"
-                                                                                                onClick={() => setNewReturns(prev => {
-                                                                                                    const copy = { ...prev };
-                                                                                                    delete copy[purchase.id];
-                                                                                                    return copy;
-                                                                                                })}
-                                                                                            >
-                                                                                                <XCircle size={12} />
-                                                                                            </Button>
-                                                                                        </CustomTooltip>
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                        )}
 
-                                                                        {/* Empty State for Returns */}
-                                                                        {returns.length === 0 && !newReturns[purchase.id] && (
+
+                                                    {/* Enhanced Returns Section */}
+                                                    <tr className="fade-in">
+                                                        <td colSpan={7} className="p-0">
+                                                            <div className="p-4">
+                                                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                                                    <h6 className="mb-0 fw-bold d-flex align-items-center gap-2">
+                                                                        <RotateCcw size={16} className="text-black" />
+                                                                        Return History
+                                                                        <Badge bg="warning" className="ms-2">
+                                                                            {returns.length} returns
+                                                                        </Badge>
+                                                                    </h6>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="warning"
+                                                                        className="d-flex align-items-center gap-2 bounce-in"
+                                                                        onClick={() => {
+                                                                            setNewReturns(prev => ({
+                                                                                ...prev,
+                                                                                [purchase.id]: {
+                                                                                    purchase_list_id: purchase.id,
+                                                                                    return_date: new Date().toISOString().split('T')[0],
+                                                                                    item_name: '',
+                                                                                    price: '',
+                                                                                    narration: ''
+                                                                                }
+                                                                            }));
+                                                                        }}
+                                                                    >
+                                                                        <Plus size={12} />
+                                                                        Add Return
+                                                                    </Button>
+                                                                </div>
+
+                                                                <Card className="border-0 shadow-sm">
+                                                                    <Table hover responsive className="mb-0">
+                                                                        <thead className="table-warning">
                                                                             <tr>
-                                                                                <td colSpan={5} className="text-center py-4">
-                                                                                    <div className="text-muted">
-                                                                                        <RotateCcw size={32} className="mb-2 opacity-50" />
-                                                                                        <p className="mb-0">No returns recorded</p>
-                                                                                        <small>Click "Add Return" if any items were returned</small>
+                                                                                <th>
+                                                                                    <div className="d-flex align-items-center gap-2">
+                                                                                        <Calendar size={14} />
+                                                                                        Return Date
                                                                                     </div>
-                                                                                </td>
+                                                                                </th>
+                                                                                <th>
+                                                                                    <div className="d-flex align-items-center gap-2">
+                                                                                        <Package size={14} />
+                                                                                        Item Name
+                                                                                    </div>
+                                                                                </th>
+                                                                                <th>
+                                                                                    <div className="d-flex align-items-center gap-2">
+                                                                                        <IndianRupee size={14} />
+                                                                                        Price
+                                                                                    </div>
+                                                                                </th>
+                                                                                <th>
+                                                                                    <div className="d-flex align-items-center gap-2">
+                                                                                        <FileText size={14} />
+                                                                                        Narration
+                                                                                    </div>
+                                                                                </th>
+                                                                                <th style={{ width: '140px' }}>Actions</th>
                                                                             </tr>
-                                                                        )}
-                                                                    </tbody>
-                                                                </Table>
-                                                            </Card>
-                                                        </div>
-                                                    </td>
-                                                </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {returns.map((returnItem, returnIndex) => {
+                                                                                const isEditingReturn = editingReturnId === returnItem.id;
+
+                                                                                return (
+                                                                                    <tr key={returnItem.id} >
+                                                                                        <td>
+                                                                                            {isEditingReturn ? (
+                                                                                                <Form.Control
+                                                                                                    size="sm"
+                                                                                                    type="date"
+                                                                                                    value={editedReturns[returnItem.id]?.return_date || returnItem.return_date}
+                                                                                                    onChange={e => handleReturnChange(
+                                                                                                        purchase.id,
+                                                                                                        returnItem.id,
+                                                                                                        'return_date',
+                                                                                                        e.target.value
+                                                                                                    )}
+                                                                                                    className="fade-in"
+                                                                                                />
+                                                                                            ) : (
+                                                                                                <div>
+                                                                                                    <span className="fw-medium">
+                                                                                                        {new Date(returnItem.return_date).toLocaleDateString()}
+                                                                                                    </span>
+                                                                                                    <br />
+                                                                                                    <small className="text-muted">
+                                                                                                        Return #{returnIndex + 1}
+                                                                                                    </small>
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            {isEditingReturn ? (
+                                                                                                <Form.Control
+                                                                                                    size="sm"
+                                                                                                    type="text"
+                                                                                                    value={editedReturns[returnItem.id]?.item_name || returnItem.item_name}
+                                                                                                    onChange={e => handleReturnChange(
+                                                                                                        purchase.id,
+                                                                                                        returnItem.id,
+                                                                                                        'item_name',
+                                                                                                        e.target.value
+                                                                                                    )}
+                                                                                                    className="fade-in"
+                                                                                                />
+                                                                                            ) : (
+                                                                                                <div className="text-truncate fw-medium" style={{ maxWidth: '200px' }}>
+                                                                                                    {returnItem.item_name}
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            {isEditingReturn ? (
+                                                                                                <Form.Control
+                                                                                                    size="sm"
+                                                                                                    type="number"
+                                                                                                    min="0"
+                                                                                                    value={editedReturns[returnItem.id]?.price || returnItem.price}
+                                                                                                    onChange={e => handleReturnChange(
+                                                                                                        purchase.id,
+                                                                                                        returnItem.id,
+                                                                                                        'price',
+                                                                                                        e.target.value
+                                                                                                    )}
+                                                                                                    className="fade-in"
+                                                                                                />
+                                                                                            ) : (
+                                                                                                <span className="fw-bold text-warning">
+                                                                                                    {formatCurrency(returnItem.price)}
+                                                                                                </span>
+                                                                                            )}
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            {isEditingReturn ? (
+                                                                                                <Form.Control
+                                                                                                    size="sm"
+                                                                                                    as="textarea"
+                                                                                                    rows={2}
+                                                                                                    value={editedReturns[returnItem.id]?.narration || returnItem.narration}
+                                                                                                    onChange={e => handleReturnChange(
+                                                                                                        purchase.id,
+                                                                                                        returnItem.id,
+                                                                                                        'narration',
+                                                                                                        e.target.value
+                                                                                                    )}
+                                                                                                    className="fade-in"
+                                                                                                />
+                                                                                            ) : (
+                                                                                                <div className="text-truncate" style={{ maxWidth: '200px' }}>
+                                                                                                    {returnItem.narration || 'No description'}
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            {isEditingReturn ? (
+                                                                                                <div className="d-flex gap-1">
+                                                                                                    <CustomTooltip text="Save Return">
+                                                                                                        <Button
+                                                                                                            size="sm"
+                                                                                                            variant="success"
+                                                                                                            onClick={() => saveReturn(purchase.id, returnItem)}
+                                                                                                            className="bounce-in"
+                                                                                                        >
+                                                                                                            <Save size={12} />
+                                                                                                        </Button>
+                                                                                                    </CustomTooltip>
+                                                                                                    <CustomTooltip text="Cancel">
+                                                                                                        <Button
+                                                                                                            size="sm"
+                                                                                                            variant="outline-secondary"
+                                                                                                            onClick={() => {
+                                                                                                                setEditingReturnId(null);
+                                                                                                                setEditedReturns(prev => {
+                                                                                                                    const newState = { ...prev };
+                                                                                                                    delete newState[returnItem.id];
+                                                                                                                    return newState;
+                                                                                                                });
+                                                                                                            }}
+                                                                                                        >
+                                                                                                            <XCircle size={12} />
+                                                                                                        </Button>
+                                                                                                    </CustomTooltip>
+                                                                                                </div>
+                                                                                            ) : (
+                                                                                                <div className="d-flex gap-1">
+                                                                                                    <CustomTooltip text="Edit Return">
+                                                                                                        <Button
+                                                                                                            variant="link"
+                                                                                                            className="p-1 text-warning"
+                                                                                                            onClick={() => {
+                                                                                                                setEditingReturnId(returnItem.id);
+                                                                                                                setEditedReturns(prev => ({
+                                                                                                                    ...prev,
+                                                                                                                    [returnItem.id]: {
+                                                                                                                        return_date: returnItem.return_date,
+                                                                                                                        item_name: returnItem.item_name,
+                                                                                                                        price: returnItem.price,
+                                                                                                                        narration: returnItem.narration
+                                                                                                                    }
+                                                                                                                }));
+                                                                                                            }}
+                                                                                                        >
+                                                                                                            <Edit size={14} />
+                                                                                                        </Button>
+                                                                                                    </CustomTooltip>
+                                                                                                    <CustomTooltip text="Delete Return">
+                                                                                                        <Button
+                                                                                                            variant="link"
+                                                                                                            className="p-1 text-danger"
+                                                                                                            onClick={() => deleteReturn(returnItem.id)}
+                                                                                                        >
+                                                                                                            <Trash2 size={14} />
+                                                                                                        </Button>
+                                                                                                    </CustomTooltip>
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                );
+                                                                            })}
+
+                                                                            {/* New Return Row */}
+                                                                            {newReturns[purchase.id] && (
+                                                                                <tr className="table-warning bounce-in">
+                                                                                    <td>
+                                                                                        <Form.Control
+                                                                                            size="sm"
+                                                                                            type="date"
+                                                                                            value={newReturns[purchase.id]?.return_date || ''}
+                                                                                            onChange={e => handleNewReturnChange(
+                                                                                                purchase.id,
+                                                                                                'return_date',
+                                                                                                e.target.value
+                                                                                            )}
+                                                                                            placeholder="Select return date"
+                                                                                        />
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <Form.Control
+                                                                                            size="sm"
+                                                                                            type="text"
+                                                                                            placeholder="Item name..."
+                                                                                            value={newReturns[purchase.id]?.item_name || ''}
+                                                                                            onChange={e => handleNewReturnChange(
+                                                                                                purchase.id,
+                                                                                                'item_name',
+                                                                                                e.target.value
+                                                                                            )}
+                                                                                        />
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <Form.Control
+                                                                                            size="sm"
+                                                                                            type="number"
+                                                                                            min="0"
+                                                                                            placeholder="Return price"
+                                                                                            value={newReturns[purchase.id]?.price || ''}
+                                                                                            onChange={e => handleNewReturnChange(
+                                                                                                purchase.id,
+                                                                                                'price',
+                                                                                                e.target.value
+                                                                                            )}
+                                                                                        />
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <Form.Control
+                                                                                            size="sm"
+                                                                                            as="textarea"
+                                                                                            rows={2}
+                                                                                            placeholder="Return reason..."
+                                                                                            value={newReturns[purchase.id]?.narration || ''}
+                                                                                            onChange={e => handleNewReturnChange(
+                                                                                                purchase.id,
+                                                                                                'narration',
+                                                                                                e.target.value
+                                                                                            )}
+                                                                                        />
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <div className="d-flex gap-1">
+                                                                                            <CustomTooltip text="Save Return">
+                                                                                                <Button
+                                                                                                    size="sm"
+                                                                                                    variant="success"
+                                                                                                    onClick={() => saveReturn(purchase.id, newReturns[purchase.id])}
+                                                                                                    disabled={!newReturns[purchase.id]?.price || !newReturns[purchase.id]?.return_date || !newReturns[purchase.id]?.item_name}
+                                                                                                    className="bounce-in"
+                                                                                                >
+                                                                                                    <Save size={12} />
+                                                                                                </Button>
+                                                                                            </CustomTooltip>
+                                                                                            <CustomTooltip text="Cancel">
+                                                                                                <Button
+                                                                                                    size="sm"
+                                                                                                    variant="outline-secondary"
+                                                                                                    onClick={() => setNewReturns(prev => {
+                                                                                                        const copy = { ...prev };
+                                                                                                        delete copy[purchase.id];
+                                                                                                        return copy;
+                                                                                                    })}
+                                                                                                >
+                                                                                                    <XCircle size={12} />
+                                                                                                </Button>
+                                                                                            </CustomTooltip>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            )}
+
+                                                                            {/* Empty State for Returns */}
+                                                                            {returns.length === 0 && !newReturns[purchase.id] && (
+                                                                                <tr>
+                                                                                    <td colSpan={5} className="text-center py-4">
+                                                                                        <div className="text-muted">
+                                                                                            <RotateCcw size={32} className="mb-2 opacity-50" />
+                                                                                            <p className="mb-0">No returns recorded</p>
+                                                                                            <small>Click "Add Return" if any items were returned</small>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            )}
+                                                                        </tbody>
+                                                                    </Table>
+                                                                </Card>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
 
 
-                                            </>
-                                        )}
+                                                </>
+                                            )
+                                        }
                                     </React.Fragment>
                                 );
                             })}
@@ -1485,7 +1533,7 @@ const Purchases = ({ vendor }) => {
 
 
             </div>
-        </AuthenticatedLayout>
+        </AuthenticatedLayout >
     );
 };
 

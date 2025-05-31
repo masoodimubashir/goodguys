@@ -16,7 +16,8 @@ const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontFamily: 'Helvetica',
-    backgroundColor: '#ffffff'
+    backgroundColor: '#ffffff',
+    position: 'relative'
   },
   header: {
     marginBottom: 25,
@@ -25,38 +26,45 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.primary,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'flex-start'
+  },
+  logoSection: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    flex: 1
+  },
+  logo: {
+    width: 60,
+    height: 60,
+    marginRight: 15
   },
   companyInfo: {
-    fontSize: 8,
+    flex: 1
+  },
+  companyName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginBottom: 5
+  },
+  companyDetails: {
+    fontSize: 9,
     color: colors.textLight,
-    lineHeight: 1.4,
+    lineHeight: 1.4
+  },
+  invoiceTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.secondary,
     textAlign: 'right'
   },
-  invoiceHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  invoiceInfo: {
     marginBottom: 20,
     padding: 15,
     backgroundColor: colors.lightBg,
-    borderRadius: 4
-  },
-  section: {
-    marginBottom: 25
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: colors.primary,
-    marginBottom: 10,
-    paddingBottom: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border
-  },
-  twoColumn: {
+    borderRadius: 4,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8
+    justifyContent: 'space-between'
   },
   column: {
     width: '48%'
@@ -75,32 +83,22 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: colors.textDark
   },
-  productSection: {
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 4,
-    overflow: 'hidden'
-  },
-  productHeader: {
-    backgroundColor: colors.primary,
-    padding: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  },
-  productTitle: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold'
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginBottom: 10,
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border
   },
   table: {
-    width: '100%'
+    width: '100%',
+    marginBottom: 20
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: colors.lightBg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    backgroundColor: colors.primary,
     paddingVertical: 8,
     paddingHorizontal: 5
   },
@@ -108,32 +106,121 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    paddingVertical: 6,
+    paddingHorizontal: 5,
+    minHeight: 25
+  },
+  col1: { width: '8%', fontSize: 8, paddingRight: 3, color: 'white' },
+  col2: { width: '25%', fontSize: 8, paddingRight: 3, color: 'white' },
+  col3: { width: '12%', fontSize: 8, paddingRight: 3, color: 'white' },
+  col4: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'right', color: 'white' },
+  col5: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right', color: 'white' },
+  col6: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right', color: 'white' },
+  col7: { width: '21%', fontSize: 8, color: 'white' },
+  dataCol1: { width: '8%', fontSize: 8, paddingRight: 3 },
+  dataCol2: { width: '25%', fontSize: 8, paddingRight: 3 },
+  dataCol3: { width: '12%', fontSize: 8, paddingRight: 3 },
+  dataCol4: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
+  dataCol5: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
+  dataCol6: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
+  totalsSection: {
+    width: '100%',
+    marginBottom: 20
+  },
+  totalsHeader: {
+    flexDirection: 'row',
+    backgroundColor: colors.primary,
     paddingVertical: 8,
     paddingHorizontal: 5
   },
-  col1: { width: '25%', fontSize: 9, paddingRight: 5 },
-  col2: { width: '20%', fontSize: 9, paddingRight: 5 },
-  col3: { width: '10%', fontSize: 9, paddingRight: 5, textAlign: 'right' },
-  col4: { width: '10%', fontSize: 9, paddingRight: 5, textAlign: 'right' },
-  col5: { width: '10%', fontSize: 9, paddingRight: 5, textAlign: 'right' },
-  col6: { width: '15%', fontSize: 9, paddingRight: 5 },
-  col7: { width: '10%', fontSize: 9, textAlign: 'right' },
-  totals: {
-    marginTop: 25,
-    width: '35%',
-    alignSelf: 'flex-end'
+  totalsRow: {
+    flexDirection: 'row',
+    backgroundColor: colors.lightBg,
+    paddingVertical: 8,
+    paddingHorizontal: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border
   },
-  totalRow: {
+  totalsLabelCol: {
+    width: '70%',
+    fontSize: 9,
+    textAlign: 'right',
+    paddingRight: 10,
+    color: 'white'
+  },
+  totalsValueCol: {
+    width: '30%',
+    fontSize: 9,
+    textAlign: 'right',
+    fontWeight: 'bold',
+    color: 'white'
+  },
+  totalsDataLabelCol: {
+    width: '70%',
+    fontSize: 9,
+    textAlign: 'right',
+    paddingRight: 10
+  },
+  totalsDataValueCol: {
+    width: '30%',
+    fontSize: 9,
+    textAlign: 'right',
+    fontWeight: 'bold'
+  },
+  grandTotalRow: {
+    backgroundColor: colors.lightBg,
+    fontWeight: 'bold'
+  },
+  bankDetailsSection: {
+    marginTop: 30,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 4,
+    backgroundColor: colors.lightBg
+  },
+  bankDetailsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 6,
-    paddingVertical: 4
+    marginBottom: 10
   },
-  grandTotal: {
+  bankDetailsColumn: {
+    width: '48%'
+  },
+  bankInfoItem: {
+    flexDirection: 'row',
+    marginBottom: 4
+  },
+  bankInfoLabel: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    width: '40%',
+    color: colors.textLight
+  },
+  bankInfoValue: {
+    fontSize: 9,
+    width: '60%',
+    color: colors.textDark
+  },
+  signatureSection: {
+    marginTop: 30,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end'
+  },
+  signatureBox: {
+    width: '45%',
+    textAlign: 'center'
+  },
+  signatureImage: {
+    width: 100,
+    height: 50,
+    marginBottom: 5
+  },
+  signatureLine: {
     borderTopWidth: 1,
-    borderColor: colors.border,
-    paddingTop: 8,
-    marginTop: 8
+    borderTopColor: colors.border,
+    paddingTop: 5
   },
   footer: {
     position: 'absolute',
@@ -149,365 +236,364 @@ const styles = StyleSheet.create({
   },
   watermark: {
     position: 'absolute',
-    opacity: 0.1,
-    fontSize: 72,
+    opacity: 0.05,
+    fontSize: 60,
     color: colors.primary,
     transform: 'rotate(-45deg)',
-    left: 100,
-    top: 400
+    left: 150,
+    top: 400,
+    zIndex: -1
   },
-  bankImagesContainer: {
+  grandTotalBox: {
+    backgroundColor: colors.primary,
+    padding: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
+  grandTotalText: {
+    color: 'white',
+    fontWeight: 'bold'
+  },
+  pageTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 30,
+    color: colors.primary
+  },
+  taxRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10
-  },
-  bankImageWrapper: {
-    width: '32%',
-    alignItems: 'center'
-  },
-  bankImageLabel: {
-    fontSize: 8,
-    marginBottom: 4
-  },
-  bankImage: {
-    width: 60,
-    height: 60
-  },
-  signatureImage: {
-    width: 60,
-    height: 30
+    marginBottom: 4,
+    paddingVertical: 3
   }
 });
 
-export const ProformaPdf = ({ client, CompanyProfile, data }) => {
+const Header = ({ company_profile, title }) => (
+  <View style={styles.header}>
+    <View style={styles.logoSection}>
+      {company_profile?.logo && (
+        <Image style={styles.logo} src={`/storage/${company_profile.logo}`} />
+      )}
+      <View style={styles.companyInfo}>
+        <Text style={styles.companyName}>
+          {company_profile?.company_name || 'Company Name'}
+        </Text>
+        <Text style={styles.companyDetails}>
+          {company_profile?.company_address || 'Company Address'}{'\n'}
+          Phone: {company_profile?.company_contact_no || 'N/A'}{'\n'}
+          Email: {company_profile?.company_email || 'N/A'}
+        </Text>
+      </View>
+    </View>
+    <View>
+      <Text style={styles.invoiceTitle}>{title}</Text>
+    </View>
+  </View>
+);
 
-  
+const BankDetails = ({ bankAccount }) => {
+  if (!bankAccount) return null;
+
+  return (
+    <View style={styles.bankDetailsSection}>
+      <Text style={styles.sectionTitle}>Bank Details</Text>
+      <View style={styles.bankDetailsRow}>
+        <View style={styles.bankDetailsColumn}>
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>Bank Name:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.bank_name}</Text>
+          </View>
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>Account Number:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.account_number}</Text>
+          </View>
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>Account Holder:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.holder_name}</Text>
+          </View>
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>IFSC Code:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.ifsc_code}</Text>
+          </View>
+        </View>
+        <View style={styles.bankDetailsColumn}>
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>Branch Code:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.branch_code}</Text>
+          </View>
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>UPI ID:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.upi_address}</Text>
+          </View>
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>SWIFT Code:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.swift_code}</Text>
+          </View>
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>Tax Number:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.tax_number}</Text>
+          </View>
+        </View>
+      </View>
+      {bankAccount.qr_code_image && (
+        <View style={{ alignItems: 'center', marginTop: 10 }}>
+          <Image
+            style={{ width: 100, height: 100, borderWidth: 1, borderColor: colors.border }}
+            src={`/storage/${bankAccount.qr_code_image}`}
+          />
+          <Text style={{ fontSize: 8, marginTop: 5 }}>Scan to Pay</Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
+const SignatureSection = ({ bankAccount }) => (
+  <View style={styles.signatureSection}>
+    <View style={styles.signatureBox}>
+      {bankAccount?.signiture_image && (
+        <Image
+          style={styles.signatureImage}
+          src={`/storage/${bankAccount.signiture_image}`}
+        />
+      )}
+      <Text style={styles.signatureLine}>Authorized Signature</Text>
+    </View>
+    <View style={styles.signatureBox}>
+      {bankAccount?.company_stamp_image && (
+        <Image
+          style={styles.signatureImage}
+          src={`/storage/${bankAccount?.company_stamp_image}`}
+        />
+      )}
+      <Text style={styles.signatureLine}>Company Stamp</Text>
+    </View>
+  </View>
+);
+
+export const ProformaPdf = ({ client, CompanyProfile, data }) => {
   const proforma = data || {};
   const products = proforma.products || [];
   const bankAccount = client?.bank_account || null;
+  const currentDate = new Date().toLocaleDateString();
   
   let grandSubtotal = 0;
   let grandTotalTax = 0;
   let grandServiceCharge = 0;
+  let hasVisiblePrices = false;
 
-  const processedProducts = products.map(product => {
-    const proformaItems = product.proformas || [];
-    let productSubtotal = 0;
-    let productTax = 0;
-    let productServiceCharge = 0;
+  // Flatten all items into a single array
+  const allItems = [];
+  let serialNo = 1;
 
-    const hasVisiblePrices = proformaItems.some(item => item.is_price_visible);
-
-    const processedItems = proformaItems.map(item => {
+  products.forEach(product => {
+    (product.proformas || []).forEach(item => {
       const quantity = parseFloat(item.count) || 0;
       const price = parseFloat(item.price) || 0;
       const taxRate = parseFloat(item.tax) || 0;
       const serviceRate = parseFloat(item.service_charge) || 0;
+      const isVisible = item.is_price_visible;
+      
       const itemTotal = quantity * price;
       const itemTax = (itemTotal * taxRate) / 100;
-      const itemServiceCharge = (itemTotal * serviceRate) / 100;
-      const is_price_visible = item.is_price_visible;
+      const itemService = (itemTotal * serviceRate) / 100;
+      
+      if (isVisible) {
+        hasVisiblePrices = true;
+        grandSubtotal += itemTotal;
+        grandTotalTax += itemTax;
+        grandServiceCharge += itemService;
+      }
 
-      productSubtotal += itemTotal;
-      productTax += itemTax;
-      productServiceCharge += itemServiceCharge;
-
+      // Parse dimensions if available
       let dimensions = [];
       try {
         dimensions = JSON.parse(item.additional_description || '[]');
-      } catch (_) {
+      } catch (e) {
         dimensions = [];
       }
 
-      return {
-        ...item,
+      allItems.push({
+        serialNo: serialNo++,
+        productName: product.product_name,
+        itemName: item.item_name,
+        description: item.description,
+        dimensions,
         quantity,
         price,
         taxRate,
         serviceRate,
         itemTotal,
         itemTax,
-        itemServiceCharge,
-        dimensions,
-        is_price_visible
-      };
+        itemService,
+        is_price_visible: isVisible
+      });
     });
-
-    grandSubtotal += productSubtotal;
-    grandTotalTax += productTax;
-    grandServiceCharge += productServiceCharge;
-
-    return {
-      ...product,
-      processedItems,
-      productSubtotal,
-      productTax,
-      productServiceCharge,
-      productTotal: productSubtotal + productTax + productServiceCharge,
-      hasVisiblePrices
-    };
   });
 
   const grandTotal = grandSubtotal + grandTotalTax + grandServiceCharge;
-  const showPrices = processedProducts.some(product => product.hasVisiblePrices);
+  const formattedDate = proforma.created_at 
+    ? new Date(proforma.created_at).toLocaleDateString() 
+    : currentDate;
 
   return (
     <Document>
-      {/* First Page - Main Proforma Content */}
+      {/* Main Proforma Page */}
       <Page size="A4" style={styles.page}>
         {/* Watermark */}
         <Text style={styles.watermark}>PROFORMA</Text>
 
         {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.primary }}>{CompanyProfile.company_name}</Text>
-            <Text style={styles.companyInfo}>
-              {CompanyProfile.company_address} {"\n"}
-              {CompanyProfile.company_contact_no} {"\n"}
-              {CompanyProfile.company_email}
+        <Header company_profile={CompanyProfile} title="PROFORMA" />
+
+        {/* Proforma Number */}
+        <Text style={[styles.value, { textAlign: 'right', fontSize: 10, marginBottom: 10 }]}>
+          No: {proforma.proforma_number || 'N/A'}
+        </Text>
+
+        {/* Client and Proforma Information */}
+        <View style={styles.invoiceInfo}>
+          <View style={styles.column}>
+            <Text style={styles.sectionTitle}>Bill To:</Text>
+            <Text style={[styles.value, { fontSize: 11, marginBottom: 3, fontWeight: 'bold' }]}>
+              {client?.client_name || 'Client Name'}
+            </Text>
+            <Text style={styles.value}>{client?.client_address || 'Client Address'}</Text>
+            <Text style={styles.value}>
+              Phone: {client?.client_phone || 'N/A'}
+            </Text>
+            <Text style={styles.value}>
+              Email: {client?.client_email || 'N/A'}
+            </Text>
+            <Text style={[styles.value, { marginTop: 5 }]}>
+              Client Type: {client?.client_type || 'N/A'}
             </Text>
           </View>
-          <View>
-            <Text style={{ fontSize: 24, fontWeight: 'black', color: colors.secondary }}>PROFORMA</Text>
-          </View>
-        </View>
-
-        {/* Proforma Summary */}
-        <View style={styles.invoiceHeader}>
-          <View style={styles.column}>
-            <Text style={styles.label}>Bill To:</Text>
-            <Text style={{ ...styles.value, marginBottom: 8 }}>{client?.client_name || '-'}</Text>
-            <Text style={styles.value}>{client?.client_address || '-'}</Text>
-            <Text style={styles.value}>{client?.client_phone || '-'} | {client?.client_email || '-'}</Text>
-          </View>
           <View style={styles.column}>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Proforma #:</Text>
-              <Text style={styles.value}>{proforma.proforma_number || '-'}</Text>
+              <Text style={styles.label}>Proforma Date:</Text>
+              <Text style={styles.value}>{formattedDate}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Date:</Text>
+              <Text style={styles.label}>Reference No:</Text>
+              <Text style={styles.value}>{proforma.reference_number || 'N/A'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Valid Until:</Text>
               <Text style={styles.value}>
-                {proforma.created_at ? new Date(proforma.created_at).toLocaleDateString() : '-'}
+                {proforma.valid_until ? new Date(proforma.valid_until).toLocaleDateString() : 'N/A'}
               </Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Client Type:</Text>
-              <Text style={{ ...styles.value, color: colors.secondary }}>{client?.client_type || '-'}</Text>
+              <Text style={styles.label}>Prepared By:</Text>
+              <Text style={styles.value}>{CompanyProfile?.company_name || 'Company'}</Text>
             </View>
           </View>
         </View>
 
-        {/* Products Section */}
-        <View style={styles.section}>
-          {processedProducts.map((product, productIndex) => (
-            <View style={styles.productSection} key={productIndex}>
-              <View style={styles.productHeader}>
-                <Text style={styles.productTitle}>{product.product_name}</Text>
-              </View>
-              <View style={styles.table}>
-                <View style={styles.tableHeader}>
-                  <Text style={styles.col1}>ITEM</Text>
-                  <Text style={styles.col6}>DIMENSIONS</Text>
-                  <Text style={styles.col2}>DESCRIPTION</Text>
-                  <Text style={styles.col3}>QTY</Text>
-                  {product.hasVisiblePrices && (
-                    <>
-                      <Text style={styles.col4}>PRICE</Text>
-                      <Text style={styles.col5}>TAX%</Text>
-                      <Text style={styles.col7}>TOTAL</Text>
-                    </>
-                  )}
-                </View>
-                {product.processedItems.map((item, itemIndex) => (
-                  <View
-                    style={[
-                      styles.tableRow,
-                      { backgroundColor: itemIndex % 2 === 0 ? '#fff' : colors.lightBg }
-                    ]}
-                    key={itemIndex}
-                  >
-                    <Text style={styles.col1}>{item.item_name}</Text>
-                    <Text style={styles.col6}>
-                      {item.dimensions.map((dim, i) => (
-                        <Text key={i}>
-                          {dim.type}: {dim.value}{dim.si}
-                          {i < item.dimensions.length - 1 ? '\n' : ''}
-                        </Text>
-                      ))}
-                    </Text>
-                    <Text style={styles.col2}>{item.description || '-'}</Text>
-                    <Text style={styles.col3}>{item.quantity}</Text>
-                    {item.is_price_visible && product.hasVisiblePrices && (
-                      <>
-                        <Text style={styles.col4}>₹{item.price}</Text>
-                        <Text style={styles.col5}>{item.taxRate}%</Text>
-                        <Text style={styles.col7}>₹{item.itemTotal}</Text>
-                      </>
-                    )}
-                  </View>
-                ))}
-              </View>
-              <View style={styles.productHeader}>
-                <Text style={styles.productTitle}>Total: ₹{product.productTotal}</Text>
-              </View>
+        {/* Items Table */}
+        <View style={styles.table}>
+          <View style={styles.tableHeader}>
+            <Text style={styles.col1}>S.No</Text>
+            <Text style={styles.col2}>ITEM</Text>
+            <Text style={styles.col3}>DESCRIPTION</Text>
+            <Text style={styles.col4}>QTY</Text>
+            {hasVisiblePrices && (
+              <>
+                <Text style={styles.col5}>PRICE</Text>
+                <Text style={styles.col6}>TOTAL</Text>
+              </>
+            )}
+          </View>
+
+          {allItems.map((item, itemIndex) => (
+            <View
+              style={[
+                styles.tableRow,
+                { backgroundColor: itemIndex % 2 === 0 ? '#fff' : colors.lightBg }
+              ]}
+              key={itemIndex}
+            >
+              <Text style={styles.dataCol1}>{item.serialNo}</Text>
+              <Text style={styles.dataCol2}>
+                {item.productName} - {item.itemName}
+                {item.dimensions.length > 0 && (
+                  <Text style={{ fontSize: 7, color: colors.textLight }}>
+                    {"\n"}
+                    {item.dimensions.map((dim, i) => (
+                      <Text key={i}>
+                        {dim.type}: {dim.value}{dim.si}
+                        {i < item.dimensions.length - 1 ? ' | ' : ''}
+                      </Text>
+                    ))}
+                  </Text>
+                )}
+              </Text>
+              <Text style={styles.dataCol3}>{item.description || '-'}</Text>
+              <Text style={styles.dataCol4}>{item.quantity}</Text>
+              {item.is_price_visible && hasVisiblePrices && (
+                <>
+                  <Text style={styles.dataCol5}>₹{item.price.toFixed(2)}</Text>
+                  <Text style={styles.dataCol6}>₹{item.itemTotal.toFixed(2)}</Text>
+                </>
+              )}
             </View>
           ))}
         </View>
 
-        {/* Grand Totals */}
-        {showPrices && (
-          <View style={styles.totals}>
-            <View style={styles.totalRow}>
-              <Text style={styles.label}>Subtotal:</Text>
-              <Text style={styles.value}>₹{grandSubtotal}</Text>
+        {/* Totals Section */}
+        {hasVisiblePrices && (
+          <View style={styles.totalsSection}>
+            <View style={styles.totalsHeader}>
+              <Text style={[styles.totalsLabelCol, { width: '70%' }]}>SUMMARY</Text>
+              <Text style={[styles.totalsValueCol, { width: '30%' }]}>AMOUNT (₹)</Text>
             </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.label}>Tax:</Text>
-              <Text style={styles.value}>₹{grandTotalTax}</Text>
+            <View style={styles.totalsRow}>
+              <Text style={styles.totalsDataLabelCol}>Subtotal:</Text>
+              <Text style={styles.totalsDataValueCol}>{grandSubtotal.toFixed(2)}</Text>
             </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.label}>Service Charge:</Text>
-              <Text style={styles.value}>₹{grandServiceCharge}</Text>
+            <View style={styles.totalsRow}>
+              <Text style={styles.totalsDataLabelCol}>Tax:</Text>
+              <Text style={styles.totalsDataValueCol}>{grandTotalTax.toFixed(2)}</Text>
             </View>
-            <View style={[styles.totalRow, styles.grandTotal]}>
-              <Text style={{ ...styles.label, fontWeight: 'black' }}>GRAND TOTAL:</Text>
-              <Text style={{ ...styles.value, fontWeight: 'black', color: colors.secondary }}>
-                ₹{grandTotal}
+            <View style={styles.totalsRow}>
+              <Text style={styles.totalsDataLabelCol}>Service Charge:</Text>
+              <Text style={styles.totalsDataValueCol}>{grandServiceCharge.toFixed(2)}</Text>
+            </View>
+            <View style={[styles.totalsRow, { backgroundColor: colors.primary }]}>
+              <Text style={[styles.totalsDataLabelCol, { color: 'white', fontWeight: 'bold' }]}>
+                Grand Total:
+              </Text>
+              <Text style={[styles.totalsDataValueCol, { color: 'white', fontWeight: 'bold' }]}>
+                {grandTotal.toFixed(2)}
               </Text>
             </View>
           </View>
         )}
 
-        {/* Footer for first page */}
-        <View style={styles.footer}>
-          <Text>Page 1 of 2</Text>
-        </View>
+       
+
       </Page>
 
-      {/* Second Page - Bank Details */}
-      <Page size="A4" style={styles.page}>
-        {/* Header for second page */}
-        <View style={styles.header}>
+      {/* Bank Details Page */}
+      {bankAccount && (
+        <Page size="A4" style={styles.page}>
+          <Text style={styles.watermark}>BANK DETAILS</Text>
+          
           <View>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.primary }}>{CompanyProfile.company_name}</Text>
-            <Text style={styles.companyInfo}>
-              Proforma #: {proforma.proforma_number || '-'}
-            </Text>
-          </View>
-          <View>
-            <Text style={{ fontSize: 24, fontWeight: 'black', color: colors.secondary }}>BANK DETAILS</Text>
-          </View>
-        </View>
-
-        {/* Bank Account Details Section */}
-        {bankAccount && (
-          <View style={[styles.section, { marginBottom: 15, padding: 10, backgroundColor: colors.lightBg, borderRadius: 4 }]}>
-            <Text style={styles.sectionTitle}>Bank Account Information</Text>
+            <Text style={styles.pageTitle}>Bank Details & Authorization</Text>
             
-            <View style={styles.twoColumn}>
-              <View style={styles.column}>
-                <View style={styles.infoRow}>
-                  <Text style={styles.label}>Bank Name:</Text>
-                  <Text style={styles.value}>{bankAccount.bank_name || '-'}</Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.label}>Account Holder:</Text>
-                  <Text style={styles.value}>{bankAccount.holder_name || '-'}</Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.label}>Account Number:</Text>
-                  <Text style={styles.value}>{bankAccount.account_number || '-'}</Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.label}>IFSC Code:</Text>
-                  <Text style={styles.value}>{bankAccount.ifsc_code || '-'}</Text>
-                </View>
-              </View>
-              
-              <View style={styles.column}>
-                <View style={styles.infoRow}>
-                  <Text style={styles.label}>Branch Code:</Text>
-                  <Text style={styles.value}>{bankAccount.branch_code || '-'}</Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.label}>SWIFT Code:</Text>
-                  <Text style={styles.value}>{bankAccount.swift_code || '-'}</Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.label}>UPI Details:</Text>
-                  <Text style={styles.value}>
-                    {bankAccount.upi_number || '-'} {bankAccount.upi_address ? `(${bankAccount.upi_address})` : ''}
-                  </Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.label}>Tax Number:</Text>
-                  <Text style={styles.value}>{bankAccount.tax_number || '-'}</Text>
-                </View>
-              </View>
-            </View>
-            
-            {/* Images Row */}
-            {(bankAccount.qr_code_image || bankAccount.signiture_image || bankAccount.company_stamp_image) && (
-              <View style={styles.bankImagesContainer}>
-                {bankAccount.qr_code_image && (
-                  <View style={styles.bankImageWrapper}>
-                    <Text style={styles.bankImageLabel}>QR Code</Text>
-                    <Image 
-                      src={`/storage/${bankAccount.qr_code_image}`} 
-                      style={styles.bankImage} 
-                    />
-                  </View>
-                )}
-                
-                {bankAccount.signiture_image && (
-                  <View style={styles.bankImageWrapper}>
-                    <Text style={styles.bankImageLabel}>Signature</Text>
-                    <Image 
-                      src={`/storage/${bankAccount.signiture_image}`} 
-                      style={styles.signatureImage} 
-                    />
-                  </View>
-                )}
-                
-                {bankAccount.company_stamp_image && (
-                  <View style={styles.bankImageWrapper}>
-                    <Text style={styles.bankImageLabel}>Company Stamp</Text>
-                    <Image 
-                      src={`/storage/${bankAccount.company_stamp_image}`} 
-                      style={styles.bankImage} 
-                    />
-                  </View>
-                )}
-              </View>
-            )}
+            <BankDetails bankAccount={bankAccount} />
+            <SignatureSection bankAccount={bankAccount} />
           </View>
-        )}
 
-        {/* Payment Terms Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Payment Terms</Text>
-          <Text style={{ fontSize: 10, lineHeight: 1.5 }}>
-            - This proforma invoice is valid for 30 days from the date of issue
-            {"\n"}
-            - Payment expected within 15 days of invoice date
-            {"\n"}
-            - Late payments subject to 1.5% monthly interest
-            {"\n"}
-            - Please include proforma number in all payments
-            {"\n"}
-            - Prices are subject to change without notice
-          </Text>
-        </View>
-
-        {/* Footer for second page */}
-        <View style={styles.footer}>
-          <Text>{CompanyProfile.company_name} - Registered VAT Number: {CompanyProfile.tax_number || 'Not Provided'}</Text>
-          <Text>All prices include VAT where applicable | {CompanyProfile.website || 'No website'}</Text>
-          <Text>Page 2 of 2</Text>
-        </View>
-      </Page>
+          <View style={styles.footer}>
+            <Text>Proforma generated on {currentDate} | {CompanyProfile?.company_name || 'Company Name'}</Text>
+            <Text>This is a proforma invoice and not a tax invoice</Text>
+          </View>
+        </Page>
+      )}
     </Document>
   );
 };
