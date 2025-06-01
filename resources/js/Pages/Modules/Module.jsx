@@ -7,6 +7,8 @@ import $ from "jquery";
 import "datatables.net";
 import "datatables.net-responsive";
 import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
+import { Table } from "react-bootstrap";
+import { Edit2, Trash } from "lucide-react";
 
 export default function Module({ modules: initialModules }) {
     const [modules, setModules] = useState(initialModules);
@@ -96,66 +98,58 @@ export default function Module({ modules: initialModules }) {
 
                 </div>
                 <div className="col-12">
-                    <div className="card shadow-sm">
-                        <div className="card-body p-3">
-                            <div className="table-responsive">
-                                <table ref={tableRef} className="table table-hover align-middle mb-0 text-left">
-                                    <thead className="table-light">
-                                        <tr>
-                                            {tableHead.map((head, index) => (
-                                                <th key={index} className="text-nowrap">{head}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {modules.length > 0 ? (
-                                            modules.map((module) => {
-                                                const totalPrice = module.selling_price * module.count;
-                                                return (
-                                                    <tr key={module.id}>
-                                                        <td>{module.module_name}</td>
-                                                        <td>{module.buying_price}</td>
-                                                        <td>{module.selling_price}</td>
-                                                        <td>{module.selling_price} * {module.count} =  {totalPrice}</td>
-                                                        <td>{module.count}</td>
-                                                        <td>
-                                                            {module.fields.map((field, i) => (
-                                                                <div key={i}>
-                                                                    <span className="badge bg-light text-dark border mb-1 d-block">
-                                                                        {field}
-                                                                    </span>
-                                                                </div>
-                                                            ))}
-                                                        </td>
+                    <Table ref={tableRef} responsive hover bordered size="sm" >
+                        <thead className="table-light">
+                            <tr>
+                                {tableHead.map((head, index) => (
+                                    <th key={index} className="text-nowrap">{head}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {modules.length > 0 ? (
+                                modules.map((module) => {
+                                    const totalPrice = module.selling_price * module.count;
+                                    return (
+                                        <tr key={module.id}>
+                                            <td>{module.module_name}</td>
+                                            <td>{module.buying_price}</td>
+                                            <td>{module.selling_price}</td>
+                                            <td>{module.selling_price} * {module.count} =  {totalPrice}</td>
+                                            <td>{module.count}</td>
+                                            <td>
+                                                {module.fields.map((field, i) => (
+                                                    <div key={i}>
+                                                        <span className="badge bg-light text-dark border mb-1 d-block">
+                                                            {field}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </td>
 
-                                                        {auth.user.role === "admin" && (
-                                                            <td>
-                                                                <div className="d-flex">
-                                                                    <Link className="dropdown-item" href={route("module.edit", module.id)} title="Edit">
-                                                                        <i className="ti ti-edit me-2"></i>
-                                                                    </Link>
-                                                                    <button className="dropdown-item text-danger" onClick={() => handleDelete(module.id)} title="Delete" >
-                                                                        <i className="ti ti-trash me-2"></i>
-                                                                    </button>
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                    </tr>
-                                                );
-                                            })
-                                        ) : (
-                                            <tr>
-                                                <td colSpan={tableHead.length} className="text-center text-muted py-4">
-                                                    <i className="ti ti-box fs-4 d-block mb-2"></i>
-                                                    No modules found.
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                                            <td>
+                                                <div className="d-flex">
+                                                    <Link className="dropdown-item" href={route("module.edit", module.id)} title="Edit">
+                                                        <Edit2 size={18}></Edit2>
+                                                    </Link>
+                                                    <button className="dropdown-item text-danger" onClick={() => handleDelete(module.id)} title="Delete" >
+                                                        <Trash size={18}></Trash>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            ) : (
+                                <tr>
+                                    <td colSpan={tableHead.length} className="text-center text-muted py-4">
+                                        <i className="ti ti-box fs-4 d-block mb-2"></i>
+                                        No modules found.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </Table>
                 </div>
             </div>
         </AuthenticatedLayout >

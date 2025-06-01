@@ -6,11 +6,9 @@ import { Trash2, FileText, Edit, Plus, User, Mail, Phone, MapPin, Calendar, Cred
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import ChallanPdf from '../PDF/ChallanPdf';
 import ChallanToInvoice from '../PDF/ChallanToPdf';
+import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 
-const ViewChallans = ({ client, company_profile,  }) => {
-
-    console.log(client);
-    
+const ViewChallans = ({ client, company_profile, }) => {
 
     const [selectedChallans, setSelectedChallans] = useState([]);
     const [showInvoiceModal, setShowInvoiceModal] = useState(false);
@@ -117,10 +115,20 @@ const ViewChallans = ({ client, company_profile,  }) => {
         });
     };
 
+
+    const breadcrumbs = [
+        { href: `/clients/${client.id}`, label: 'Back', active: false },
+        { href: ``, label: `${client.client_name}`, active: true }
+    ];
+
     return (
         <AuthenticatedLayout>
             <Head title={`${client.client_name} - Challans`} />
             <div className="container-fluid py-4">
+
+                <BreadCrumbHeader
+                    breadcrumbs={breadcrumbs}
+                />
                 {/* Client Information Card */}
                 <Card className="mb-4">
                     <Card.Body>
@@ -212,15 +220,15 @@ const ViewChallans = ({ client, company_profile,  }) => {
                 </Row>
 
                 {/* Challans Table */}
-                <Card className='p-2'>
-                    <Card.Header className="d-flex justify-content-between align-items-center">
-                        <h6>Challan Records 
+                <div>
+                    <div className="d-flex justify-content-between align-items-center">
+                        <h6>Challan Selected
                             ({selectedChallans.length})
                         </h6>
                         <div className="d-flex gap-2 mb-2">
                             {selectedChallans.length > 0 && (
                                 <>
-                                 
+
                                     <PDFDownloadLink
                                         document={
                                             <ChallanToInvoice
@@ -243,104 +251,104 @@ const ViewChallans = ({ client, company_profile,  }) => {
                             )}
 
                         </div>
-                    </Card.Header>
+                    </div>
 
-                        <Table hover responsive >
-                            <thead>
-                                <tr>
-                                    <th>
-                                        <Form.Check
-                                            type="checkbox"
-                                            onChange={handleSelectAll}
-                                            checked={
-                                                selectedChallans.length > 0 &&
-                                                selectedChallans.length === client.challan_refrences.length
-                                            }
-                                        />
-                                    </th>
-                                    <th>Challan No.</th>
-                                    <th>Date</th>
-                                    <th className="text-end">Items</th>
-                                    <th className="text-end">Subtotal</th>
-                                    <th className="text-end">Service Charge</th>
-                                    <th className="text-end">Total</th>
-                                    <th className="text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {client.challan_refrences.map((ref) => {
-                                    const items = ref.challans || [];
-                                    const subtotal = items.reduce((sum, item) => {
-                                        return item.qty > 0 ? sum + (item.price * item.qty) : item.price;
-                                    }, 0);
-                                    const serviceRate = Number(ref.service_charge) || 0;
-                                    const serviceCharge = subtotal * serviceRate / 100;
-                                    const total = subtotal + serviceCharge;
-                                    const isInvoiced = ref.invoice_id !== null;
+                    <Table hover responsive size='sm' bordered >
+                        <thead>
+                            <tr>
+                                <th>
+                                    <Form.Check
+                                        type="checkbox"
+                                        onChange={handleSelectAll}
+                                        checked={
+                                            selectedChallans.length > 0 &&
+                                            selectedChallans.length === client.challan_refrences.length
+                                        }
+                                    />
+                                </th>
+                                <th>Challan No.</th>
+                                <th>Date</th>
+                                <th className="text-end">Items</th>
+                                <th className="text-end">Subtotal</th>
+                                <th className="text-end">Service Charge</th>
+                                <th className="text-end">Total</th>
+                                <th className="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {client.challan_refrences.map((ref) => {
+                                const items = ref.challans || [];
+                                const subtotal = items.reduce((sum, item) => {
+                                    return item.qty > 0 ? sum + (item.price * item.qty) : item.price;
+                                }, 0);
+                                const serviceRate = Number(ref.service_charge) || 0;
+                                const serviceCharge = subtotal * serviceRate / 100;
+                                const total = subtotal + serviceCharge;
+                                const isInvoiced = ref.invoice_id !== null;
 
-                                    return (
-                                        <tr key={ref.id}>
-                                            <td>
-                                                {!isInvoiced && (
-                                                    <Form.Check
-                                                        type="checkbox"
-                                                        checked={selectedChallans.includes(ref.id)}
-                                                        onChange={() => handleCheckboxChange(ref.id)}
-                                                        disabled={isInvoiced}
-                                                    />
-                                                )}
-                                            </td>
-                                            <td>
-                                                {ref.challan_number}
+                                return (
+                                    <tr key={ref.id}>
+                                        <td>
+                                            {!isInvoiced && (
+                                                <Form.Check
+                                                    type="checkbox"
+                                                    checked={selectedChallans.includes(ref.id)}
+                                                    onChange={() => handleCheckboxChange(ref.id)}
+                                                    disabled={isInvoiced}
+                                                />
+                                            )}
+                                        </td>
+                                        <td>
+                                            {ref.challan_number}
 
-                                            </td>
-                                            <td>{new Date(ref.created_at).toLocaleDateString()}</td>
+                                        </td>
+                                        <td>{new Date(ref.created_at).toLocaleDateString()}</td>
 
-                                            <td className="text-end">{items.length}</td>
-                                            <td className="text-end">₹{subtotal.toLocaleString('en-IN')}</td>
-                                            <td className="text-end">
-                                                <Badge bg="warning" text="dark">
-                                                    ₹{serviceCharge.toLocaleString('en-IN')} ({ref.service_charge}%)
-                                                </Badge>
-                                            </td>
-                                            <td className="text-end fw-bold">₹{total.toLocaleString('en-IN')}</td>
-                                            <td className="text-center">
-                                                <div className="d-flex justify-content-center gap-2">
+                                        <td className="text-end">{items.length}</td>
+                                        <td className="text-end">₹{subtotal.toLocaleString('en-IN')}</td>
+                                        <td className="text-end">
+                                            <Badge bg="warning" text="dark">
+                                                ₹{serviceCharge.toLocaleString('en-IN')} ({ref.service_charge}%)
+                                            </Badge>
+                                        </td>
+                                        <td className="text-end fw-bold">₹{total.toLocaleString('en-IN')}</td>
+                                        <td className="text-center">
+                                            <div className="d-flex justify-content-center gap-2">
 
-                                                    <Link href={route('challan.edit', ref.id)}>
-                                                        <Edit size={20} />
-                                                    </Link>
+                                                <Link href={route('challan.edit', ref.id)}>
+                                                    <Edit size={20} />
+                                                </Link>
 
-                                                    <Trash2 size={20} className="text-danger" title="Delete"
-                                                        onClick={() => {
-                                                            if (confirm('Are you sure you want to delete this challan?')) {
-                                                                router.delete(route('challan.destroy', ref.id));
-                                                            }
-                                                        }}
-                                                    />
-
-                                                    <PDFDownloadLink
-                                                        document={
-                                                            <ChallanPdf
-                                                                company_profile={company_profile}
-                                                                challan={ref}
-                                                                client={client}
-                                                            />
+                                                <Trash2 size={20} className="text-danger" title="Delete"
+                                                    onClick={() => {
+                                                        if (confirm('Are you sure you want to delete this challan?')) {
+                                                            router.delete(route('challan.destroy', ref.id));
                                                         }
-                                                        fileName={`${client.client_name}.pdf`}
-                                                    >
-                                                        {({ loading }) => (
-                                                            <FileText size={20} className="me-2" />
-                                                        )}
-                                                    </PDFDownloadLink>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </Table>
-                </Card>
+                                                    }}
+                                                />
+
+                                                <PDFDownloadLink
+                                                    document={
+                                                        <ChallanPdf
+                                                            company_profile={company_profile}
+                                                            challan={ref}
+                                                            client={client}
+                                                        />
+                                                    }
+                                                    fileName={`${client.client_name}.pdf`}
+                                                >
+                                                    {({ loading }) => (
+                                                        <FileText size={20} className="me-2" />
+                                                    )}
+                                                </PDFDownloadLink>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </Table>
+                </div>
 
 
             </div>

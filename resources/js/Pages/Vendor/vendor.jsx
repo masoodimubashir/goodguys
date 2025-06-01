@@ -8,7 +8,7 @@ import 'datatables.net';
 import 'datatables.net-responsive';
 import Swal from 'sweetalert2';
 import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
-import { Row, Form } from "react-bootstrap";
+import { Row, Form, Table } from "react-bootstrap";
 
 export default function Vendor({ vendors: initialVendors }) {
 
@@ -158,10 +158,7 @@ export default function Vendor({ vendors: initialVendors }) {
                 </div>
 
                 <div className="col-12">
-                    <div className="card shadow-sm">
-                        <div className="card-body p-3">
-                            <div className="table-responsive">
-                                <table ref={tableRef} className="table table-hover align-middle mb-0 text-left">
+                                <Table ref={tableRef} responsive hover size="sm" bordered>
                                     <thead className="table-light">
                                         <tr>
                                             {tableHead.map((head, index) => (
@@ -205,10 +202,7 @@ export default function Vendor({ vendors: initialVendors }) {
                                             </tr>
                                         )}
                                     </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                                </Table>
                 </div>
             </div>
 

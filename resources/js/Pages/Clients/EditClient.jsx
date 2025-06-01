@@ -19,6 +19,7 @@ export default function EditClient({ client }) {
     client_phone: client.client_phone || '',
     client_address: client.client_address || '',
     service_charge: isServiceClient ? client?.service_charge?.service_charge : '',
+    advance_amount: client?.advance_amount || 0,
   });
 
   const handleSubmit = (e) => {
@@ -44,14 +45,13 @@ export default function EditClient({ client }) {
 
       <Head title="Edit Client" />
 
-      <div className="row g-4 mt-4">
+      <div className="row g-4">
 
         <div className="d-flex justify-content-between align-items-center">
 
           <BreadCrumbHeader
             breadcrumbs={breadcrumbs}
           />
-
 
         </div>
 
@@ -116,15 +116,31 @@ export default function EditClient({ client }) {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">Client Address</label>
+                  <label className="client_address">Client Address</label>
                   <TextInput
                     type="text"
+                    id="client_address"
                     className="form-control"
                     placeholder="Enter Client Address"
                     value={data.client_address}
                     onChange={e => setData('client_address', e.target.value)}
                   />
                   <InputError message={errors.client_address} />
+                </div>
+
+                <div className="mb-3">
+                  <label className="advance_amount">Advance Amount</label>
+
+                  <TextInput
+                    className="form-control"
+                    id="advance_amount"
+                    name="advance_amount"
+                    placeholder={"Enter Amount"}
+                    value={data.advance_amount}
+                    onChange={e => setData('advance_amount', e.target.value)}
+                    
+                  />
+                  <InputError message={errors.advance_amount} />
                 </div>
 
                 {data.client_type === 'Service Client' && (

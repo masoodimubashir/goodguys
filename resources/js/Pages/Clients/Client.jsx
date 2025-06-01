@@ -6,6 +6,8 @@ import $ from 'jquery';
 import 'datatables.net';
 import 'datatables.net-responsive';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
+import { Table } from 'react-bootstrap';
+import Swal from 'sweetalert2';
 
 export default function Client({ clients: initialClients }) {
 
@@ -14,7 +16,7 @@ export default function Client({ clients: initialClients }) {
     const [clients, setClients] = useState(initialClients);
     const tableHead = [
         'Name', 'Client Type', 'Site  / Product', 'Email', 'Phone', 'Address',
-        'Service Charge (%)', 'Actions'
+        'Service Charge', 'Advance Amount', 'Actions'
     ];
     const tableRef = useRef(null);
     const { flash, auth } = usePage().props;
@@ -58,16 +60,28 @@ export default function Client({ clients: initialClients }) {
     }, [clients]);
 
     const handleDelete = (id) => {
-        destroy(route('clients.destroy', id), {
-            preserveScroll: true,
-            onSuccess: () => {
-                if ($.fn.DataTable.isDataTable(tableRef.current)) {
-                    $(tableRef.current).DataTable().destroy();
-                }
-                setClients(clients.filter(client => client.id !== id));
-                ShowMessage('success', 'Client deleted successfully');
-            },
-            onError: () => ShowMessage('error', 'Failed to delete client'),
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                destroy(route('clients.destroy', id), {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        if ($.fn.DataTable.isDataTable(tableRef.current)) {
+                            $(tableRef.current).DataTable().destroy();
+                        }
+                        setClients(clients.filter(client => client.id !== id));
+                        ShowMessage('success', 'Client deleted successfully');
+                    },
+                    onError: () => ShowMessage('error', 'Failed to delete client'),
+                });
+            }
         });
     };
 
@@ -86,72 +100,67 @@ export default function Client({ clients: initialClients }) {
                     <BreadCrumbHeader
                         breadcrumbs={breadcrumbs}
                     />
-                    
-                    {auth.user.role === 'admin' && (
-                        <Link href={route('clients.create')} className="btn btn-sm btn-primary me-2">
-                            <i className="ti ti-plus me-1"></i> Add Client
-                        </Link>
-                    )}
+
+                    <Link href={route('clients.create')} className="btn btn-sm btn-primary me-2">
+                        <i className="ti ti-plus me-1"></i> Add Client
+                    </Link>
 
                 </div>
 
                 <div className="col-12">
-                    <div className="card">
-                        <div className="card-body p-3">
-                            <div className="app-scroll table-responsive">
-                                <table ref={tableRef} className="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            {tableHead.map((head, index) => (
-                                                <th key={index}>{head}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {clients.length > 0 ? (
-                                            clients.map((client) => (
-                                                <tr key={client.id}>
-                                                    <td>
-                                                        <Link href={route('clients.show', client.id)} className="text-decoration-underline text-primary">
-                                                            {client.client_name}
-                                                        </Link>
-                                                    </td>
+                    <Table ref={tableRef} size='sm' bordered hover responsive>
+                        <thead>
+                            <tr>
+                                {tableHead.map((head, index) => (
+                                    <th key={index}>{head}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {clients.length > 0 ? (
+                                clients.map((client) => (
+                                    <tr key={client.id}>
+                                        <td>
+                                            <Link href={route('clients.show', client.id)} className="text-decoration-underline text-primary">
+                                                {client.client_name}
+                                            </Link>
+                                        </td>
 
-                                                    <td>{client.client_type}</td>
+                                        <td>{client.client_type}</td>
 
-                                                    <td>{client.site_name ?? 'NA'}</td>
+                                        <td>{client.site_name ?? 'NA'}</td>
 
-                                                    <td>{client.client_email}</td>
+                                        <td>{client.client_email}</td>
 
-                                                    <td>{client.client_phone}</td>
+                                        <td>{client.client_phone}</td>
 
-                                                    <td>{client.client_address}</td>
+                                        <td>{client.client_address}</td>
+                                        
+                                        <td>{client.service_charge?.service_charge || 0}</td>
 
-                                                    <td>{client.service_charge?.service_charge || 0}</td>
+                                        <td>{client?.advance_amount || 0}</td>
 
 
-                                                    <td>
-                                                        <div className="d-flex">
-                                                                    <Link className="dropdown-item" href={route('clients.edit', client.id)} title='Edit'>
-                                                                        <i className="ti ti-edit"></i>
-                                                                    </Link>
-                                                                    <button className="dropdown-item" onClick={() => handleDelete(client.id)} title='Delete'>
-                                                                        <i className="ti ti-trash text-danger"></i>
-                                                                    </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan={tableHead.length} className="text-center">No clients found</td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+
+                                        <td>
+                                            <div className="d-flex">
+                                                <Link className="dropdown-item" href={route('clients.edit', client.id)} title='Edit'>
+                                                    <i className="ti ti-edit"></i>
+                                                </Link>
+                                                <button className="dropdown-item" onClick={() => handleDelete(client.id)} title='Delete'>
+                                                    <i className="ti ti-trash text-danger"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={tableHead.length} className="text-center">No clients found</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </Table>
                 </div>
             </div>
         </AuthenticatedLayout>

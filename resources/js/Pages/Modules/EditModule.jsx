@@ -1,3 +1,8 @@
+
+
+
+
+
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
 import CreatableSelect from "react-select/creatable";
@@ -7,27 +12,28 @@ import InputError from "@/Components/InputError";
 import Button from "@/Components/Button";
 
 export default function EditModule({ module, fields = [] }) {
-
+    // Improved parser that handles both string and object formats
     const parseModuleFields = () => {
-
         if (!module.fields) return [{ field_name: '', si_unit: '', dimension_value: '' }];
 
-        if (Array.isArray(module.fields) && typeof module.fields[0] === 'string') {
-            return module.fields.map(fieldStr => {
-                const parts = fieldStr.split(' ');
+        return module.fields.map(field => {
+            // Handle string format (e.g., "length,20,m")
+            if (typeof field === 'string') {
+                const [field_name, dimension_value, si_unit] = field.split(',');
                 return {
-                    field_name: parts[0] || '',
-                    dimension_value: parts[1] || '',
-                    si_unit: parts[2] || ''
+                    field_name: field_name || '',
+                    dimension_value: dimension_value || '',
+                    si_unit: si_unit || ''
                 };
-            });
-        }
+            }
 
-        return module.fields.map(field => ({
-            field_name: field.field_name || '',
-            si_unit: field.si_unit || '',
-            dimension_value: field.dimension_value || ''
-        }));
+            // Handle object format
+            return {
+                field_name: field.field_name || '',
+                si_unit: field.si_unit || '',
+                dimension_value: field.dimension_value || ''
+            };
+        });
     };
 
     const initialFields = parseModuleFields();
@@ -43,22 +49,53 @@ export default function EditModule({ module, fields = [] }) {
 
     const handleSelectChange = (index, selectedOption) => {
         const updated = [...data.fields];
+
         if (selectedOption) {
-            updated[index] = {
-                field_name: selectedOption.value,
-                si_unit: selectedOption.si_unit || '',
-                dimension_value: updated[index].dimension_value || '',
-            };
+            // Check if the selected option has separate properties
+            if (selectedOption.field_name && selectedOption.dimension_value && selectedOption.si_unit) {
+                // If it's already split into separate properties
+                updated[index] = {
+                    field_name: selectedOption.field_name,
+                    dimension_value: selectedOption.dimension_value,
+                    si_unit: selectedOption.si_unit
+                };
+            }
+            // Handle comma-separated format (legacy)
+            else if (selectedOption.value.includes(',')) {
+                const [field_name, dimension_value, si_unit] = selectedOption.value.split(',');
+                updated[index] = {
+                    field_name: field_name.trim(),
+                    dimension_value: dimension_value.trim(),
+                    si_unit: si_unit.trim()
+                };
+            } else {
+                // New simple selection - only field name
+                updated[index] = {
+                    field_name: selectedOption.value,
+                    dimension_value: updated[index].dimension_value || '', // Keep existing
+                    si_unit: updated[index].si_unit || '' // Keep existing
+                };
+            }
         } else {
-            updated[index] = {
-                field_name: '',
-                si_unit: '',
-                dimension_value: '',
-            };
+            // Clear all fields if selection is cleared
+            updated[index] = { field_name: '', si_unit: '', dimension_value: '' };
         }
+
         setData('fields', updated);
     };
 
+    // Prepare options for the select component
+    const prepareOptions = () => {
+        return fields.map(field => ({
+            value: field.field_name,
+            label: field.field_name,
+            field_name: field.field_name,
+            dimension_value: field.dimension_value || '',
+            si_unit: field.si_unit || ''
+        }));
+    };
+
+    // Handle individual field changes
     const handleChange = (index, key, value) => {
         const updated = [...data.fields];
         updated[index][key] = value;
@@ -83,6 +120,7 @@ export default function EditModule({ module, fields = [] }) {
         });
     };
 
+
     return (
         <AuthenticatedLayout>
             <Head title="Edit Module" />
@@ -106,159 +144,162 @@ export default function EditModule({ module, fields = [] }) {
                 <div className="col-12">
                     <div className="card">
                         <div className="card-body">
-                            <form onSubmit={handleSubmit}>
-                                <div className="row">
+                            <form onSubmit={handleSubmit} className="row">
 
-                                    {/* Module Name */}
-                                    <div className="col-md-6 mb-4">
-                                        <InputLabel htmlFor="module_name" value="Module Name" />
-                                        <TextInput
-                                            id="module_name"
-                                            type="text"
-                                            className="form-control"
-                                            value={data.module_name}
-                                            onChange={(e) => setData('module_name', e.target.value)}
-                                            placeholder="Enter Module Name"
-                                        />
-                                        <InputError message={errors.module_name} />
+                                {/* Module Name */}
+                                <div className="col-md-6 mb-4">
+                                    <InputLabel htmlFor="module_name" value="Module Name" />
+                                    <TextInput
+                                        id="module_name"
+                                        type="text"
+                                        className="form-control"
+                                        value={data.module_name}
+                                        onChange={(e) => setData('module_name', e.target.value)}
+                                        placeholder="Enter Module Name"
+                                    />
+                                    <InputError message={errors.module_name} />
+                                </div>
+
+                                {/* Count */}
+                                <div className="col-md-6 mb-4">
+                                    <InputLabel htmlFor="count" value="Count" />
+                                    <TextInput
+                                        id="count"
+                                        type="number"
+                                        className="form-control"
+                                        value={data.count}
+                                        onChange={(e) => setData('count', e.target.value)}
+                                        placeholder="Item Count"
+                                    />
+                                    <InputError message={errors.count} />
+                                </div>
+
+                                {/* Buying Price */}
+                                <div className="col-md-6 mb-4">
+                                    <InputLabel htmlFor="buying_price" value="Buying Price" />
+                                    <TextInput
+                                        id="buying_price"
+                                        type="number"
+                                        value={data.buying_price}
+                                        onChange={(e) => setData('buying_price', e.target.value)}
+                                        placeholder="Enter Buying Price"
+                                    />
+                                    <InputError message={errors.buying_price} />
+                                </div>
+
+                                {/* Selling Price */}
+                                <div className="col-md-6 mb-4">
+                                    <InputLabel htmlFor="selling_price" value="Selling Price" />
+                                    <TextInput
+                                        id="selling_price"
+                                        type="number"
+                                        value={data.selling_price}
+                                        onChange={(e) => setData('selling_price', e.target.value)}
+                                        placeholder="Enter Selling Price"
+                                    />
+                                    <InputError message={errors.selling_price} />
+                                </div>
+
+                                <div className="col-12 mb-3">
+                                    <div className="d-flex justify-content-between align-items-center mb-2">
+                                        <InputLabel value="Fields" />
+                                        <button type="button" className="btn btn-secondary btn-sm" onClick={addRow}>
+                                            + Add Field
+                                        </button>
                                     </div>
 
-                                    {/* Count */}
-                                    <div className="col-md-6 mb-4">
-                                        <InputLabel htmlFor="count" value="Count" />
-                                        <TextInput
-                                            id="count"
-                                            type="number"
-                                            className="form-control"
-                                            value={data.count}
-                                            onChange={(e) => setData('count', e.target.value)}
-                                            placeholder="Item Count"
-                                        />
-                                        <InputError message={errors.count} />
-                                    </div>
+                                    {data.fields.map((attr, index) => {
+                                        // Create the option value in the format "field,dimension,unit"
+                                        const optionValue = `${attr.field_name}`;
 
-                                    {/* Buying Price */}
-                                    <div className="col-md-6 mb-4">
-                                        <InputLabel htmlFor="buying_price" value="Buying Price" />
-                                        <TextInput
-                                            id="buying_price"
-                                            type="number"
-                                            value={data.buying_price}
-                                            onChange={(e) => setData('buying_price', e.target.value)}
-                                            placeholder="Enter Buying Price"
-                                        />
-                                        <InputError message={errors.buying_price} />
-                                    </div>
+                                        const selectedOption = attr.field_name ? {
+                                            label: optionValue,
+                                            value: optionValue,
+                                            si_unit: attr.si_unit
+                                        } : null;
 
-                                    {/* Selling Price */}
-                                    <div className="col-md-6 mb-4">
-                                        <InputLabel htmlFor="selling_price" value="Selling Price" />
-                                        <TextInput
-                                            id="selling_price"
-                                            type="number"
-                                            value={data.selling_price}
-                                            onChange={(e) => setData('selling_price', e.target.value)}
-                                            placeholder="Enter Selling Price"
-                                        />
-                                        <InputError message={errors.selling_price} />
-                                    </div>
-
-                                    <div className="col-12 mb-4">
-                                        <InputLabel htmlFor="description" value="Module Description" />
-                                        <TextInput
-                                            id="description"
-                                            type="text"
-                                            className="form-control"
-                                            value={data.description}
-                                            onChange={(e) => setData('description', e.target.value)}
-                                            placeholder="Enter Description"
-                                        />
-                                        <InputError message={errors.description} />
-                                    </div>
-
-                                    <div className="col-12 mb-3">
-                                        <div className="d-flex justify-content-between align-items-center mb-2">
-                                            <InputLabel value="Fields" />
-                                            <button type="button" className="btn btn-secondary btn-sm" onClick={addRow}>
-                                                + Add Field
-                                            </button>
-                                        </div>
-
-                                        {data.fields.map((attr, index) => {
-                                            const selectedOption =
-
-                                                (attr.field_name ? {
-                                                    value: attr.field_name,
-                                                    label: attr.field_name,
-                                                    si_unit: attr.si_unit
-                                                } : null);
-
-                                            return (
-                                                <div className="row mb-2 align-items-center" key={`attr-${index}`}>
-                                                    <div className="col-md-5 mb-2">
-                                                        <CreatableSelect
-                                                            isClearable
-                                                            placeholder="Select or create field"
-                                                            className="react-select-container"
-                                                            classNamePrefix="react-select"
-                                                            onChange={(option) => handleSelectChange(index, option)}
-                                                            value={selectedOption}
-                                                            options={fields.map((field) => ({
-                                                                value: field.field_name,
-                                                                label: field.field_name,
-                                                                id: field.id,
-                                                                si_unit: field.si_unit
-                                                            }))}
-                                                        />
-                                                        <InputError message={errors[`fields.${index}.field_name`]} />
-                                                    </div>
-
-                                                    <div className="col-md-3 mb-2">
-                                                        <TextInput
-                                                            type="text"
-                                                            className="form-control"
-                                                            placeholder="SI Unit"
-                                                            value={attr.si_unit}
-                                                            onChange={(e) => handleChange(index, 'si_unit', e.target.value)}
-                                                        />
-                                                        <InputError message={errors[`fields.${index}.si_unit`]} />
-
-                                                    </div>
-
-                                                    <div className="col-md-3 mb-2">
-                                                        <TextInput
-                                                            type="text"
-                                                            className="form-control"
-                                                            placeholder="Enter value"
-                                                            value={attr.dimension_value}
-                                                            onChange={(e) => handleChange(index, 'dimension_value', e.target.value)}
-                                                        />
-                                                        <InputError message={errors[`fields.${index}.dimension_value`]} />
-
-                                                    </div>
-
-                                                    <div className="col-md-1 text-end">
-                                                        {data.fields.length > 1 && (
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-danger btn-sm"
-                                                                onClick={() => removeRow(index)}
-                                                            >
-                                                                Remove
-                                                            </button>
-                                                        )}
-                                                    </div>
+                                        return (
+                                            <div className="row mb-2 align-items-center" key={`attr-${index}`}>
+                                                <div className="col-md-5 mb-2">
+                                                    <CreatableSelect
+                                                        isClearable
+                                                        placeholder="Select or create field"
+                                                        className="react-select-container"
+                                                        classNamePrefix="react-select"
+                                                        onChange={(option) => handleSelectChange(index, option)}
+                                                        value={attr.field_name ? {
+                                                            value: attr.field_name,
+                                                            label: attr.field_name,
+                                                            field_name: attr.field_name,
+                                                            dimension_value: attr.dimension_value,
+                                                            si_unit: attr.si_unit
+                                                        } : null}
+                                                    // options={prepareOptions()}
+                                                    // formatOptionLabel={(option) => (
+                                                    //     <div>
+                                                    //         <strong>{option.field_name}</strong>
+                                                    //         {option.dimension_value && ` (${option.dimension_value} ${option.si_unit})`}
+                                                    //     </div>
+                                                    // )}
+                                                    />
                                                 </div>
-                                            );
-                                        })}
-                                        <InputError message={errors.fields} />
-                                    </div>
 
-                                    <div className="col-12 text-end">
-                                        <Button type="submit" className="btn btn-primary" disabled={processing}>
-                                            {processing ? 'Submitting...' : 'Update'}
-                                        </Button>
-                                    </div>
+                                                <div className="col-md-3 mb-2">
+                                                    <TextInput
+                                                        type="text"
+                                                        className="form-control"
+                                                        placeholder="SI Unit"
+                                                        value={attr.si_unit}
+                                                        onChange={(e) => handleChange(index, 'si_unit', e.target.value)}
+                                                    />
+                                                    <InputError message={errors[`fields.${index}.si_unit`]} />
+                                                </div>
+
+                                                <div className="col-md-3 mb-2">
+                                                    <TextInput
+                                                        type="text"
+                                                        className="form-control"
+                                                        placeholder="Enter value"
+                                                        value={attr.dimension_value}
+                                                        onChange={(e) => handleChange(index, 'dimension_value', e.target.value)}
+                                                    />
+                                                    <InputError message={errors[`fields.${index}.dimension_value`]} />
+                                                </div>
+
+                                                <div className="col-md-1 text-end">
+                                                    {data.fields.length > 1 && (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-danger btn-sm"
+                                                            onClick={() => removeRow(index)}
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    <InputError message={errors.fields} />
+                                </div>
+
+                                <div className="col-12 mb-4">
+                                    <InputLabel htmlFor="description" value="Module Description" />
+                                    <TextInput
+                                        id="description"
+                                        type="text"
+                                        className="form-control"
+                                        value={data.description}
+                                        onChange={(e) => setData('description', e.target.value)}
+                                        placeholder="Enter Description"
+                                    />
+                                    <InputError message={errors.description} />
+                                </div>
+
+                                <div className="col-12 text-end">
+                                    <Button type="submit" className="btn btn-primary" disabled={processing}>
+                                        {processing ? 'Submitting...' : 'Update'}
+                                    </Button>
                                 </div>
                             </form>
                         </div>

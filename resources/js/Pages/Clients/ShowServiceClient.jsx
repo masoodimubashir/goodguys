@@ -24,8 +24,12 @@ import { BankAccountCard } from '@/Components/BankAccountCard';
 import { PurchaseListModal } from '@/Components/PurchaseListModal';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import ProjectDocumentTab from '@/Components/ProjectDocumentTab';
+import Swal from 'sweetalert2';
 
-export default function ShowClient({ client,  vendors = [],  client_vendors = [] }) {
+export default function ShowServiceClient({ client, vendors = [], client_vendors = [] }) {
+
+
     // State management
     const [activeTab, setActiveTab] = useState('purchase-items');
     const [purchaseItems, setPurchaseItems] = useState(client.purchase_items || []);
@@ -240,18 +244,30 @@ export default function ShowClient({ client,  vendors = [],  client_vendors = []
 
     // Delete item
     const deleteItem = (itemId) => {
-        if (confirm('Are you sure you want to delete this item?')) {
-            router.delete(`/purchased-item/${itemId}`, {
-                onSuccess: () => {
-                    setPurchaseItems(prev => prev.filter(i => i.id !== itemId));
-                    ShowMessage('Success', 'Item deleted successfully');
-                },
-                onError: (errors) => {
-                    console.error('Error deleting item:', errors);
-                    ShowMessage('Error', 'Failed to delete item');
-                }
-            });
-        }
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'You are about to delete this item. This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(`/purchased-item/${itemId}`, {
+                    onSuccess: () => {
+                        setPurchaseItems(prev => prev.filter(i => i.id !== itemId));
+                        ShowMessage('Success', 'Item deleted successfully');
+                    },
+                    onError: (errors) => {
+                        console.error('Error deleting item:', errors);
+                        ShowMessage('Error', 'Failed to delete item');
+                    }
+                });
+            }
+        });
+
+
     };
 
     // Create new item
@@ -282,7 +298,7 @@ export default function ShowClient({ client,  vendors = [],  client_vendors = []
                         only: ['client'],
                         onSuccess: (updated) => {
                             setPurchaseItems(updated.props.client.purchase_items || []);
-                            ShowMessage('Success', 'Item created - data refreshed');
+                            ShowMessage('Success', 'Item created');
                         }
                     });
                 }
@@ -463,7 +479,7 @@ export default function ShowClient({ client,  vendors = [],  client_vendors = []
         });
     };
 
-  
+
 
     // Toggle product selection for challan
     const toggleProductSelection = (id) => {
@@ -534,7 +550,7 @@ export default function ShowClient({ client,  vendors = [],  client_vendors = []
         <AuthenticatedLayout>
             <Head title={`Client - ${client.client_name}`} />
 
-            <div className="d-flex justify-content-between align-items-center mb-4">
+            <div className="d-flex justify-content-between align-items-center mt-2 mb-2">
                 <BreadCrumbHeader breadcrumbs={[
                     { href: '/clients', label: 'Clients', active: false },
                     { href: `/clients/${client.id}`, label: client.client_name, active: true }
@@ -550,7 +566,7 @@ export default function ShowClient({ client,  vendors = [],  client_vendors = []
                             Create
                         </button>
                         <ul className="dropdown-menu dropdown-menu-end">
-                           
+
                             <li>
                                 <Link href={route('bank-account.create', { client_id: client.id })} className="dropdown-item">
                                     <i className="ti ti-building-bank me-2"></i> Bank Account
@@ -566,25 +582,25 @@ export default function ShowClient({ client,  vendors = [],  client_vendors = []
                                     <i className="ti ti-building-bank me-2"></i> Challans
                                 </Link>
                             </li>
-                            {/* <li>
+                            <li>
                                 <button className="dropdown-item" onClick={() => openModal('purchase-list')}>
                                     <i className="ti ti-shopping-cart me-2"></i> Purchase List
                                 </button>
-                            </li> */}
+                            </li>
                         </ul>
                     </div>
                 </div>
             </div>
 
-            <div className="container-fluid py-4">
+            <div>
                 {/* Client Summary */}
-                <Row className="mb-4">
+                <Row >
                     <ClientInfoCard client={client} />
                     {client.bank_account && <BankAccountCard BankProfile={client.bank_account} />}
                 </Row>
 
                 {/* Analytics Cards */}
-                <Row className="g-3 mb-4">
+                <Row className="g-3">
                     <Col md={3}>
                         <Card className={`border-0 shadow-sm h-100 card-hover gradient-bg ${animatingCards.has('total-value') ? 'pulse-animation' : ''}`}>
                             <Card.Body className="p-3">
@@ -658,8 +674,6 @@ export default function ShowClient({ client,  vendors = [],  client_vendors = []
             <Tabs
                 activeKey={activeTab}
                 onSelect={(k) => setActiveTab(k)}
-                className="mb-4"
-                fill
             >
                 <Tab eventKey="purchase-items" title={
                     <span className="d-flex align-items-center gap-1">
@@ -667,464 +681,453 @@ export default function ShowClient({ client,  vendors = [],  client_vendors = []
                     </span>
                 }>
                     <div className="">
-                        <Card className="border-0 shadow-sm">
-                            <Card.Header className="bg-white border-0 p-3">
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <div className="d-flex align-items-center gap-2">
-                                        <Badge bg="primary" pill>
-                                            {filteredItems.length} items
-                                        </Badge>
-                                    </div>
-                                    <div className="d-flex gap-2">
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                            <div className="d-flex align-items-center gap-2">
+                                <Badge bg="primary" pill>
+                                    {filteredItems.length} items
+                                </Badge>
+                            </div>
+                            <div className="d-flex gap-2">
+                                <Button
+                                    variant="primary"
+                                    className="d-flex align-items-center gap-2"
+                                    size="sm"
+                                    onClick={() => setNewItem(prev => ({ ...prev, show: true }))}
+                                >
+                                    <Plus size={16} /> Add Entry
+                                </Button>
+                                <Button
+                                    variant="success"
+                                    className="d-flex align-items-center gap-2"
+                                    size="sm"
+                                    onClick={openChallanForm}
+                                    disabled={!Object.values(challanState.selectedProducts).some(selected => selected)}
+                                >
+                                    <ShoppingCart size={16} /> Create Challan
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Search and Filter Section */}
+                        <div className=" d-flex gap-3">
+                            <div className="flex-grow-1">
+                                <InputGroup>
+                                    <InputGroup.Text>
+                                        <Search size={14} />
+                                    </InputGroup.Text>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Search items..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </InputGroup>
+                            </div>
+                            <div className="d-flex gap-2">
+                                <div className="d-flex align-items-center gap-2">
+                                    <DatePicker
+                                        selectsRange={true}
+                                        startDate={startDate}
+                                        endDate={endDate}
+                                        onChange={(update) => setDateRange(update)}
+                                        isClearable={true}
+                                        placeholderText="Filter by date range"
+                                        className="form-control form-control-sm"
+                                    />
+                                    {(startDate || endDate) && (
                                         <Button
-                                            variant="primary"
-                                            className="d-flex align-items-center gap-2"
+                                            variant="outline-secondary"
                                             size="sm"
-                                            onClick={() => setNewItem(prev => ({ ...prev, show: true }))}
+                                            onClick={resetDateFilter}
+                                            title="Clear date filter"
                                         >
-                                            <Plus size={16} /> Add Entry
+                                            <XCircle size={14} />
                                         </Button>
-                                        <Button
-                                            variant="success"
-                                            className="d-flex align-items-center gap-2"
-                                            size="sm"
-                                            onClick={openChallanForm}
-                                            disabled={!Object.values(challanState.selectedProducts).some(selected => selected)}
-                                        >
-                                            <ShoppingCart size={16} /> Create Challan
-                                        </Button>
-                                    </div>
+                                    )}
                                 </div>
-                            </Card.Header>
-
-
-                            {/* Insert From Here */}
+                            </div>
+                        </div>
 
 
 
-                            <Card.Body className="p-2">
-                                {/* Search and Filter Section */}
-                                <div className="mb-3 d-flex gap-3">
-                                    <div className="flex-grow-1">
-                                        <InputGroup>
-                                            <InputGroup.Text>
-                                                <Search size={14} />
-                                            </InputGroup.Text>
-                                            <Form.Control
-                                                type="text"
-                                                placeholder="Search items..."
-                                                value={searchTerm}
-                                                onChange={(e) => setSearchTerm(e.target.value)}
+                        <Table hover responsive size='sm' className="mb-0">
+                            <thead className="table-light">
+                                <tr>
+                                    <th>
+                                        <Button
+                                            variant="link"
+                                            className="p-0"
+                                            onClick={() => {
+                                                const allSelected = purchaseItems.every(item => challanState.selectedProducts[item.id]);
+                                                const newSelection = {};
+                                                purchaseItems.forEach(item => {
+                                                    newSelection[item.id] = !allSelected;
+                                                });
+                                                setChallanState(prev => ({
+                                                    ...prev,
+                                                    selectedProducts: newSelection
+                                                }));
+                                            }}
+                                            title="Select all for challan"
+                                        >
+                                            <Check
+                                                size={18}
+                                                className={purchaseItems.length > 0 && purchaseItems.every(item => challanState.selectedProducts[item.id])
+                                                    ? "text-danger"
+                                                    : "text-muted"}
                                             />
-                                        </InputGroup>
-                                    </div>
-                                    <div className="d-flex gap-2">
+                                        </Button>
+                                    </th>
+                                    <th>
                                         <div className="d-flex align-items-center gap-2">
-                                            <DatePicker
-                                                selectsRange={true}
-                                                startDate={startDate}
-                                                endDate={endDate}
-                                                onChange={(update) => setDateRange(update)}
-                                                isClearable={true}
-                                                placeholderText="Filter by date range"
-                                                className="form-control form-control-sm"
-                                            />
-                                            {(startDate || endDate) && (
-                                                <Button
-                                                    variant="outline-secondary"
-                                                    size="sm"
-                                                    onClick={resetDateFilter}
-                                                    title="Clear date filter"
-                                                >
-                                                    <XCircle size={14} />
-                                                </Button>
-                                            )}
+                                            <FileText size={14} />
+                                            Description
                                         </div>
-                                    </div>
-                                </div>
+                                    </th>
+                                    <th>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <Package size={14} />
+                                            Unit Type
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <Activity size={14} />
+                                            Quantity
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <IndianRupee size={14} />
+                                            Price
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <IndianRupee size={14} />
+                                            Total
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <Text size={14} />
+                                            Narration
+                                        </div>
+                                    </th>
+                                    <th style={{ width: '140px' }}>Actions</th>
+                                </tr>
+                            </thead>
 
-
-
-                                <Table hover responsive size='sm' className="mb-0">
-                                    <thead className="table-light">
-                                        <tr>
-                                            <th>
-                                                <Button
-                                                    variant="link"
-                                                    className="p-0"
-                                                    onClick={() => {
-                                                        const allSelected = purchaseItems.every(item => challanState.selectedProducts[item.id]);
-                                                        const newSelection = {};
-                                                        purchaseItems.forEach(item => {
-                                                            newSelection[item.id] = !allSelected;
-                                                        });
-                                                        setChallanState(prev => ({
-                                                            ...prev,
-                                                            selectedProducts: newSelection
-                                                        }));
-                                                    }}
-                                                    title="Select all for challan"
-                                                >
-                                                    <Check
-                                                        size={18}
-                                                        className={purchaseItems.length > 0 && purchaseItems.every(item => challanState.selectedProducts[item.id])
-                                                            ? "text-danger"
-                                                            : "text-muted"}
-                                                    />
-                                                </Button>
-                                            </th>
-                                            <th>
-                                                <div className="d-flex align-items-center gap-2">
-                                                    <FileText size={14} />
-                                                    Description
-                                                </div>
-                                            </th>
-                                            <th>
-                                                <div className="d-flex align-items-center gap-2">
-                                                    <Package size={14} />
-                                                    Unit Type
-                                                </div>
-                                            </th>
-                                            <th>
-                                                <div className="d-flex align-items-center gap-2">
-                                                    <Activity size={14} />
-                                                    Quantity
-                                                </div>
-                                            </th>
-                                            <th>
-                                                <div className="d-flex align-items-center gap-2">
-                                                    <IndianRupee size={14} />
-                                                    Price
-                                                </div>
-                                            </th>
-                                            <th>
-                                                <div className="d-flex align-items-center gap-2">
-                                                    <IndianRupee size={14} />
-                                                    Total
-                                                </div>
-                                            </th>
-                                            <th>
-                                                <div className="d-flex align-items-center gap-2">
-                                                    <Text size={14} />
-                                                    Narration
-                                                </div>
-                                            </th>
-                                            <th style={{ width: '140px' }}>Actions</th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        {/* New Item Row */}
-                                        {newItem.show && (
-                                            <tr className="table-warning bounce-in" key={newItem.id}>
-                                                <td></td>
-                                                <td>
-                                                    <Form.Control
+                            <tbody>
+                                {/* New Item Row */}
+                                {newItem.show && (
+                                    <tr className="table-warning bounce-in" key={newItem.id}>
+                                        <td></td>
+                                        <td>
+                                            <Form.Control
+                                                size="sm"
+                                                type="text"
+                                                placeholder="Item description"
+                                                value={newItem.description}
+                                                onChange={e => handleNewItemChange('description', e.target.value)}
+                                            />
+                                        </td>
+                                        <td>
+                                            <Form.Control
+                                                size="sm"
+                                                type="text"
+                                                placeholder="Unit type"
+                                                value={newItem.unit_type}
+                                                onChange={e => handleNewItemChange('unit_type', e.target.value)}
+                                            />
+                                        </td>
+                                        <td>
+                                            <Form.Control
+                                                size="sm"
+                                                type="number"
+                                                min="1"
+                                                placeholder="Quantity"
+                                                value={newItem.qty > 0 ? newItem.qty : newItem.qty}
+                                                onChange={e => handleNewItemChange('qty', e.target.value)}
+                                            />
+                                        </td>
+                                        <td>
+                                            <Form.Control
+                                                size="sm"
+                                                type="number"
+                                                min="0"
+                                                placeholder="Price"
+                                                value={newItem.price}
+                                                onChange={e => handleNewItemChange('price', e.target.value)}
+                                            />
+                                        </td>
+                                        <td>
+                                            {newItem.qty > 0 ?
+                                                formatCurrency((parseFloat(newItem.price) || 0) * (parseInt(newItem.qty) || 1)) : newItem.qty}
+                                        </td>
+                                        <td>
+                                            <Form.Control
+                                                size="sm"
+                                                as={'textArea'}
+                                                min="0"
+                                                placeholder="enter narration"
+                                                value={newItem.narration}
+                                                onChange={e => handleNewItemChange('narration', e.target.value)}
+                                            />
+                                        </td>
+                                        <td>
+                                            <div className="d-flex gap-1">
+                                                <CustomTooltip>
+                                                    <Button
                                                         size="sm"
-                                                        type="text"
-                                                        placeholder="Item description"
-                                                        value={newItem.description}
-                                                        onChange={e => handleNewItemChange('description', e.target.value)}
-                                                    />
-                                                </td>
-                                                <td>
-                                                    <Form.Control
+                                                        variant="success"
+                                                        onClick={createItem}
+                                                        disabled={!newItem.description || !newItem.unit_type || !newItem.qty || !newItem.price}
+                                                        className="bounce-in"
+                                                    >
+                                                        <Save size={12} />
+                                                    </Button>
+                                                </CustomTooltip>
+                                                <CustomTooltip>
+                                                    <Button
                                                         size="sm"
-                                                        type="text"
-                                                        placeholder="Unit type"
-                                                        value={newItem.unit_type}
-                                                        onChange={e => handleNewItemChange('unit_type', e.target.value)}
-                                                    />
-                                                </td>
-                                                <td>
-                                                    <Form.Control
-                                                        size="sm"
-                                                        type="number"
-                                                        min="1"
-                                                        placeholder="Quantity"
-                                                        value={newItem.qty > 0 ? newItem.qty : newItem.qty}
-                                                        onChange={e => handleNewItemChange('qty', e.target.value)}
-                                                    />
-                                                </td>
-                                                <td>
-                                                    <Form.Control
-                                                        size="sm"
-                                                        type="number"
-                                                        min="0"
-                                                        placeholder="Price"
-                                                        value={newItem.price}
-                                                        onChange={e => handleNewItemChange('price', e.target.value)}
-                                                    />
-                                                </td>
-                                                <td>
-                                                    {newItem.qty > 0 ?
-                                                        formatCurrency((parseFloat(newItem.price) || 0) * (parseInt(newItem.qty) || 1)) : newItem.qty}
-                                                </td>
-                                                <td>
-                                                    <Form.Control
-                                                        size="sm"
-                                                        as={'textArea'}
-                                                        min="0"
-                                                        placeholder="enter narration"
-                                                        value={newItem.narration}
-                                                        onChange={e => handleNewItemChange('narration', e.target.value)}
-                                                    />
-                                                </td>
-                                                <td>
-                                                    <div className="d-flex gap-1">
-                                                        <CustomTooltip>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="success"
-                                                                onClick={createItem}
-                                                                disabled={!newItem.description || !newItem.unit_type || !newItem.qty || !newItem.price}
-                                                                className="bounce-in"
-                                                            >
-                                                                <Save size={12} />
-                                                            </Button>
-                                                        </CustomTooltip>
-                                                        <CustomTooltip>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline-secondary"
-                                                                onClick={() => setNewItem(prev => ({
-                                                                    client_id: client.id,
-                                                                    unit_type: '',
-                                                                    description: '',
-                                                                    qty: '',
-                                                                    price: '',
-                                                                    narration: '',
-                                                                    show: false
-                                                                }))}
-                                                            >
-                                                                <XCircle size={12} />
-                                                            </Button>
-                                                        </CustomTooltip>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )}
+                                                        variant="outline-secondary"
+                                                        onClick={() => setNewItem(prev => ({
+                                                            client_id: client.id,
+                                                            unit_type: '',
+                                                            description: '',
+                                                            qty: '',
+                                                            price: '',
+                                                            narration: '',
+                                                            show: false
+                                                        }))}
+                                                    >
+                                                        <XCircle size={12} />
+                                                    </Button>
+                                                </CustomTooltip>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
 
-                                        {filteredItems.map((item, index) => {
-                                            const isExpanded = expandedItems.includes(item.id);
-                                            const isEditing = editingItemId === item.id;
-                                            const totalValue = item.qty > 0 ? (parseFloat(item.price) || 0) * (parseInt(item.qty) || 1) : item.price;
+                                {filteredItems.map((item, index) => {
+                                    const isExpanded = expandedItems.includes(item.id);
+                                    const isEditing = editingItemId === item.id;
+                                    const totalValue = item.qty > 0 ? (parseFloat(item.price) || 0) * (parseInt(item.qty) || 1) : item.price;
 
-                                            return (
-                                                <React.Fragment key={item.id}>
-                                                    <tr className={`align-middle`}>
-                                                        <td>
-                                                            <Button
-                                                                variant="link"
-                                                                className="p-0"
-                                                                onClick={() => toggleProductSelection(item.id)}
-                                                                title="Select for challan"
-                                                            >
-                                                                <Check
-                                                                    size={18}
-                                                                    className={challanState.selectedProducts[item.id] ? "text-danger" : "text-muted"}
-                                                                />
-                                                            </Button>
-                                                        </td>
-                                                        <td>
-                                                            {isEditing ? (
-                                                                <Form.Control
-                                                                    size="sm"
-                                                                    type="text"
-                                                                    value={editedItems[item.id]?.description || item.description}
-                                                                    onChange={e => handleItemChange(item.id, 'description', e.target.value)}
-                                                                />
-                                                            ) : (
-                                                                <div>
-                                                                    <span className="fw-bold">{item.description}</span>
-                                                                    <br />
-                                                                    <small className="text-muted">
-                                                                        ID: #{item.id}
-                                                                    </small>
-                                                                </div>
+                                    return (
+                                        <React.Fragment key={item.id}>
+                                            <tr className={`align-middle`}>
+                                                <td>
+                                                    <Button
+                                                        variant="link"
+                                                        className="p-0"
+                                                        onClick={() => toggleProductSelection(item.id)}
+                                                        title="Select for challan"
+                                                    >
+                                                        <Check
+                                                            size={18}
+                                                            className={challanState.selectedProducts[item.id] ? "text-danger" : "text-muted"}
+                                                        />
+                                                    </Button>
+                                                </td>
+                                                <td>
+                                                    {isEditing ? (
+                                                        <Form.Control
+                                                            size="sm"
+                                                            type="text"
+                                                            value={editedItems[item.id]?.description || item.description}
+                                                            onChange={e => handleItemChange(item.id, 'description', e.target.value)}
+                                                        />
+                                                    ) : (
+                                                        <div>
+                                                            <span className="fw-bold">{item.description}</span>
+                                                            <br />
+                                                            <small className="text-muted">
+                                                                ID: #{item.id}
+                                                            </small>
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    {isEditing ? (
+                                                        <Form.Control
+                                                            size="sm"
+                                                            type="text"
+                                                            value={editedItems[item.id]?.unit_type || item.unit_type}
+                                                            onChange={e => handleItemChange(item.id, 'unit_type', e.target.value)}
+                                                        />
+                                                    ) : (
+                                                        <span className="fw-medium">{item.unit_type}</span>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    {isEditing ? (
+                                                        <Form.Control
+                                                            size="sm"
+                                                            type="number"
+                                                            min="0"
+                                                            value={editedItems[item.id]?.qty ?? ''}
+                                                            onChange={e => handleItemChange(
+                                                                item.id,
+                                                                'qty',
+                                                                e.target.value === '' ? '' : parseInt(e.target.value) || 0
                                                             )}
-                                                        </td>
-                                                        <td>
-                                                            {isEditing ? (
-                                                                <Form.Control
-                                                                    size="sm"
-                                                                    type="text"
-                                                                    value={editedItems[item.id]?.unit_type || item.unit_type}
-                                                                    onChange={e => handleItemChange(item.id, 'unit_type', e.target.value)}
-                                                                />
-                                                            ) : (
-                                                                <span className="fw-medium">{item.unit_type}</span>
+                                                            onFocus={e => e.target.select()}
+                                                            placeholder="Enter quantity"
+                                                        />
+                                                    ) : (
+                                                        <span className="fw-bold">{item.qty > 0 ? item.qty : 'NA'}</span>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    {isEditing ? (
+                                                        <Form.Control
+                                                            size="sm"
+                                                            type="number"
+                                                            min="0"
+                                                            step="0.01"
+                                                            value={editedItems[item.id]?.price ?? ''}
+                                                            onChange={e => handleItemChange(
+                                                                item.id,
+                                                                'price',
+                                                                e.target.value === '' ? '' : parseFloat(e.target.value) || 0
                                                             )}
-                                                        </td>
-                                                        <td>
-                                                            {isEditing ? (
-                                                                <Form.Control
-                                                                    size="sm"
-                                                                    type="number"
-                                                                    min="0"
-                                                                    value={editedItems[item.id]?.qty ?? ''}
-                                                                    onChange={e => handleItemChange(
-                                                                        item.id,
-                                                                        'qty',
-                                                                        e.target.value === '' ? '' : parseInt(e.target.value) || 0
-                                                                    )}
-                                                                    onFocus={e => e.target.select()}
-                                                                    placeholder="Enter quantity"
-                                                                />
-                                                            ) : (
-                                                                <span className="fw-bold">{item.qty > 0 ? item.qty : 'NA'}</span>
+                                                            onFocus={e => e.target.select()}
+                                                            placeholder="Enter price"
+                                                        />
+                                                    ) : (
+                                                        <span
+                                                            className="fw-bold text-primary">
+                                                            {formatCurrency(item.price)}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        className="fw-bold text-success">
+                                                        {formatCurrency(totalValue)}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {isEditing ? (
+                                                        <Form.Control
+                                                            as="textarea"
+                                                            rows={3}
+                                                            className="fade-in"
+                                                            value={editedItems[item.id]?.narration || item.narration || ''}
+                                                            onChange={e => handleItemChange(item.id, 'narration', e.target.value)}
+                                                            placeholder="Enter item narration..."
+                                                            style={{
+                                                                minWidth: '200px',
+                                                                transition: 'all 0.3s ease',
+                                                                border: '1px solid #dee2e6',
+                                                                borderRadius: '4px',
+                                                                fontSize: '14px'
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div
+                                                            className={`text-truncate ${!item.narration ? 'text-muted' : ''}`}
+                                                        >
+                                                            {item.narration || (
+                                                                <small className="d-flex align-items-center gap-1 text-muted">
+                                                                    <FileText size={12} />
+                                                                    Click to add narration
+                                                                </small>
                                                             )}
-                                                        </td>
-                                                        <td>
-                                                            {isEditing ? (
-                                                                <Form.Control
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    {isEditing ? (
+                                                        <div className="d-flex gap-1">
+                                                            <CustomTooltip>
+                                                                <Button
                                                                     size="sm"
-                                                                    type="number"
-                                                                    min="0"
-                                                                    step="0.01"
-                                                                    value={editedItems[item.id]?.price ?? ''}
-                                                                    onChange={e => handleItemChange(
-                                                                        item.id,
-                                                                        'price',
-                                                                        e.target.value === '' ? '' : parseFloat(e.target.value) || 0
-                                                                    )}
-                                                                    onFocus={e => e.target.select()}
-                                                                    placeholder="Enter price"
-                                                                />
-                                                            ) : (
-                                                                <span
-                                                                    className="fw-bold text-primary">
-                                                                    {formatCurrency(item.price)}
-                                                                </span>
-                                                            )}
-                                                        </td>
-                                                        <td>
-                                                            <span
-                                                                className="fw-bold text-success">
-                                                                {formatCurrency(totalValue)}
-                                                            </span>
-                                                        </td>
-                                                        <td>
-                                                            {isEditing ? (
-                                                                <Form.Control
-                                                                    as="textarea"
-                                                                    rows={3}
-                                                                    className="fade-in"
-                                                                    value={editedItems[item.id]?.narration || item.narration || ''}
-                                                                    onChange={e => handleItemChange(item.id, 'narration', e.target.value)}
-                                                                    placeholder="Enter item narration..."
-                                                                    style={{
-                                                                        minWidth: '200px',
-                                                                        transition: 'all 0.3s ease',
-                                                                        border: '1px solid #dee2e6',
-                                                                        borderRadius: '4px',
-                                                                        fontSize: '14px'
-                                                                    }}
-                                                                />
-                                                            ) : (
-                                                                <div
-                                                                    className={`text-truncate ${!item.narration ? 'text-muted' : ''}`}
+                                                                    variant="success"
+                                                                    onClick={() => saveItem(item)}
+                                                                    className="bounce-in"
                                                                 >
-                                                                    {item.narration || (
-                                                                        <small className="d-flex align-items-center gap-1 text-muted">
-                                                                            <FileText size={12} />
-                                                                            Click to add narration
-                                                                        </small>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                        <td>
-                                                            {isEditing ? (
-                                                                <div className="d-flex gap-1">
-                                                                    <CustomTooltip>
-                                                                        <Button
-                                                                            size="sm"
-                                                                            variant="success"
-                                                                            onClick={() => saveItem(item)}
-                                                                            className="bounce-in"
-                                                                        >
-                                                                            <Save size={12} />
-                                                                        </Button>
-                                                                    </CustomTooltip>
-                                                                    <CustomTooltip>
-                                                                        <Button
-                                                                            size="sm"
-                                                                            variant="outline-secondary"
-                                                                            onClick={() => {
-                                                                                setEditingItemId(null);
-                                                                                setEditedItems(prev => {
-                                                                                    const newState = { ...prev };
-                                                                                    delete newState[item.id];
-                                                                                    return newState;
-                                                                                });
-                                                                            }}
-                                                                        >
-                                                                            <XCircle size={12} />
-                                                                        </Button>
-                                                                    </CustomTooltip>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="d-flex gap-1">
-                                                                    <CustomTooltip>
-                                                                        <Button
-                                                                            variant="link"
-                                                                            className="p-1 text-primary"
-                                                                            onClick={() => {
-                                                                                setEditingItemId(item.id);
-                                                                                setEditedItems(prev => ({
-                                                                                    ...prev,
-                                                                                    [item.id]: {
-                                                                                        id: item.id,
-                                                                                        unit_type: item.unit_type,
-                                                                                        description: item.description,
-                                                                                        qty: item.qty,
-                                                                                        price: item.price,
-                                                                                        narration: item.narration
-                                                                                    }
-                                                                                }));
-                                                                            }}
-                                                                        >
-                                                                            <Edit size={14} />
-                                                                        </Button>
-                                                                    </CustomTooltip>
-                                                                    <CustomTooltip>
-                                                                        <Button
-                                                                            variant="link"
-                                                                            className="p-1 text-danger"
-                                                                            onClick={() => deleteItem(item.id)}
-                                                                        >
-                                                                            <Trash2 size={14} />
-                                                                        </Button>
-                                                                    </CustomTooltip>
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                </React.Fragment>
-                                            );
-                                        })}
-
-                                        {/* Empty State for Purchase Items */}
-                                        {filteredItems.length === 0 && !newItem.show && (
-                                            <tr>
-                                                <td colSpan={8} className="text-center py-5">
-                                                    <div className="text-muted">
-                                                        <Package size={20} className="mb-3 opacity-50" />
-                                                        <h5 className="mb-2">No Items Found</h5>
-                                                        {searchTerm || (startDate || endDate) ? (
-                                                            <p>No items match your search criteria</p>
-                                                        ) : (
-                                                            <p>No items available for this client</p>
-                                                        )}
-                                                    </div>
+                                                                    <Save size={12} />
+                                                                </Button>
+                                                            </CustomTooltip>
+                                                            <CustomTooltip>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline-secondary"
+                                                                    onClick={() => {
+                                                                        setEditingItemId(null);
+                                                                        setEditedItems(prev => {
+                                                                            const newState = { ...prev };
+                                                                            delete newState[item.id];
+                                                                            return newState;
+                                                                        });
+                                                                    }}
+                                                                >
+                                                                    <XCircle size={12} />
+                                                                </Button>
+                                                            </CustomTooltip>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="d-flex gap-1">
+                                                            <CustomTooltip>
+                                                                <Button
+                                                                    variant="link"
+                                                                    className="p-1 text-primary"
+                                                                    onClick={() => {
+                                                                        setEditingItemId(item.id);
+                                                                        setEditedItems(prev => ({
+                                                                            ...prev,
+                                                                            [item.id]: {
+                                                                                id: item.id,
+                                                                                unit_type: item.unit_type,
+                                                                                description: item.description,
+                                                                                qty: item.qty,
+                                                                                price: item.price,
+                                                                                narration: item.narration
+                                                                            }
+                                                                        }));
+                                                                    }}
+                                                                >
+                                                                    <Edit size={14} />
+                                                                </Button>
+                                                            </CustomTooltip>
+                                                            <CustomTooltip>
+                                                                <Button
+                                                                    variant="link"
+                                                                    className="p-1 text-danger"
+                                                                    onClick={() => deleteItem(item.id)}
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </Button>
+                                                            </CustomTooltip>
+                                                        </div>
+                                                    )}
                                                 </td>
                                             </tr>
-                                        )}
-                                    </tbody>
-                                </Table>
-                            </Card.Body>
-                        </Card>
+                                        </React.Fragment>
+                                    );
+                                })}
+
+                                {/* Empty State for Purchase Items */}
+                                {filteredItems.length === 0 && !newItem.show && (
+                                    <tr>
+                                        <td colSpan={8} className="text-center py-5">
+                                            <div className="text-muted">
+                                                <Package size={20} className="mb-3 opacity-50" />
+                                                <h5 className="mb-2">No Items Found</h5>
+                                                {searchTerm || (startDate || endDate) ? (
+                                                    <p>No items match your search criteria</p>
+                                                ) : (
+                                                    <p>No items available for this client</p>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </Table>
                     </div>
                 </Tab>
 
@@ -1133,15 +1136,23 @@ export default function ShowClient({ client,  vendors = [],  client_vendors = []
                         <ShoppingBag size={16} /> Vendor List
                     </span>
                 }>
-                    <div className="container-fluid py-4">
-                        <PurchaseListTab
-                            client={client}
-                            tableRef={useRef(null)}
-                            handleEditAccount={(purchase_list) => openModal('purchase-list', purchase_list)}
-                            handleDeleteItem={handleDelete}
-                            clientVendors={client_vendors}
-                        />
-                    </div>
+                    <PurchaseListTab
+                        client={client}
+                        tableRef={useRef(null)}
+                        handleEditAccount={(purchase_list) => openModal('purchase-list', purchase_list)}
+                        handleDeleteItem={handleDelete}
+                        clientVendors={client_vendors}
+                    />
+                </Tab>
+
+                <Tab eventKey="project-document-lists" title={
+                    <span className="d-flex align-items-center gap-1">
+                        <FileText size={16} /> Document
+                    </span>
+                }>
+                    <ProjectDocumentTab
+                        client={client}
+                    />
                 </Tab>
             </Tabs>
 

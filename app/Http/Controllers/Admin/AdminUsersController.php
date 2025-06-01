@@ -16,7 +16,9 @@ class AdminUsersController extends Controller
     public function index()
     {
         return Inertia::render('Users/User', [
-            'users' => User::orderBy('name')->get(),
+            'users' => User::whereHas('roles' , function($role) {
+                $role->where('name', 'client');
+            })->orderBy('name')->get(),
         ]);
     }
 

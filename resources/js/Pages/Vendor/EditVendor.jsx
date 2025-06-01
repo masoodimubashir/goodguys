@@ -1,13 +1,49 @@
+import BreadCrumbHeader from '@/Components/BreadCrumbHeader'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
+import { useForm } from '@inertiajs/react'
+import { Link } from '@inertiajs/react'
 import React from 'react'
 
 const EditVendor = ({ vendor }) => {
+    // Initialize form with vendor data
+    const { data, setData, put, processing, errors } = useForm({
+        vendor_name: vendor.vendor_name || '',
+        contact_number: vendor.contact_number || '',
+        email: vendor.email || '',
+        address: vendor.address || '',
+        description: vendor.description || ''
+    });
+
+    // Handle form submission
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        put(route('vendor.update', vendor.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                // Optional: You can add success notification here
+            },
+            onError: (errors) => {
+                console.error('Validation errors:', errors);
+            }
+        });
+    };
+
     return (
         <AuthenticatedLayout>
+
+            <div className="d-flex justify-content-between align-items-center">
+                <BreadCrumbHeader breadcrumbs={[
+                    { href: '/vendor', label: 'Vendor', active: true },
+                ]} />
+            </div>
 
             <div className="row">
                 <div className="col-12">
                     <div className="card">
+                        <div className="card-header d-flex justify-content-between align-items-center">
+                            <h5 className="card-title mb-0">Edit Vendor</h5>
+
+                        </div>
                         <div className="card-body">
                             <form onSubmit={handleSubmit} noValidate>
                                 <div className="row">
@@ -56,6 +92,7 @@ const EditVendor = ({ vendor }) => {
                                             </div>
                                         )}
                                     </div>
+
                                     {/* Email */}
                                     <div className="col-md-4 mb-3">
                                         <label htmlFor="email" className="form-label">
@@ -124,7 +161,13 @@ const EditVendor = ({ vendor }) => {
                                 </div>
 
                                 {/* Form Actions */}
-                                <div className="d-flex justify-content-end align-items-center">
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <Link
+                                        href={route('vendor.index')}
+                                        className="btn btn-outline-secondary btn-sm"
+                                    >
+                                        Cancel
+                                    </Link>
 
                                     <button
                                         type="submit"
@@ -134,24 +177,21 @@ const EditVendor = ({ vendor }) => {
                                         {processing ? (
                                             <>
                                                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                Creating...
+                                                Updating...
                                             </>
                                         ) : (
                                             <>
                                                 <i className="fas fa-save me-1"></i>
-                                                Create Vendor
+                                                Update Vendor
                                             </>
                                         )}
                                     </button>
-
                                 </div>
-
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
-
         </AuthenticatedLayout>
     )
 }

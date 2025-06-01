@@ -22,7 +22,6 @@ class UpdateInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-
             'id' => 'required|integer|exists:invoice_refrences,id',
             'client_id' => ['required', 'exists:clients,id'],
             'client_name' => ['required', 'string'],
@@ -41,7 +40,6 @@ class UpdateInvoiceRequest extends FormRequest
             'products.*.items.*.item_dimensions.*.type' => ['required', 'string'],
             'products.*.items.*.item_dimensions.*.value' => ['required', 'numeric'],
             'products.*.items.*.item_dimensions.*.si' => ['required', 'string'],
-
         ];
     }
 }

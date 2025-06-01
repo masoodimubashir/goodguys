@@ -22,7 +22,6 @@ class UpdateBankAccountRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_id' => 'required|exists:clients,id',
             'tax_number' => 'sometimes|nullable|string|max:32',
             'bank_name' => 'sometimes|nullable|string|max:100',
             'ifsc_code' => 'sometimes|nullable|string|max:32',
@@ -32,9 +31,9 @@ class UpdateBankAccountRequest extends FormRequest
             'swift_code' => 'sometimes|nullable|string|max:32',
             'upi_number' => 'sometimes|nullable|string|max:32',
             'upi_address' => 'sometimes|nullable|string|max:250',
-            'signature_image' => 'nullable|sometimes|file|mimes:jpeg,png,pdf|max:2048',
-            'company_stamp_image' => 'nullable|sometimes|file|mimes:jpeg,png,pdf|max:2048',
-            'qr_code_image' => 'nullable|sometimes|file|mimes:jpeg,png,pdf|max:2048',
+            'signature_image' => 'nullable|sometimes|file|mimes:jpeg,|max:2048',
+            'company_stamp_image' => 'nullable|sometimes|file|mimes:jpeg,|max:2048',
+            'qr_code_image' => 'nullable|sometimes|file|mimes:jpeg,|max:2048',
 
         ];
     }

@@ -39,6 +39,7 @@ class AdminAdminCompanyProfile extends Controller
         try {
 
             DB::beginTransaction();
+            
             $validatedData = $request->validated();
 
             if ($request->hasFile('logo')) {

@@ -4,13 +4,17 @@ import {
     Wallet, IndianRupee, Phone, Mail, MapPin, FileText, Building2,
     User2, Package, RefreshCw, HandCoins, Undo2,
     TrendingUp, Calendar, Activity, BarChart3, XCircle, Eye, EyeOff, Download, Percent, Receipt,
-    Zap, ShoppingCart, Banknote, RotateCcw
+    Zap, ShoppingCart, Banknote, RotateCcw,
+    Trash
 } from 'lucide-react';
 import { Card, Table, Form, Button, Badge, ProgressBar, Row, Col, Tooltip, OverlayTrigger } from 'react-bootstrap';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
 import { router } from '@inertiajs/react';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
+import { ClientInfoCard } from '@/Components/ClientInfoCard';
+import VendorInfoCard from '@/Components/VendorInfoCard';
+import Swal from 'sweetalert2';
 
 const Purchases = ({ vendor }) => {
     // Extract data from vendor prop
@@ -253,22 +257,68 @@ const Purchases = ({ vendor }) => {
     };
 
     const deleteAllocation = (allocationId) => {
-        if (confirm('Delete this allocation?')) {
-            triggerCardAnimation(`allocation-${allocationId}`);
-            router.delete(route('purchase-managment.destroy', allocationId), {
-                onSuccess: () => ShowMessage('success', 'Payment deleted successfully')
-            });
-        }
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                triggerCardAnimation(`allocation-${allocationId}`);
+                router.delete(route('purchase-managment.destroy', allocationId), {
+                    onSuccess: () => ShowMessage('success', 'Payment deleted successfully')
+                });
+            }
+        })
     };
 
     const deleteReturn = (returnId) => {
-        if (confirm('Delete this return?')) {
-            triggerCardAnimation(`return-${returnId}`);
-            router.delete(route('return-list.destroy', returnId), {
-                onSuccess: () => ShowMessage('success', 'Return deleted successfully')
-            });
-        }
+
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                triggerCardAnimation(`return-${returnId}`);
+                router.delete(route('return-list.destroy', returnId), {
+                    onSuccess: () => ShowMessage('success', 'Return deleted successfully')
+                });
+            }
+        });
+
     };
+
+
+    const deletePurchase = (purchaseId) => {
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                triggerCardAnimation(`purchase-${purchaseId}`);
+                router.delete(route('purchase-list.destroy', purchaseId), {
+                    onSuccess: () => ShowMessage('success', 'Purchase deleted successfully')
+                });
+            }
+        })
+
+    }
+
 
 
 
@@ -392,24 +442,19 @@ const Purchases = ({ vendor }) => {
                 }
             `}</style>
 
-            <div className="container-fluid py-3">
+            <div>
 
-                <div className="d-flex justify-content-between align-items-center">
+                <BreadCrumbHeader
+                    breadcrumbs={breadcrumbs}
+                />
 
-                    <BreadCrumbHeader
-                        breadcrumbs={breadcrumbs}
-                    />
-
-                   
-
-                </div>
                 {/* Enhanced Header with Analytics Toggle */}
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <div className="d-flex align-items-center gap-3">
-                        <h5 className="mb-0 fw-bold">
-                            <ShoppingCart size={28} className="me-2 text-primary" />
-                            Purchase Management
-                        </h5>
+                        <h6 className="mb-0 fw-bold d-flex  align-items-center">
+                            <ShoppingCart size={20} className="me-2 text-primary" />
+                            Purchase List
+                        </h6>
                         <Badge bg="primary" className="">
                             <Activity size={14} className="me-1" />
                             {purchases.length} Active Purchases
@@ -420,83 +465,17 @@ const Purchases = ({ vendor }) => {
                             <Button
                                 variant={showAnalytics ? "primary" : "outline-primary"}
                                 onClick={() => setShowAnalytics(!showAnalytics)}
-                                className="d-flex align-items-center gap-2"
+                                className="d-flex align-items-center gap-2 btn-sm"
                             >
                                 {showAnalytics ? <EyeOff size={10} /> : <Eye size={10} />}
                                 Analytics
                             </Button>
                         </CustomTooltip>
-                        <CustomTooltip text="Export Data">
-                            <Button variant="success" className="d-flex align-items-center gap-2">
-                                <Download size={16} />
-                                Export
-                            </Button>
-                        </CustomTooltip>
+
                     </div>
                 </div>
 
-                {/* Vendor and Client Information Cards */}
-                <Row className="g-3 mb-4">
-                    <Col md={6}>
-                        <Card className={`shadow-sm border-0 rounded-4 card-hover ${animationClasses.slideInUp}`}>
-                            <Card.Body className="p-4">
-                                <div className="d-flex align-items-center mb-3">
-                                    <div className="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
-                                        <Building2 size={24} className="text-white" />
-                                    </div>
-                                    <div>
-                                        <h6 className="mb-1 fw-bold">{vendor.vendor_name}</h6>
-                                        <small className="text-muted">Vendor Details</small>
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <p className="mb-2 d-flex align-items-center gap-2">
-                                        <Phone size={16} className="text-muted" />
-                                        <span className="fw-medium">{vendor.contact_number}</span>
-                                    </p>
-                                    <p className="mb-2 d-flex align-items-center gap-2">
-                                        <Mail size={16} className="text-muted" />
-                                        <span className="fw-medium">{vendor.email}</span>
-                                    </p>
-                                    <p className="mb-2 d-flex align-items-center gap-2">
-                                        <MapPin size={16} className="text-muted" />
-                                        <span className="fw-medium">{vendor.address}</span>
-                                    </p>
-                                    <p className="mb-0 d-flex align-items-center gap-2">
-                                        <FileText size={16} className="text-muted" />
-                                        <span className="fw-medium">{vendor.description}</span>
-                                    </p>
-                                </div>
-                            </Card.Body>
-                        </Card>
-                    </Col>
 
-                    <Col md={6}>
-                        <Card className={`shadow-sm border-0 rounded-4 card-hover ${animationClasses.slideInUp}`} style={{ animationDelay: '0.1s' }}>
-                            <Card.Body className="p-4">
-                                <div className="d-flex align-items-center mb-3">
-                                    <div className="bg-success bg-opacity-10 p-3 rounded-circle me-3">
-                                        <User2 size={24} className="text-white" />
-                                    </div>
-                                    <div>
-                                        <h6 className="mb-1 fw-bold">{client.client_name}</h6>
-                                        <small className="text-muted">Client Information</small>
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <p className="mb-2 d-flex align-items-center gap-2">
-                                        <Building2 size={16} className="text-muted" />
-                                        <span className="fw-medium">{client.site_name}</span>
-                                    </p>
-                                    <p className="mb-0 d-flex align-items-center gap-2">
-                                        <MapPin size={16} className="text-muted" />
-                                        <span className="fw-medium">{client.client_address}</span>
-                                    </p>
-                                </div>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                </Row>
 
                 {/* Enhanced Analytics Cards */}
                 {showAnalytics && (
@@ -675,38 +654,14 @@ const Purchases = ({ vendor }) => {
                                 <RefreshCw size={14} />
                             </Button>
                         </CustomTooltip>
-                        <CustomTooltip text="Print Report">
-                            <Button variant="outline-secondary" size="sm" onClick={() => window.print()}>
-                                <Download size={14} />
-                            </Button>
-                        </CustomTooltip>
-                        <CustomTooltip text="Export to Excel">
-                            <Button variant="outline-success" size="sm">
-                                <FileText size={14} />
-                            </Button>
-                        </CustomTooltip>
+
                     </div>
                 </div>
 
                 {/* Enhanced Purchases Table */}
-                <Card className={`shadow-sm border-0 ${animationClasses.slideInUp}`}>
+                <div className={` border-0 ${animationClasses.slideInUp}`}>
 
-                    <Card.Header className="bg-white border-0 p-4">
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                            <div className="d-flex align-items-center gap-3">
-                                <h5 className="mb-0 fw-bold d-flex align-items-center gap-2">
-                                    <ShoppingCart size={20} className="text-primary" />
-                                    Purchase List
-                                </h5>
-                                <Badge  >
-                                    {purchases.length} Total
-                                </Badge>
-                            </div>
-                            <div className="d-flex gap-2">
 
-                            </div>
-                        </div>
-                    </Card.Header>
 
                     <Table hover bordered responsive size='sm' className="mb-0">
                         <thead className="table-light">
@@ -738,6 +693,13 @@ const Purchases = ({ vendor }) => {
                                         Progress
                                     </div>
                                 </th>
+
+                                <th>
+                                    <div className="d-flex align-items-center gap-2">
+
+                                    </div>
+                                </th>
+
                             </tr>
                         </thead>
 
@@ -863,6 +825,15 @@ const Purchases = ({ vendor }) => {
                                                         className={purchaseProgress > 0 ? 'progress-animated' : ''}
                                                     />
                                                 </div>
+                                            </td>
+
+                                            <td>
+
+                                                <Trash size={16}
+                                                    onClick={() => {
+                                                        deletePurchase(purchase.id);
+                                                    }}
+                                                />
                                             </td>
 
                                         </tr>
@@ -1518,18 +1489,13 @@ const Purchases = ({ vendor }) => {
                                         <div className="text-muted">
                                             <ShoppingCart size={48} className="mb-3 opacity-50" />
                                             <h5 className="mb-2">No Purchase List Found</h5>
-                                            <p className="mb-3">Get started by creating your first purchase order</p>
-                                            <Button variant="primary" className="d-flex align-items-center gap-2 mx-auto">
-                                                <Plus size={16} />
-                                                Create Purchase Order
-                                            </Button>
                                         </div>
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </Table>
-                </Card>
+                </div>
 
 
             </div>

@@ -13,6 +13,7 @@ import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import { ClientInfoCard } from '@/Components/ClientInfoCard';
 import { BankAccountCard } from '@/Components/BankAccountCard';
 import { Plus, FileText, PieChart, DollarSign, CreditCard, Activity, Building, Download } from 'lucide-react';
+import ProjectDocumentTab from '@/Components/ProjectDocumentTab';
 
 export default function ShowClient({ client, modules = [], inventoryOptions = [], vendors = [], company_profile = null }) {
     const { delete: destroy } = useForm();
@@ -189,7 +190,7 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
         }
     };
 
-   
+
 
 
     return (
@@ -204,13 +205,13 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
             </div>
 
             {/* Main Content */}
-            <div className="container-fluid py-4">
+            <div>
                 {/* Action Buttons */}
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <h4 className="mb-0">Client Details</h4>
                     <div className="btn-group">
                         <button
-                            className="btn btn-primary d-flex align-items-center gap-2"
+                            className="btn btn-primary d-flex align-items-center gap-2 btn-sm"
                             type="button"
                             data-bs-toggle="dropdown"
                         >
@@ -232,53 +233,15 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                     </div>
                 </div>
 
-                {/* Analytics Cards */}
-                <div className="row g-4 mb-4">
-                    <div className="col-md-6 col-lg-3">
-                        <div className="card border-0 shadow-sm h-100">
-                            <div className="card-body">
-                                <div className="d-flex align-items-center">
-                                    <div className="bg-primary bg-opacity-10 p-3 rounded me-3">
-                                        <Download size={24} className="text-white" />
-                                    </div>
-                                    <div>
-                                        <h6 className="mb-1">Invoices</h6>
-                                        <h3 className="mb-0">{analytics.totalInvoices}</h3>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="col-md-6 col-lg-3">
-                        <div className="card border-0 shadow-sm h-100">
-                            <div className="card-body">
-                                <div className="d-flex align-items-center">
-                                    <div className="bg-info bg-opacity-10 p-3 rounded me-3">
-                                        <FileText size={24} className="text-white" />
-                                    </div>
-                                    <div>
-                                        <h6 className="mb-1">Proformas</h6>
-                                        <h3 className="mb-0">{analytics.totalProformas}</h3>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-
-                </div>
 
                 {/* Client Information */}
-                <div className="row g-4 mb-4">
+                <div className="row g-4">
                     <ClientInfoCard client={client} />
                     {client.bank_account && <BankAccountCard BankProfile={client.bank_account} />}
                 </div>
 
                 {/* Tabs Section */}
-                <div className="card shadow-sm">
-                    <div className="card-body p-0">
-                        <ul className="nav nav-tabs tab-light-secondary px-3 pt-2" role="tablist">
+                        <ul className="nav nav-tabs " role="tablist">
                             <li className="nav-item" role="presentation">
                                 <button className="nav-link active d-flex align-items-center gap-1" data-bs-toggle="tab" data-bs-target="#accounts-tab" type="button" role="tab">
                                     <PieChart size={16} />
@@ -300,12 +263,18 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                             <li className="nav-item" role="presentation">
                                 <button className="nav-link d-flex align-items-center gap-1" data-bs-toggle="tab" data-bs-target="#pdf-tab" type="button" role="tab">
                                     <FileText size={16} />
+                                    PDF Report
+                                </button>
+                            </li>
+                            <li className="nav-item" role="presentation">
+                                <button className="nav-link d-flex align-items-center gap-1" data-bs-toggle="tab" data-bs-target="#project-document-tab" type="button" role="tab">
+                                    <FileText size={16} />
                                     Documents
                                 </button>
                             </li>
                         </ul>
 
-                        <div className="tab-content p-3">
+                        <div className="tab-content">
                             <div className="tab-pane fade show active" id="accounts-tab" role="tabpanel">
                                 <AccountTab
                                     client={client}
@@ -354,9 +323,12 @@ export default function ShowClient({ client, modules = [], inventoryOptions = []
                             <div className="tab-pane fade" id="pdf-tab" role="tabpanel">
                                 <PdfTable client={client} CompanyProfile={company_profile || {}} />
                             </div>
-                        </div>
+
+                            <div className="tab-pane fade" id="project-document-tab" role="tabpanel">
+                                <ProjectDocumentTab client={client} />
+                            </div>
+                        
                     </div>
-                </div>
             </div>
         </AuthenticatedLayout>
     );

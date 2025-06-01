@@ -6,7 +6,7 @@ const BreadCrumbHeader = ({
   breadcrumbs = []
 }) => {
   return (
-    <div className="row m-1">
+    <div className="row">
       <div className="col-12">
         <ul className="app-line-breadcrumbs mb-3">
           {/* Home breadcrumb */}

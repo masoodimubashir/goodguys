@@ -74,7 +74,8 @@ class AdminClientsController extends Controller
             'accounts',
             'serviceCharge',
             'bankAccount',
-            'purchaseItems'
+            'purchaseItems',
+            'projectDocuments',
         ]);
 
         $clientVendorIds = $client->purchaseLists->pluck('vendor_id')->unique();
@@ -90,7 +91,7 @@ class AdminClientsController extends Controller
             ]);
 
         } else {
-            
+
             return Inertia::render('Clients/ShowProductClient', [
                 'client' => $client,
                 'modules' => Module::latest()->get(),

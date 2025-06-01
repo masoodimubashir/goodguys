@@ -1,18 +1,19 @@
 import { useState } from 'react';
 
 
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import NavLink from './NavLink';
+import { use } from 'react';
 
 const ProfileCanvas = ({ Logo }) => {
 
+    const user = usePage().props.auth.user;
 
     const [isOpen, setIsOpen] = useState(false);
 
     const toggleCanvas = () => {
         setIsOpen(!isOpen);
     };
-
 
     const logOut = (e) => {
         e.preventDefault()
@@ -28,7 +29,7 @@ const ProfileCanvas = ({ Logo }) => {
             >
                 <img
                     alt="avatar"
-                    className="b-r-50 h-35 w-35 bg-dark"
+                    className="b-r-50 w-35 bg-dark"
                     src={Logo}
                 />
             </a>
@@ -39,7 +40,7 @@ const ProfileCanvas = ({ Logo }) => {
                 tabIndex="-1"
             >
                 <div className="offcanvas-body app-scroll">
-                    <ul className="">
+                    <ul>
                         <li className="d-flex gap-3 mb-3">
                             <div className="d-flex-center">
                                 <span className="h-45 w-45 d-flex-center b-r-10 position-relative">
@@ -52,10 +53,13 @@ const ProfileCanvas = ({ Logo }) => {
                             </div>
                             <div className="text-center mt-2">
                                 <h6 className="mb-0">
-                                    Laura Monaldo
+                                    
+                                    {user.name}
 
                                 </h6>
-                                <p className="f-s-12 mb-0 text-secondary">lauradesign@gmail.com</p>
+                                <p className="f-s-12 mb-0 text-secondary">
+                                    {user.email}
+                                </p>
                             </div>
                         </li>
 
@@ -77,19 +81,6 @@ const ProfileCanvas = ({ Logo }) => {
                             </NavLink>
                         </li>
 
-                        <li className="app-divider-v dotted py-1"></li>
-
-
-                        <li className="app-divider-v dotted py-1"></li>
-
-                        <li>
-                            <Link
-                                className="mb-0 text-secondary f-w-500"
-                                href=""
-                            >
-                                <i className="iconoir-plus pe-1 f-s-20"></i> Add account
-                            </Link>
-                        </li>
 
                         <li>
                             <Link

@@ -5,6 +5,8 @@ import { ShowMessage } from '@/Components/ShowMessage';
 import $ from 'jquery';
 import 'datatables.net';
 import 'datatables.net-responsive';
+import { Table } from 'react-bootstrap';
+import Swal from 'sweetalert2';
 
 export default function User({ users: initialUsers }) {
     const [users, setUsers] = useState(initialUsers);
@@ -47,17 +49,29 @@ export default function User({ users: initialUsers }) {
     }, [users]);
 
     const handleDelete = (id) => {
-        destroy(route('users.destroy', id), {
-            preserveScroll: true,
-            onSuccess: () => {
-                if ($.fn.DataTable.isDataTable(tableRef.current)) {
-                    $(tableRef.current).DataTable().destroy();
-                }
-                setUsers(users.filter(user => user.id !== id));
-                ShowMessage('success', 'User deleted successfully');
-            },
-            onError: () => ShowMessage('error', 'Failed to delete user'),
-        });
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                destroy(route('users.destroy', id), {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        if ($.fn.DataTable.isDataTable(tableRef.current)) {
+                            $(tableRef.current).DataTable().destroy();
+                        }
+                        setUsers(users.filter(user => user.id !== id));
+                        ShowMessage('success', 'User deleted successfully');
+                    },
+                    onError: () => ShowMessage('error', 'Failed to delete user'),
+                });
+            }
+        })
     };
 
     return (
@@ -67,58 +81,52 @@ export default function User({ users: initialUsers }) {
                 <div className="d-flex justify-content-end align-items-center">
 
                     {auth.user.role === 'admin' && (
-                        <Link href={route('register')} className="btn btn-primary me-2">
+                        <Link href={route('register')} className="btn btn-primary me-2 btn-sm">
                             <i className="ti ti-plus me-1"></i> Add User
                         </Link>
                     )}
 
                 </div>
                 <div className="col-12">
-                    <div className="card">
-                        <div className="card-body p-3">
-                            <div className="app-scroll table-responsive">
-                                <table ref={tableRef} className="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            {tableHead.map((head, index) => (
-                                                <th key={index} className={index === tableHead.length - 1 ? "text-end" : ""}>
-                                                    {head}
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {users.length > 0 ? (
-                                            users.map((user) => (
-                                                <tr key={user.id}>
-                                                    <td>{user.name}</td>
-                                                    <td>{user.email}</td>
-                                                    {auth.user.role === 'admin' && (
-                                                        <td className="">
-                                                            <div className='d-flex gap-4'>
-                                                                <Link  href={route('users.edit', user.id)} title='Edit'>
-                                                                    <i className="ti ti-edit"></i> 
-                                                                </Link>
-                                                                <button className="dropdown-item" onClick={() => handleDelete(user.id)} title='Delete'>
-                                                                    <i className="ti ti-trash text-danger"></i>
-                                                                </button>
-                                                            </div>
+                    <Table responsive size='sm' hover bordered ref={tableRef} >
+                        <thead>
+                            <tr>
+                                {tableHead.map((head, index) => (
+                                    <th key={index} className={index === tableHead.length - 1 ? "text-end" : ""}>
+                                        {head}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {users.length > 0 ? (
+                                users.map((user) => (
+                                    <tr key={user.id}>
+                                        <td>{user.name}</td>
+                                        <td>{user.email}</td>
+                                        {auth.user.role === 'admin' && (
+                                            <td className="">
+                                                <div className='d-flex gap-4'>
+                                                    <Link href={route('users.edit', user.id)} title='Edit'>
+                                                        <i className="ti ti-edit"></i>
+                                                    </Link>
+                                                    <button className="dropdown-item" onClick={() => handleDelete(user.id)} title='Delete'>
+                                                        <i className="ti ti-trash text-danger"></i>
+                                                    </button>
+                                                </div>
 
-                                                        </td>
-                                                    )}
-                                                    {auth.user.role !== 'admin' && <td></td>}
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan={tableHead.length} className="text-center">No users found</td>
-                                            </tr>
+                                            </td>
                                         )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                                        {auth.user.role !== 'admin' && <td></td>}
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={tableHead.length} className="text-center">No users found</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </Table>
                 </div>
             </div>
         </AuthenticatedLayout>

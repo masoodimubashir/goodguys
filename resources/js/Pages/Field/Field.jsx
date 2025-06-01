@@ -8,6 +8,8 @@ import 'datatables.net';
 import 'datatables.net-responsive';
 import Breadcrumb from "@/Components/BreadCrumbHeader";
 import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
+import { Table } from "react-bootstrap";
+import Swal from "sweetalert2";
 
 export default function Field({ fields: initialFields }) {
 
@@ -54,17 +56,29 @@ export default function Field({ fields: initialFields }) {
     }, [fields]);
 
     const handleDelete = (id) => {
-        destroy(route('field.destroy', id), {
-            preserveScroll: true,
-            onSuccess: () => {
-                if ($.fn.DataTable.isDataTable(tableRef.current)) {
-                    $(tableRef.current).DataTable().destroy();
-                }
-                setFields(fields.filter(item => item.id !== id));
-                ShowMessage('success', flash.message);
-            },
-            onError: () => ShowMessage('error', flash.error),
-        });
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                destroy(route('field.destroy', id), {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        if ($.fn.DataTable.isDataTable(tableRef.current)) {
+                            $(tableRef.current).DataTable().destroy();
+                        }
+                        setFields(fields.filter(item => item.id !== id));
+                        ShowMessage('success', flash.message);
+                    },
+                    onError: () => ShowMessage('error', flash.error),
+                });
+            }
+        })
     };
 
     const breadcrumbs = [
@@ -92,46 +106,40 @@ export default function Field({ fields: initialFields }) {
                     </Link>
                 </div>
                 <div className="col-12">
-                    <div className="card">
-                        <div className="card-body p-3">
-                            <div className="app-scroll table-responsive">
-                                <table ref={tableRef} className="table mb-0">
-                                    <thead>
-                                        <tr>
-                                            {tableHead.map((head, index) => (
-                                                <th key={index}>{head}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {fields.length > 0 ? (
-                                            fields.map((item) => (
-                                                <tr key={item.id}>
-                                                    <td>{item.field_name}</td>
-                                                    <td>{item.si_unit}</td>
-                                                    <td>{item.dimension_value}</td>
-                                                        <td>
-                                                            <div className="d-flex gap-4" title="Edit">
-                                                                <Link href={route('field.edit', item.id)}>
-                                                                    <i className="ti ti-edit"></i>
-                                                                </Link>
-                                                                <button className="dropdown-item" onClick={() => handleDelete(item.id)} title="Delete">
-                                                                    <i className="ti ti-trash text-danger"></i>
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan={tableHead.length} className="text-center">No fields found</td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    <Table ref={tableRef} responsive hover bordered size="sm">
+                        <thead>
+                            <tr>
+                                {tableHead.map((head, index) => (
+                                    <th key={index}>{head}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {fields.length > 0 ? (
+                                fields.map((item) => (
+                                    <tr key={item.id}>
+                                        <td>{item.field_name}</td>
+                                        <td>{item.si_unit}</td>
+                                        <td>{item.dimension_value}</td>
+                                        <td>
+                                            <div className="d-flex gap-4" title="Edit">
+                                                <Link href={route('field.edit', item.id)}>
+                                                    <i className="ti ti-edit"></i>
+                                                </Link>
+                                                <button className="dropdown-item" onClick={() => handleDelete(item.id)} title="Delete">
+                                                    <i className="ti ti-trash text-danger"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={tableHead.length} className="text-center">No fields found</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </Table>
                 </div>
             </div>
         </AuthenticatedLayout >

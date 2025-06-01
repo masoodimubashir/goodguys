@@ -20,6 +20,7 @@ export default function CreateClient() {
         client_address: '',
         service_charge: '',
         site_name: '',
+        advance_amount: ''
     });
 
     const handleInputChange = (e) => {
@@ -62,7 +63,7 @@ export default function CreateClient() {
                     <BreadCrumbHeader
                         breadcrumbs={breadcrumbs}
                     />
-                  
+
 
                 </div>
 
@@ -234,8 +235,26 @@ function FormFields({ data, errors, onChange }) {
                 <InputError message={errors.site_name} />
             </div>
 
+            <div className="col-md-3">
+                <InputLabel
+                    htmlFor="advance_amount"
+                    value={"Advance Amount"}
+                />
+                <TextInput
+                    className="form-control"
+                    id="advance_amount"
+                    name="advance_amount"
+                    placeholder={"Enter Amount"}
+                    value={data.advance_amount}
+                    onChange={onChange}
+                />
+                <InputError message={errors.advance_amount} />
+            </div>
+
+
+
             {isServiceType && (
-                <div className="col-md-3">
+                <div className="col-md-2">
                     <InputLabel htmlFor="service_charge" value="Service Charge (%)" />
                     <TextInput
                         type="number"

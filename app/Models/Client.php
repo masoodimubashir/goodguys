@@ -15,6 +15,7 @@ class Client extends Model
         'client_email',
         'client_address',
         'client_phone',
+        'advance_amount',
         'created_by',
         'updated_by',
         'site_name',
@@ -107,6 +108,17 @@ class Client extends Model
     public function challanRefrences(): HasMany
     {
         return $this->hasMany(ChallanRefrence::class);
+    }
+
+
+    /**
+     * Get all of the projectDocuments for the Client
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function projectDocuments(): HasMany
+    {
+        return $this->hasMany(ProjectDocument::class);
     }
 
 
