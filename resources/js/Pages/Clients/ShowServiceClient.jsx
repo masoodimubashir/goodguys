@@ -31,6 +31,10 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
 
     // State management
+
+    const { delete: destroy } = useForm();
+    const flash = usePage().props.flash;
+
     const [activeTab, setActiveTab] = useState('purchase-items');
     const [purchaseItems, setPurchaseItems] = useState(client.purchase_items || []);
     const [filteredItems, setFilteredItems] = useState(client.purchase_items || []);
@@ -68,12 +72,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         is_price_visible: true,
     });
 
-    // Animation classes
-    const animationClasses = {
-        slideInUp: 'animate__animated animate__slideInUp',
-        fadeIn: 'animate__animated animate__fadeIn',
-        slideIn: 'animate__animated animate__slideInLeft'
-    };
+
 
     // Format currency
     const formatCurrency = (amount) => {
@@ -144,31 +143,9 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
     const analytics = calculateAnalytics();
 
-    // Toggle item expansion
-    const toggleItemExpansion = (itemId) => {
-        setExpandedItems(prev =>
-            prev.includes(itemId)
-                ? prev.filter(id => id !== itemId)
-                : [...prev, itemId]
-        );
-    };
 
-    // Trigger card animation
-    const triggerCardAnimation = (cardId) => {
-        setAnimatingCards(prev => {
-            const newSet = new Set(prev);
-            newSet.add(cardId);
-            return newSet;
-        });
 
-        setTimeout(() => {
-            setAnimatingCards(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(cardId);
-                return newSet;
-            });
-        }, 1000);
-    };
+
 
     // Handle field changes for editing
     const handleItemChange = (itemId, field, value) => {
@@ -333,12 +310,6 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         </div>
     );
 
-    const breadcrumbs = [
-        { href: `/clients/${client.id}`, label: 'Back', active: true }
-    ];
-
-    const { delete: destroy } = useForm();
-    const flash = usePage().props.flash;
 
     // State management
     const [state, setState] = useState({
@@ -399,20 +370,14 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
     // Modal handlers
     const openModal = (type, item = null) => {
-        switch (type) {
-            case 'purchase-list':
-                setState(prev => ({
-                    ...prev,
-                    showPurchaseListModal: true,
-                    isEditingPurchaseList: !!item,
-                    currentPurchaseListId: item?.id || null
-                }));
-                purchaseListForm.reset();
-                if (item) purchaseListForm.setData(item);
-                break;
-            default:
-                break;
-        }
+        setState(prev => ({
+            ...prev,
+            showPurchaseListModal: true,
+            isEditingPurchaseList: !!item,
+            currentPurchaseListId: item?.id || null
+        }));
+        purchaseListForm.reset();
+        if (item) purchaseListForm.setData(item);
     };
 
     // Form submission handlers
@@ -421,15 +386,10 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
         let form, isEditing, currentId;
 
-        switch (type) {
-            case 'purchase-list':
-                form = purchaseListForm;
-                isEditing = state.isEditingPurchaseList;
-                currentId = state.currentPurchaseListId;
-                break;
-            default:
-                return;
-        }
+        form = purchaseListForm;
+        isEditing = state.isEditingPurchaseList;
+        currentId = state.currentPurchaseListId;
+        form.reset();
 
         const formData = new FormData();
         for (const key in form.data) {
@@ -502,44 +462,47 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         setChallanState(prev => ({ ...prev, showChallanForm: true }));
     };
 
-    // Handle challan creation
-    const handleCreateChallan = (e) => {
-        e.preventDefault();
-
-        // Prepare items data from selected products
-        const selectedItems = purchaseItems
-            .filter(product => challanState.selectedProducts[product.id])
-            .map(product => ({
-                item_id: product.id,
-                description: product.description,
-                unit_type: product.unit_type,
-                price: product.price,
-                narration: product.narration || '',
-                is_price_visible: challanForm.data.is_price_visible,
-                qty: product.qty,
-                total: product.total,
-            }));
 
 
-        challanForm.setData('challan', selectedItems);
+    // Alternative Option 2: Use router.post directly
+const handleCreateChallan = (e) => {
+    e.preventDefault();
 
+    const selectedItems = purchaseItems
+        .filter(product => challanState.selectedProducts[product.id])
+        .map(product => ({
+            item_id: product.id,
+            description: product.description,
+            unit_type: product.unit_type,
+            price: product.price,
+            narration: product.narration || '',
+            is_price_visible: challanForm.data.is_price_visible,
+            qty: product.qty,
+            total: product.total,
+        }));
 
-        challanForm.post(route('challan.store'), {
-            preserveScroll: true,
-            onSuccess: () => {
-                setChallanState(prev => ({
-                    ...prev,
-                    selectedProducts: {},
-                    showChallanForm: false
-                }));
-                ShowMessage('success', 'Challan created successfully');
-            },
-            onError: (errors) => {
-                console.error('Error creating challan:', errors);
-                ShowMessage('error', 'Failed to create challan');
-            }
-        });
+    const payload = {
+        ...challanForm.data,
+        challan: selectedItems
     };
+
+    router.post(route('challan.store'), payload, {
+        preserveScroll: true,
+        onSuccess: () => {
+            setChallanState(prev => ({
+                ...prev,
+                selectedProducts: {},
+                showChallanForm: false
+            }));
+            ShowMessage('success', 'Challan created successfully');
+        },
+        onError: (errors) => {
+            console.error('Error creating challan:', errors);
+            ShowMessage('error', 'Failed to create challan');
+        }
+    });
+};
+
 
     // Reset date filter
     const resetDateFilter = () => {

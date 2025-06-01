@@ -43,7 +43,6 @@ class AdminChallanController extends Controller
 
         DB::beginTransaction();
 
-
         try {
             // Create Challan Reference
             $challanReference = ChallanRefrence::create([

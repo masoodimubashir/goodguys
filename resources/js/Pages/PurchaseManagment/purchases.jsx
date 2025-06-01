@@ -659,10 +659,7 @@ const Purchases = ({ vendor }) => {
                 </div>
 
                 {/* Enhanced Purchases Table */}
-                <div className={` border-0 ${animationClasses.slideInUp}`}>
-
-
-
+                <div className={` border-0 ${animationClasses.slideInUp}  mb-5`}>
                     <Table hover bordered responsive size='sm' className="mb-0">
                         <thead className="table-light">
                             <tr>
@@ -694,11 +691,11 @@ const Purchases = ({ vendor }) => {
                                     </div>
                                 </th>
 
-                                <th>
+                                {/* <th>
                                     <div className="d-flex align-items-center gap-2">
 
                                     </div>
-                                </th>
+                                </th> */}
 
                             </tr>
                         </thead>
@@ -827,20 +824,14 @@ const Purchases = ({ vendor }) => {
                                                 </div>
                                             </td>
 
-                                            <td>
-
-                                                <Trash size={16}
-                                                    onClick={() => {
-                                                        deletePurchase(purchase.id);
-                                                    }}
-                                                />
-                                            </td>
+                                            {/* <td>
+                                                <CustomTooltip text={'Delete'}>
+                                                    <Trash size={16} onClick={() => { deletePurchase(purchase.id); }} className='text-danger' />
+                                                </CustomTooltip>
+                                            </td> */}
 
                                         </tr>
 
-
-
-                                        {/* Expanded Content with Enhanced Animations */}
                                         {
                                             isExpanded && (
                                                 <>

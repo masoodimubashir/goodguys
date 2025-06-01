@@ -33,7 +33,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
             setData({
                 ...data,
                 products: formattedProducts,
-            });        
+            });
         }
     }, [proforma]);
 
@@ -157,25 +157,36 @@ export default function EditProforma({ proforma, modules, inventories }) {
                 };
             }
         } else if (item.source === "module") {
-            const selected = modules.find((m) => m.id === parsedId);
+             const selected = modules.find((m) => m.id === parsedId);
+
+
             if (selected) {
+                const price = selected.selling_price || 0;
                 newProducts[productIndex].items[itemIndex] = {
                     ...item,
                     source_id: selected.id,
                     name: selected.module_name,
                     description: selected.description || "",
-                    price: selected.selling_price || 0,
+                    price: price,
                     quantity: selected.count || 0,
-                    item_dimensions: (selected.fields || []).map(dim => {
-                        const [type, value, si] = dim.split(",");
-                        return { type, value, si };
+                    item_dimensions: (selected.fields || []).map((dim) => {
+                        const parts = dim.split(",");
+                        return {
+                            type: parts[0] || "",
+                            value: parts[2] || "",
+                            si: parts[1] || ""
+                        };
                     }),
+
                 };
             }
         }
 
         setData("products", newProducts);
     };
+
+
+
 
     // Handle dimension changes
     const handleDimensionChange = (productIndex, itemIndex, dimIndex, field, value) => {
@@ -212,7 +223,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
     // Submit handler
     const handleSubmit = (e) => {
         e.preventDefault();
-        
+
         const payload = {
             ...data,
             products: data.products.map(product => ({
@@ -252,7 +263,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
                                 />
                             </Form.Group>
                         </Col>
-                       
+
                         <Col md={4}>
                             <Form.Group>
                                 <Form.Label className="fw-semibold">Price Visibility</Form.Label>
@@ -485,7 +496,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
                             <Col>Subtotal</Col>
                             <Col className="text-end">₹{subtotal.toFixed(2)}</Col>
                         </Row>
-                       
+
                         <hr />
                         <Row className="fw-bold">
                             <Col>Total</Col>

@@ -149,6 +149,8 @@ export default function CreateInvoice({ client, modules, inventories }) {
             }
         } else if (item.source === "module") {
             const selected = modules.find((m) => m.id === parsedId);
+
+
             if (selected) {
                 const price = selected.selling_price || 0;
                 newProducts[productIndex].items[itemIndex] = {
@@ -159,9 +161,14 @@ export default function CreateInvoice({ client, modules, inventories }) {
                     price: price,
                     quantity: selected.count || 0,
                     item_dimensions: (selected.fields || []).map((dim) => {
-                        const [type, value, si] = dim.split(",");
-                        return { type, value, si };
+                        const parts = dim.split(",");
+                        return {
+                            type: parts[0] || "",
+                            value: parts[2] || "",
+                            si: parts[1] || ""
+                        };
                     }),
+
                 };
             }
         }
@@ -245,7 +252,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                 />
                             </Form.Group>
                         </Col>
-                       
+
                         <Col md={4}>
                             <Form.Group>
                                 <Form.Label className="fw-semibold">Price Visibility</Form.Label>
@@ -338,6 +345,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                             </option>
                                                         ))}
                                                     </Form.Select>
+                                                   
                                                 </Form.Group>
                                             </Col>
                                         )}
@@ -403,10 +411,12 @@ export default function CreateInvoice({ client, modules, inventories }) {
 
                                         <Col md={6}>
                                             {item.item_dimensions.map((dim, dimIndex) => (
+
                                                 <Row key={dimIndex} className="g-2 mb-2">
                                                     <Col md={3}>
                                                         <Form.Control
                                                             placeholder="Type"
+                                                            type="text"
                                                             value={dim.type}
                                                             onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "type", e.target.value)}
                                                             disabled={item.source !== "custom"}
@@ -415,7 +425,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                     <Col md={3}>
                                                         <Form.Control
                                                             placeholder="Value"
-                                                            type="number"
+                                                            type="text"
                                                             value={dim.value}
                                                             onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "value", e.target.value)}
                                                             disabled={item.source !== "custom"}
@@ -424,6 +434,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                     <Col md={3}>
                                                         <Form.Control
                                                             placeholder="SI Unit"
+                                                            type="text"
                                                             value={dim.si}
                                                             onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "si", e.target.value)}
                                                             disabled={item.source !== "custom"}
@@ -480,8 +491,8 @@ export default function CreateInvoice({ client, modules, inventories }) {
                             <Col>Subtotal</Col>
                             <Col className="text-end">₹{subtotal.toFixed(2)}</Col>
                         </Row>
-                       
-                       
+
+
                         <hr />
                         <Row className="fw-bold">
                             <Col>Total</Col>

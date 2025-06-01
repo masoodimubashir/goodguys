@@ -7,6 +7,7 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import ChallanPdf from '../PDF/ChallanPdf';
 import ChallanToInvoice from '../PDF/ChallanToPdf';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
+import Swal from 'sweetalert2';
 
 const ViewChallans = ({ client, company_profile, }) => {
 
@@ -113,6 +114,23 @@ const ViewChallans = ({ client, company_profile, }) => {
                 setSelectedChallans([]);
             }
         });
+    };
+
+    const handleDelete = (id) => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(route('challan.destroy', id));
+            }
+        })
+
     };
 
 
@@ -321,9 +339,7 @@ const ViewChallans = ({ client, company_profile, }) => {
 
                                                 <Trash2 size={20} className="text-danger" title="Delete"
                                                     onClick={() => {
-                                                        if (confirm('Are you sure you want to delete this challan?')) {
-                                                            router.delete(route('challan.destroy', ref.id));
-                                                        }
+                                                        handleDelete(ref.id);
                                                     }}
                                                 />
 

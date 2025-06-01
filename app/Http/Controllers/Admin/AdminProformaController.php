@@ -52,8 +52,6 @@ class AdminProformaController extends Controller
 
         try {
 
-
-
             $data = $request->validated();
 
             $proforma_refrence = ProformaRefrence::create([
@@ -153,7 +151,6 @@ class AdminProformaController extends Controller
         try {
 
             $data = $request->validated();
-
 
             $proformaReference = ProformaRefrence::findOrFail($id);
 

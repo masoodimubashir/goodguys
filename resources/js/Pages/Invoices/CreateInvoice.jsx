@@ -151,8 +151,11 @@ export default function CreateInvoice({ client, modules, inventories }) {
                     }),
                 };
             }
-        } else if (item.source === "module") {
+        }
+        else if (item.source === "module") {
             const selected = modules.find((m) => m.id === parsedId);
+
+
             if (selected) {
                 const price = selected.selling_price || 0;
                 newProducts[productIndex].items[itemIndex] = {
@@ -163,13 +166,17 @@ export default function CreateInvoice({ client, modules, inventories }) {
                     price: price,
                     quantity: selected.count || 0,
                     item_dimensions: (selected.fields || []).map((dim) => {
-                        const [type, value, si] = dim.split(",");
-                        return { type, value, si };
+                        const parts = dim.split(",");
+                        return {
+                            type: parts[0] || "",
+                            value: parts[2] || "",
+                            si: parts[1] || ""
+                        };
                     }),
+
                 };
             }
         }
-
         setData("products", newProducts);
     };
 
@@ -250,8 +257,8 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                 />
                             </Form.Group>
                         </Col>
-                      
-                        <Col md={4}>
+
+                        <Col md={4} className="mb-4">
                             <Form.Group>
                                 <Form.Label className="fw-semibold">Price Visibility</Form.Label>
                                 <Form.Check
@@ -265,7 +272,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                         </Col>
                     </Row>
 
-                    <Form.Group className="mb-5">
+                    <Form.Group className="mb-4">
                         <Form.Label className="fw-semibold">Client Address</Form.Label>
                         <Form.Control
                             as="textarea"
@@ -384,7 +391,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             </Form.Group>
                                         </Col>
 
-                                    
+
                                         <Col md={2}>
                                             <Form.Group>
                                                 <Form.Label>Amount</Form.Label>
@@ -442,7 +449,6 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                                 onClick={() => removeDimension(productIndex, itemIndex, dimIndex)}
                                                             >
                                                                 <i className="ti ti-trash"></i>
-
                                                             </Button>
                                                         </Col>
                                                     )}
@@ -490,8 +496,8 @@ export default function CreateInvoice({ client, modules, inventories }) {
                             <Col>Subtotal</Col>
                             <Col className="text-end">₹{subtotal.toFixed(2)}</Col>
                         </Row>
-                        
-                       
+
+
                         <hr />
                         <Row className="fw-bold">
                             <Col>Total</Col>
@@ -510,7 +516,6 @@ export default function CreateInvoice({ client, modules, inventories }) {
 
     );
 }
-
 
 
 

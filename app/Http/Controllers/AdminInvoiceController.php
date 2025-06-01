@@ -57,6 +57,7 @@ class AdminInvoiceController extends Controller
 
             $data = $request->validated();
 
+
             $invoice_refrence = InvoiceRefrence::create([
                 'invoice_number' => uniqid('INV-'),
                 'client_id' => $data['client_id'],
@@ -155,6 +156,8 @@ class AdminInvoiceController extends Controller
 
         try {
             $data = $request->validated();
+
+
             $invoice = InvoiceRefrence::findOrFail($id);
 
             // Get existing product IDs for this invoice
