@@ -8,7 +8,8 @@ import Button from "@/Components/Button";
 import { useState } from "react";
 import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
 
-export default function CreateModule({ fields }) {
+export default function CreateModule({ fields = [] }) {
+    
     const [touched, setTouched] = useState({
         module_name: false,
         count: false,
@@ -119,8 +120,9 @@ export default function CreateModule({ fields }) {
             const name = attr.field_name?.trim() || '';
             const value = attr.dimension_value?.trim() || '';
             const unit = attr.si_unit?.trim() || '';
-            return `${name} ${value} ${unit}`.trim();
+            return `${name} ${unit} ${value}`.trim();
         });
+
 
         post(route('module.store'), {
             preserveScroll: true,
@@ -269,13 +271,7 @@ export default function CreateModule({ fields }) {
                                                     <div className="col-md-5 mb-2">
                                                         <CreatableSelect
                                                             options={fieldOptions}
-                                                            value={
-                                                                attr.field_id
-                                                                    ? fieldOptions.find(opt => opt.value === attr.field_id)
-                                                                    : attr.field_name
-                                                                        ? { label: attr.field_name, value: attr.field_name }
-                                                                        : null
-                                                            }
+                                                           
                                                             onChange={(selected) => {
                                                                 const touchedAttributes = [...(touched.attributes || [])];
                                                                 touchedAttributes[index] = touchedAttributes[index] || {};

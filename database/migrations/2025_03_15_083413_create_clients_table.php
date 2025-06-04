@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('client_email', 150)->unique();
             $table->string('client_phone', 10);
             $table->text('client_address');
-            $table->integer('advance_amount')->nullable();
             $table->string('site_name', 100)->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

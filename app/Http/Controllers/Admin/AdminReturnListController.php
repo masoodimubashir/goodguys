@@ -36,8 +36,6 @@ class AdminReturnListController extends Controller
 
             $validated = $request->validated();
 
-            // dd($validated);
-
             ReturnList::create(array_merge($validated, [
                 'created_by' => auth()->id(),
             ]));

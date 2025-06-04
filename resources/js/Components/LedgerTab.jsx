@@ -41,13 +41,20 @@ export default function LedgerTab({ client }) {
                 <tbody>
                     {client.accounts.map((entry) => (
                         <React.Fragment key={`account-${entry.id}`}>
-                            <motion.tr 
+                            <motion.tr
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
                                 <td className="text-start">
                                     <div className="fw-medium">{entry.item_name}</div>
+                                    <small className="text-muted">
+                                        {new Date(entry.created_at).toLocaleDateString('en-IN', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })}
+                                    </small>
                                 </td>
                                 <td className="text-start">
                                     <span className="badge bg-light-subtle text-dark border px-2 py-1">
@@ -71,7 +78,7 @@ export default function LedgerTab({ client }) {
                                     </span>
                                 </td>
                                 <td className="text-end">
-                                    <button 
+                                    <button
                                         className="btn btn-sm btn-link p-0"
                                         onClick={() => toggleRow(entry.id)}
                                     >

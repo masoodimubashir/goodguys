@@ -1,13 +1,6 @@
-
-
-
-
-
-
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 
-// Color Scheme (unchanged)
 const colors = {
   primary: '#2c3e50',
   secondary: '#3498db',
@@ -116,20 +109,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     minHeight: 25
   },
-  col1: { width: '8%', fontSize: 8, paddingRight: 3, color: 'white' },
-  col2: { width: '25%', fontSize: 8, paddingRight: 3, color: 'white' },
-  col3: { width: '12%', fontSize: 8, paddingRight: 3, color: 'white' },
-  col4: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'right', color: 'white' },
-  col5: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right', color: 'white' },
-  col6: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right', color: 'white' },
-  col7: { width: '21%', fontSize: 8, color: 'white' },
-  dataCol1: { width: '8%', fontSize: 8, paddingRight: 3 },
-  dataCol2: { width: '25%', fontSize: 8, paddingRight: 3 },
-  dataCol3: { width: '12%', fontSize: 8, paddingRight: 3 },
+  col1: { width: '5%', fontSize: 8, paddingRight: 3, color: 'white' },
+  col2: { width: '10%', fontSize: 8, paddingRight: 3, color: 'white' },
+  col3: { width: '20%', fontSize: 8, paddingRight: 3, color: 'white' },
+  col4: { width: '10%', fontSize: 8, paddingRight: 3, color: 'white' },
+  col5: { width: '10%', fontSize: 8, paddingRight: 3, color: 'white' },
+  col6: { width: '10%', fontSize: 8, paddingRight: 3, color: 'white' },
+  col7: { width: '10%', fontSize: 8, paddingRight: 3, color: 'white' },
+  col8: { width: '25%', fontSize: 8, color: 'white' }, // Increased width for remarks
+  dataCol1: { width: '5%', fontSize: 8, paddingRight: 3 },
+  dataCol2: { width: '10%', fontSize: 8, paddingRight: 3 },
+  dataCol3: { width: '20%', fontSize: 8, paddingRight: 3 },
   dataCol4: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
-  dataCol5: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
-  dataCol6: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
-  dataCol7: { width: '21%', fontSize: 8 },
+  dataCol5: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
+  dataCol6: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
+  dataCol7: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
+  dataCol8: { width: '25%', fontSize: 8 }, // Increased width for remarks
   totalsSection: {
     padding: 10,
     backgroundColor: colors.lightBg,
@@ -224,6 +219,9 @@ const styles = StyleSheet.create({
     left: 150,
     top: 400,
     zIndex: -1
+  },
+  pageBreak: {
+    pageBreakBefore: 'always'
   }
 });
 
@@ -254,7 +252,7 @@ const BankDetails = ({ bankAccount }) => {
   if (!bankAccount) return null;
 
   return (
-    <View style={styles.bankDetailsSection}>
+    <View style={[styles.bankDetailsSection, styles.pageBreak]}>
       <Text style={styles.sectionTitle}>Bank Details</Text>
       <View style={styles.bankDetailsRow}>
         <View style={styles.bankDetailsColumn}>
@@ -333,178 +331,175 @@ const SignatureSection = ({ bankAccount }) => (
 const ChallanPdf = ({ company_profile, client, challans }) => {
   const currentDate = new Date().toLocaleDateString();
 
-  const processedReferences = challans.map(reference => {
-    const items = reference.challans || [];
-    const serviceCharge = parseFloat(reference.service_charge) || 0;
+  // Process all items from all challans into a single array
+  let allItems = [];
+  let grandSubtotal = 0;
+  let grandServiceCharge = 0;
+  let grandTotal = 0;
+  const serviceChargeRate = challans[0]?.service_charge || 0;
 
-    let subtotal = 0;
-    const processedItems = items.map((item, index) => {
+  challans.forEach((challan, challanIndex) => {
+    const items = challan.challans || [];
+    const serviceCharge = parseFloat(challan.service_charge) || 0;
+
+    items.forEach((item, itemIndex) => {
       const quantity = parseFloat(item.qty) || 0;
       const price = parseFloat(item.price) || 0;
       const itemTotal = quantity > 0 ? (quantity * price) : price;
 
       if (item.is_price_visible) {
-        subtotal += itemTotal;
+        grandSubtotal += itemTotal;
       }
 
-      return {
+      allItems.push({
         ...item,
-        serialNo: index + 1,
+        serialNo: allItems.length + 1,
+        challanNumber: challan.challan_number || `CH-${challan.id}`,
+        challanDate: new Date(challan.created_at).toLocaleDateString(),
         quantity,
         price,
         itemTotal,
         formattedPrice: price.toFixed(2),
-        formattedTotal: itemTotal.toFixed(2)
-      };
+        formattedTotal: itemTotal.toFixed(2),
+        createdDate: new Date(challan.created_at).toLocaleDateString() // Added created_at date
+      });
     });
-
-    const serviceChargeAmount = (subtotal * serviceCharge / 100);
-    const total = subtotal + serviceChargeAmount;
-
-    return {
-      ...reference,
-      processedItems,
-      subtotal,
-      serviceChargeAmount,
-      total,
-      formattedDate: new Date(reference.created_at).toLocaleDateString(),
-      challanNumber: reference.challan_number || `CH-${reference.id}`
-    };
   });
 
-  const showPrices = processedReferences.some(ref =>
-    ref.processedItems.some(item => item.is_price_visible)
+  // Calculate totals based on all items
+  grandServiceCharge = (grandSubtotal * serviceChargeRate / 100);
+  grandTotal = grandSubtotal + grandServiceCharge;
+
+  const showPrices = challans.some(challan => 
+    challan.challans?.some(item => item.is_price_visible)
   );
 
   return (
     <Document>
-      {/* Challan Pages */}
-      {processedReferences.map((reference, index) => (
-        <Page key={index} size="A4" style={styles.page}>
-          <Text style={styles.watermark}>Invoice</Text>
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.watermark}>Invoice</Text>
+        <Header company_profile={company_profile} />
 
-          {index === 0 && <Header company_profile={company_profile} />}
-
-          <Text style={[styles.value, { textAlign: 'right', fontSize: 10, marginBottom: 10 }]}>
-            No: {reference.challanNumber}
-          </Text>
-
-          <View style={styles.challanInfo}>
-            <View style={styles.column}>
-              <Text style={styles.sectionTitle}>Deliver To:</Text>
-              <Text style={[styles.value, { fontSize: 11, marginBottom: 3, fontWeight: 'bold' }]}>
-                {client?.client_name || 'Client Name'}
-              </Text>
-              <Text style={styles.value}>{client?.client_address || 'Client Address'}</Text>
-              <Text style={styles.value}>
-                Phone: {client?.client_phone || 'N/A'}
-              </Text>
-              <Text style={styles.value}>
-                Email: {client?.client_email || 'N/A'}
-              </Text>
+        <View style={styles.challanInfo}>
+          <View style={styles.column}>
+            <Text style={styles.sectionTitle}>Deliver To:</Text>
+            <Text style={[styles.value, { fontSize: 11, marginBottom: 3, fontWeight: 'bold' }]}>
+              {client?.client_name || 'Client Name'}
+            </Text>
+            <Text style={styles.value}>{client?.client_address || 'Client Address'}</Text>
+            <Text style={styles.value}>
+              Phone: {client?.client_phone || 'N/A'}
+            </Text>
+            <Text style={styles.value}>
+              Email: {client?.client_email || 'N/A'}
+            </Text>
+          </View>
+          <View style={styles.column}>
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Generated Date:</Text>
+              <Text style={styles.value}>{currentDate}</Text>
             </View>
-            <View style={styles.column}>
-              <View style={styles.infoRow}>
-                <Text style={styles.label}>Challan Date:</Text>
-                <Text style={styles.value}>{reference.formattedDate}</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.label}>Reference No:</Text>
-                <Text style={styles.value}>{reference.reference_number || 'N/A'}</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.label}>Prepared By:</Text>
-                <Text style={styles.value}>{company_profile?.company_name || 'Company'}</Text>
-              </View>
-              {showPrices && (
-                <View style={styles.infoRow}>
-                  <Text style={styles.label}>Service Charge:</Text>
-                  <Text style={styles.value}>{reference.service_charge || 0}%</Text>
-                </View>
-              )}
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Created Date:</Text>
+              <Text style={styles.value}>{allItems[0]?.createdDate || currentDate}</Text>
             </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Total Items:</Text>
+              <Text style={styles.value}>{allItems.length}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Prepared By:</Text>
+              <Text style={styles.value}>{company_profile?.company_name || 'Company'}</Text>
+            </View>
+            {showPrices && (
+              <View style={styles.infoRow}>
+                <Text style={styles.label}>Service Charge:</Text>
+                <Text style={styles.value}>{serviceChargeRate || 0}%</Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.table}>
+          <View style={styles.tableHeader}>
+            <Text style={styles.col1}>#</Text>
+            <Text style={styles.col2}>DATE</Text>
+            <Text style={styles.col3}>DESCRIPTION</Text>
+            <Text style={styles.col4}>UNIT</Text>
+            <Text style={styles.col5}>QTY</Text>
+            {showPrices && (
+              <>
+                <Text style={styles.col6}>PRICE</Text>
+                <Text style={styles.col7}>TOTAL</Text>
+              </>
+            )}
+            <Text style={styles.col8}>REMARKS</Text>
           </View>
 
-          <View style={styles.table}>
-            <View style={styles.tableHeader}>
-              <Text style={styles.col1}>S.No</Text>
-              <Text style={styles.col2}>DESCRIPTION</Text>
-              <Text style={styles.col3}>UNIT TYPE</Text>
-              <Text style={styles.col4}>QTY</Text>
-              {showPrices && (
+          {allItems.map((item, itemIndex) => (
+            <View
+              style={[
+                styles.tableRow,
+                { backgroundColor: itemIndex % 2 === 0 ? '#fff' : colors.lightBg }
+              ]}
+              key={itemIndex}
+            >
+              <Text style={styles.dataCol1}>
+                {item.serialNo}
+              </Text>
+              <Text style={styles.dataCol2}>{item.createdDate}</Text>
+              <Text style={styles.dataCol3}>{item.description || '-'}</Text>
+              <Text style={styles.dataCol4}>{item.unit_type || '-'}</Text>
+              <Text style={styles.dataCol5}>{item.quantity > 1 ? item.quantity : 'NA'}</Text>
+              {item.is_price_visible && showPrices && (
                 <>
-                  <Text style={styles.col5}>PRICE</Text>
-                  <Text style={styles.col6}>TOTAL</Text>
+                  <Text style={styles.dataCol6}>{item.formattedPrice}</Text>
+                  <Text style={styles.dataCol7}>{item.formattedTotal}</Text>
                 </>
               )}
-              <Text style={styles.col7}>REMARKS</Text>
+              <Text style={styles.dataCol8}>{item.narration || '-'}</Text>
             </View>
+          ))}
+        </View>
 
-            {reference.processedItems.map((item, itemIndex) => (
-              <View
-                style={[
-                  styles.tableRow,
-                  { backgroundColor: itemIndex % 2 === 0 ? '#fff' : colors.lightBg }
-                ]}
-                key={itemIndex}
-              >
-                <Text style={styles.dataCol1}>{item.serialNo}</Text>
-                <Text style={styles.dataCol2}>{item.description || '-'}</Text>
-                <Text style={styles.dataCol3}>{item.unit_type || '-'}</Text>
-                <Text style={styles.dataCol4}>{item.quantity}</Text>
-                {item.is_price_visible && showPrices && (
-                  <>
-                    <Text style={styles.dataCol5}>₹{item.formattedPrice}</Text>
-                    <Text style={styles.dataCol6}>₹{item.formattedTotal}</Text>
-                  </>
-                )}
-                <Text style={styles.dataCol7}>{item.narration || '-'}</Text>
-              </View>
-            ))}
-          </View>
-
-          {showPrices && (
-            <View style={styles.totalsSection}>
-              <View style={styles.totalRow}>
-                <Text style={styles.label}>Subtotal:</Text>
-                <Text style={styles.value}>₹{reference.subtotal.toFixed(2)}</Text>
-              </View>
-              <View style={styles.totalRow}>
-                <Text style={styles.label}>Service Charge ({reference.service_charge}%):</Text>
-                <Text style={styles.value}>₹{reference.serviceChargeAmount.toFixed(2)}</Text>
-              </View>
-              <View style={styles.grandTotalRow}>
-                <Text style={[styles.label, { fontWeight: 'bold' }]}>Total Amount:</Text>
-                <Text style={[styles.value, { fontWeight: 'bold', color: colors.secondary }]}>
-                  ₹{reference.total.toFixed(2)}
-                </Text>
-              </View>
+        {showPrices && (
+          <View style={styles.totalsSection}>
+            <View style={styles.totalRow}>
+              <Text style={styles.label}>Subtotal:</Text>
+              <Text style={styles.value}>{grandSubtotal.toFixed(2)}</Text>
             </View>
-          )}
-
-          <View style={styles.footer}>
-            <Text>Challan generated on {currentDate} | {company_profile?.company_name || 'Company Name'}</Text>
-            <Text>Thank you for your business!</Text>
+            <View style={styles.totalRow}>
+              <Text style={styles.label}>Service Charge ({serviceChargeRate}%):</Text>
+              <Text style={styles.value}>{grandServiceCharge.toFixed(2)}</Text>
+            </View>
+            <View style={styles.grandTotalRow}>
+              <Text style={[styles.label, { fontWeight: 'bold' }]}>Total Amount:</Text>
+              <Text style={[styles.value, { fontWeight: 'bold', color: colors.secondary }]}>
+                {grandTotal.toFixed(2)}
+              </Text>
+            </View>
           </View>
-        </Page>
-      ))}
+        )}
 
-      {/* Separate Page for Bank Details and Signatures */}
+        <View style={styles.footer}>
+          <Text>Invoice generated on {currentDate} | {company_profile?.company_name || 'Company Name'}</Text>
+          <Text>Thank you for your business!</Text>
+        </View>
+      </Page>
+
+      {/* Bank Details Page (always on a new page) */}
       {client.bank_account && (
         <Page size="A4" style={styles.page}>
           <Text style={styles.watermark}>BANK DETAILS</Text>
-
           <View style={{ marginTop: 40 }}>
             <Text style={[styles.companyName, { textAlign: 'center', marginBottom: 30 }]}>
-              Bank Details & Authorization
+              Payment Details & Authorization
             </Text>
-
             <BankDetails bankAccount={client.bank_account} />
             <SignatureSection bankAccount={client.bank_account} />
           </View>
-
           <View style={styles.footer}>
-            <Text>Challan generated on {currentDate} | {company_profile?.company_name || 'Company Name'}</Text>
+            <Text>Invoice generated on {currentDate} | {company_profile?.company_name || 'Company Name'}</Text>
             <Text>Thank you for your business!</Text>
           </View>
         </Page>

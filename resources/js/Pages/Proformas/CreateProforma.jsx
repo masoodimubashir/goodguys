@@ -2,7 +2,7 @@ import React from "react";
 import { useForm, Link } from "@inertiajs/react";
 import { Container, Card, Row, Col, Form, Button } from "react-bootstrap";
 
-export default function CreateInvoice({ client, modules, inventories }) {
+export default function CreateProforma({ client, modules, inventories }) {
 
 
     const { data, setData, post, processing, errors } = useForm({
@@ -230,21 +230,25 @@ export default function CreateInvoice({ client, modules, inventories }) {
 
     return (
 
-        <Container className="py-2 col-lg-8 col-md-10">
+        <Container className="py-2 col-lg-7 col-md-10">
 
             <Link href={route("clients.show", [client.id])} className="btn btn-link text-decoration-none">
                 ← Back to Client
             </Link>
 
             <Card className="p-4 shadow-sm rounded-4 border-0">
-                <h2 className="text-center text-primary mb-5 fw-bold">Create Proforma</h2>
+                
+                <h4 className="text-center text-primary mb-5 fw-bold">Create Proforma</h4>
 
                 <Form onSubmit={handleSubmit}>
-                    <Row className="g-4 mb-4">
+
+                    <Row className="">
                         <Col md={4}>
                             <Form.Group>
                                 <Form.Label className="fw-semibold">Client Name</Form.Label>
                                 <Form.Control
+                                    size="sm"
+                                    disabled
                                     type="text"
                                     value={data.client_name}
                                     onChange={(e) => setData("client_name", e.target.value)}
@@ -255,8 +259,25 @@ export default function CreateInvoice({ client, modules, inventories }) {
 
                         <Col md={4}>
                             <Form.Group>
+                                <Form.Label className="fw-semibold">Client Address</Form.Label>
+                                <Form.Control
+                                    size="sm"
+                                    as="textarea"
+                                    disabled
+                                    rows={1}
+                                    value={data.client_address}
+                                    onChange={(e) => setData("client_address", e.target.value)}
+                                    isInvalid={!!errors.client_address}
+                                />
+                            </Form.Group>
+                        </Col>
+
+
+                        <Col md={4}>
+                            <Form.Group>
                                 <Form.Label className="fw-semibold">Price Visibility</Form.Label>
                                 <Form.Check
+                                    size="sm"
                                     type="switch"
                                     id="price-visibility-switch"
                                     label={data.show_all_prices ? "Showing all prices" : "Hiding all prices"}
@@ -267,24 +288,15 @@ export default function CreateInvoice({ client, modules, inventories }) {
                         </Col>
                     </Row>
 
-                    <Form.Group className="mb-5">
-                        <Form.Label className="fw-semibold">Client Address</Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            rows={3}
-                            value={data.client_address}
-                            onChange={(e) => setData("client_address", e.target.value)}
-                            isInvalid={!!errors.client_address}
-                        />
-                    </Form.Group>
+                    <hr />
 
                     {/* Products Section */}
                     {data.products.map((product, productIndex) => (
-                        <Card key={productIndex} className="mb-4">
+                        <Card key={productIndex}>
                             <Row className="align-items-center mb-3">
                                 <Col md={6}>
-                                    <Form.Group>
-                                        <Form.Control
+                                    <Form.Group >
+                                        <Form.Control size="sm"
                                             type="text"
                                             value={product.product_name}
                                             onChange={(e) => updateProduct(productIndex, "product_name", e.target.value)}
@@ -320,6 +332,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             <Form.Group>
                                                 <Form.Label>Source</Form.Label>
                                                 <Form.Select
+                                                    size="sm"
                                                     value={item.source}
                                                     onChange={(e) => handleSourceChange(productIndex, itemIndex, e.target.value)}
                                                 >
@@ -335,6 +348,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                 <Form.Group>
                                                     <Form.Label>Select Item</Form.Label>
                                                     <Form.Select
+                                                        size="sm"
                                                         value={item.source_id || ""}
                                                         onChange={(e) => handleItemSelect(productIndex, itemIndex, e.target.value)}
                                                     >
@@ -345,7 +359,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                             </option>
                                                         ))}
                                                     </Form.Select>
-                                                   
+
                                                 </Form.Group>
                                             </Col>
                                         )}
@@ -354,6 +368,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             <Form.Group>
                                                 <Form.Label>Item Name</Form.Label>
                                                 <Form.Control
+                                                    size="sm"
                                                     value={item.name}
                                                     onChange={(e) => updateItem(productIndex, itemIndex, "name", e.target.value)}
                                                     disabled={item.source !== "custom"}
@@ -365,6 +380,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             <Form.Group>
                                                 <Form.Label>Qty</Form.Label>
                                                 <Form.Control
+                                                    size="sm"
                                                     type="text"
                                                     value={item.quantity}
                                                     min="0"
@@ -378,6 +394,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             <Form.Group>
                                                 <Form.Label>Price</Form.Label>
                                                 <Form.Control
+                                                    size="sm"
                                                     type="text"
                                                     value={item.price}
                                                     onChange={(e) => updateItem(productIndex, itemIndex, "price", parseFloat(e.target.value) || 0)}
@@ -400,6 +417,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             <Form.Group>
                                                 <Form.Label>Description</Form.Label>
                                                 <Form.Control
+                                                    size="sm"
                                                     as="textarea"
                                                     rows={2}
                                                     value={item.description}
@@ -415,6 +433,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                 <Row key={dimIndex} className="g-2 mb-2">
                                                     <Col md={3}>
                                                         <Form.Control
+                                                            size="sm"
                                                             placeholder="Type"
                                                             type="text"
                                                             value={dim.type}
@@ -424,6 +443,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                     </Col>
                                                     <Col md={3}>
                                                         <Form.Control
+                                                            size="sm"
                                                             placeholder="Value"
                                                             type="text"
                                                             value={dim.value}
@@ -433,6 +453,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                     </Col>
                                                     <Col md={3}>
                                                         <Form.Control
+                                                            size="sm"
                                                             placeholder="SI Unit"
                                                             type="text"
                                                             value={dim.si}
@@ -443,6 +464,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                     {item.source === "custom" && (
                                                         <Col md={3}>
                                                             <Button
+                                                                size="sm"
                                                                 variant="outline-danger"
                                                                 onClick={() => removeDimension(productIndex, itemIndex, dimIndex)}
                                                             >
@@ -477,6 +499,8 @@ export default function CreateInvoice({ client, modules, inventories }) {
                             ))}
                         </Card>
                     ))}
+
+                    <hr />
 
                     <div className="d-flex justify-content-end mb-5">
                         <Button variant="primary" size="sm" onClick={addProduct}>

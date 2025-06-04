@@ -277,6 +277,13 @@ export default function AccountTab({
                                         {entry.description && (
                                             <small className="text-muted">{entry.description}</small>
                                         )}
+                                           <small className="text-muted"> <br />
+                                        {new Date(entry.created_at).toLocaleDateString('en-IN', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })}
+                                    </small>
                                     </td>
                                     <td>₹{Number(entry.selling_price)}</td>
                                     <td>{entry.count}</td>

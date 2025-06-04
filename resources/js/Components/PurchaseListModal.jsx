@@ -24,8 +24,14 @@ export const PurchaseListModal = ({
     return (
         <Modal show={show} onHide={onHide} backdrop="static" size="lg" centered>
             <Modal.Header closeButton className="border-0 pb-0">
-                <Modal.Title>{isEditing ? 'Edit' : 'Create'} Purchase List</Modal.Title>
+
+                <Modal.Title>
+                    <h5 className="text-primary">
+                        {isEditing ? 'Edit' : 'Create'} Purchase List
+                    </h5>
+                </Modal.Title>
             </Modal.Header>
+            
             <Form onSubmit={handleSubmit} encType='multipart/form-data'>
                 <Modal.Body className="pt-0">
                     <div className="row">

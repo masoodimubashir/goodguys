@@ -1,4 +1,4 @@
-import { Building2, Mail, MapPin, Phone, User2 } from "lucide-react";
+import { Building2, IndianRupee, Mail, MapPin, Phone, User2 } from "lucide-react";
 import { Card } from "react-bootstrap";
 
 export const ClientInfoCard = ({ client }) => {
@@ -14,6 +14,9 @@ export const ClientInfoCard = ({ client }) => {
                         <h6 className="mb-0 fw-bold text-truncate">{client.client_name}</h6>
                         <small className="text-muted">{client.site_name}</small>
                     </div>
+
+
+
                 </div>
 
                 {/* Compact Info Grid */}
@@ -36,6 +39,14 @@ export const ClientInfoCard = ({ client }) => {
                             <span>{client.client_phone || 'N/A'}</span>
                         </div>
                     </div>
+                    <span className="text-muted">
+                        {new Date(client.created_at).toLocaleDateString('en-IN', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })}
+                    </span>
+
                 </div>
 
                 {/* Service Charge Badge */}

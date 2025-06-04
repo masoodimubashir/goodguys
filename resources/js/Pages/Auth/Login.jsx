@@ -107,12 +107,7 @@ export default function Login({ status, canResetPassword }) {
                 </div>
 
                 <div className="text-center gap-1">
-                    <Link
-                        href={route('register')}
-                        className="text-secondary me-2"
-                    >
-                        Register
-                    </Link>
+                    
 
                     {canResetPassword && (
                         <Link

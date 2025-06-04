@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { Link, router } from '@inertiajs/react';
-import { InvoicePdf } from '@/Pages/PDF/InvoicePdf';
 import { ProformaPdf } from '@/Pages/PDF/ProformaPdf';
 import Swal from 'sweetalert2';
 import { Table } from 'react-bootstrap';
 import { Download, Edit, FileText, RefreshCw, Trash2 } from 'lucide-react';
+import { InvoicePdf } from '@/Pages/PDF/InvoicePdf';
 
 export default function PdfTable({ client, pdfRef, CompanyProfile }) {
 

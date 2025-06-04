@@ -6,18 +6,18 @@ import { Table } from 'react-bootstrap';
 
 const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
 
-  
+
 
     const getFileExtension = (filename) => {
         return filename.split('.').pop().toLowerCase();
     };
 
- 
+
 
     return (
 
         <>
-          
+
             <Table bordered size='md' ref={tableRef} className="table table-striped text-start align-middle">
                 <thead>
                     <tr>
@@ -38,6 +38,13 @@ const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
 
                                 <td className="text-start align-middle">
                                     {entry.vendor_name}
+                                    <small className="text-muted"> <br />
+                                        {new Date(entry.created_at).toLocaleDateString('en-IN', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })}
+                                    </small>
                                 </td>
 
                                 <td className="text-start align-middle">
@@ -48,8 +55,6 @@ const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
                                     </div>
                                 </td>
 
-                           
-
                                 <td className="text-start align-middle">
                                     {entry.email}
                                 </td>
@@ -59,7 +64,7 @@ const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
                                 </td>
 
                                 <td className="text-start align-middle">
-                                    <Link href={route('purchase-list.index', ({ vendor_id: entry.id }))}>
+                                    <Link href={route('purchase-list.index', ({ client_id: client?.id, vendor_id: entry.id }))}>
                                         <Eye className='text-success' size={20} />
                                     </Link>
                                 </td>

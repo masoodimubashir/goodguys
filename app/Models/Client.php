@@ -15,7 +15,6 @@ class Client extends Model
         'client_email',
         'client_address',
         'client_phone',
-        'advance_amount',
         'created_by',
         'updated_by',
         'site_name',
@@ -119,6 +118,16 @@ class Client extends Model
     public function projectDocuments(): HasMany
     {
         return $this->hasMany(ProjectDocument::class);
+    }
+
+    /**
+     * Get all of the clientAccounts for the Client
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function clientAccounts(): HasMany
+    {
+        return $this->hasMany(ClientAccount::class);
     }
 
 

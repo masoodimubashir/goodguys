@@ -27,4 +27,7 @@ class Vendor extends Model
     {
         return $this->hasMany(PurchaseList::class);
     }
+
+
+    
 }

@@ -35,6 +35,7 @@ class AdminVendorController extends Controller
     {
         $validated = $request->validated();
 
+
         Vendor::create(array_merge($validated, [
             'created_by' => auth()->user()->id,
         ]));
@@ -50,35 +51,44 @@ class AdminVendorController extends Controller
      */
     public function show($id)
     {
-        $search = request('search');
-        $startDate = request('start_date');
-        $endDate = request('end_date');
 
-        $Vendor = Vendor::with([
-            'purchasedProducts' => function ($query) use ($search, $startDate, $endDate) {
-                $query->when($search, function ($query) use ($search) {
-                    $query->where('product_name', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
-                })
-                    ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
-                        $query->whereBetween('created_at', [$startDate, $endDate]);
-                    })
-                    ->with(['returnLists']);
-            },
-            'client' => function ($query) {
-                $query->with(['serviceCharge']);
-            },
-        ])
-            ->findOrFail($id);
+        $vendor = Vendor::with(['purchaseLists' => function ($list) {
+            $list->with(['client' => function ($client) {
+                $client->with([
+                    'serviceCharge',
+                    'clientAccounts'
+                ]);
+            }])->paginate(10); // Add pagination here
+        }])->findOrFail($id);
 
+        $groupedPurchaseLists = $vendor->purchaseLists->groupBy('client_id');
+
+        // Append client account totals (in/out) to each client
+        $groupedPurchaseLists->transform(function ($lists) {
+            $client = $lists->first()->client;
+
+            $client_id = $client->id;
+
+            $clientAccountInTotal = \App\Models\ClientAccount::where([
+                ['client_id', '=', $client_id],
+                ['payment_flow', '=', 1]
+            ])->sum('amount');
+
+            $clientAccountOutTotal = \App\Models\ClientAccount::where([
+                ['client_id', '=', $client_id],
+                ['payment_flow', '=', 0]
+            ])->sum('amount');
+
+            $client->clientAccountInTotal = $clientAccountInTotal;
+            $client->clientAccountOutTotal = $clientAccountOutTotal;
+
+            return $lists;
+        });
 
         return Inertia::render('PurchasedProduct/PurchasedProduct', [
-            'Vendor' => $Vendor,
-            'filters' => [
-                'search' => $search,
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-            ],
+            'vendor' => $vendor,
+            'groupedPurchaseLists' => $groupedPurchaseLists,
+            'purchaseListsPagination' => $vendor->purchaseLists()->paginate(10), 
         ]);
     }
 

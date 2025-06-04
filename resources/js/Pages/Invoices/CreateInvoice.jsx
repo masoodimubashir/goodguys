@@ -242,14 +242,17 @@ export default function CreateInvoice({ client, modules, inventories }) {
 
             <Card className="p-4 shadow-sm rounded-4 border-0">
 
-                <h2 className="text-center text-primary mb-5 fw-bold">Create Invoice</h2>
+                <h4 className="text-center text-primary fw-bold mb-3">Create Invoice</h4>
 
                 <Form onSubmit={handleSubmit}>
-                    <Row className="g-4 ">
+                    
+                    <Row>
                         <Col md={4}>
                             <Form.Group>
                                 <Form.Label className="fw-semibold">Client Name</Form.Label>
                                 <Form.Control
+                                    size="sm"
+                                    disabled
                                     type="text"
                                     value={data.client_name}
                                     onChange={(e) => setData("client_name", e.target.value)}
@@ -258,10 +261,11 @@ export default function CreateInvoice({ client, modules, inventories }) {
                             </Form.Group>
                         </Col>
 
-                        <Col md={4} className="mb-4">
+                        <Col md={3}>
                             <Form.Group>
                                 <Form.Label className="fw-semibold">Price Visibility</Form.Label>
                                 <Form.Check
+                                    size="sm"
                                     type="switch"
                                     id="price-visibility-switch"
                                     label={data.show_all_prices ? "Showing all prices" : "Hiding all prices"}
@@ -270,18 +274,27 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                 />
                             </Form.Group>
                         </Col>
+
+                        <Col md={4} >
+                            <Form.Group className="mb-4">
+                                <Form.Label className="fw-semibold">Client Address</Form.Label>
+                                <Form.Control
+                                    size="sm"
+                                    disabled
+                                    as="textarea"
+                                    rows={1}
+                                    value={data.client_address}
+                                    onChange={(e) => setData("client_address", e.target.value)}
+                                    isInvalid={!!errors.client_address}
+                                />
+                            </Form.Group>
+                        </Col>
+
+
                     </Row>
 
-                    <Form.Group className="mb-4">
-                        <Form.Label className="fw-semibold">Client Address</Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            rows={3}
-                            value={data.client_address}
-                            onChange={(e) => setData("client_address", e.target.value)}
-                            isInvalid={!!errors.client_address}
-                        />
-                    </Form.Group>
+                    <hr />
+
 
                     {/* Products Section */}
                     {data.products.map((product, productIndex) => (
@@ -290,6 +303,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                 <Col md={6}>
                                     <Form.Group>
                                         <Form.Control
+                                            size="sm"
                                             type="text"
                                             value={product.product_name}
                                             onChange={(e) => updateProduct(productIndex, "product_name", e.target.value)}
@@ -326,6 +340,8 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             <Form.Group>
                                                 <Form.Label>Source</Form.Label>
                                                 <Form.Select
+                                                    size="sm"
+
                                                     value={item.source}
                                                     onChange={(e) => handleSourceChange(productIndex, itemIndex, e.target.value)}
                                                 >
@@ -341,6 +357,8 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                 <Form.Group>
                                                     <Form.Label>Select Item</Form.Label>
                                                     <Form.Select
+                                                        size="sm"
+
                                                         value={item.source_id || ""}
                                                         onChange={(e) => handleItemSelect(productIndex, itemIndex, e.target.value)}
                                                     >
@@ -359,6 +377,8 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             <Form.Group>
                                                 <Form.Label>Item Name</Form.Label>
                                                 <Form.Control
+                                                    size="sm"
+
                                                     value={item.name}
                                                     onChange={(e) => updateItem(productIndex, itemIndex, "name", e.target.value)}
                                                     disabled={item.source !== "custom"}
@@ -370,6 +390,8 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             <Form.Group>
                                                 <Form.Label>Qty</Form.Label>
                                                 <Form.Control
+                                                    size="sm"
+
                                                     type="text"
                                                     value={item.quantity}
                                                     min="0"
@@ -383,6 +405,8 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             <Form.Group>
                                                 <Form.Label>Price</Form.Label>
                                                 <Form.Control
+                                                    size="sm"
+
                                                     type="text"
                                                     value={item.price}
                                                     onChange={(e) => updateItem(productIndex, itemIndex, "price", parseFloat(e.target.value) || 0)}
@@ -405,6 +429,8 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                             <Form.Group>
                                                 <Form.Label>Description</Form.Label>
                                                 <Form.Control
+                                                    size="sm"
+
                                                     as="textarea"
                                                     rows={2}
                                                     value={item.description}
@@ -419,6 +445,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                 <Row key={dimIndex} className="g-2 mb-2">
                                                     <Col md={3}>
                                                         <Form.Control
+                                                            size="sm"
                                                             placeholder="Type"
                                                             value={dim.type}
                                                             onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "type", e.target.value)}
@@ -427,6 +454,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                     </Col>
                                                     <Col md={3}>
                                                         <Form.Control
+                                                            size="sm"
                                                             placeholder="Value"
                                                             type="number"
                                                             value={dim.value}
@@ -436,6 +464,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
                                                     </Col>
                                                     <Col md={3}>
                                                         <Form.Control
+                                                            size="sm"
                                                             placeholder="SI Unit"
                                                             value={dim.si}
                                                             onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "si", e.target.value)}

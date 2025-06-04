@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminAccountsController;
 use App\Http\Controllers\Admin\AdminBankAccountController;
 use App\Http\Controllers\Admin\AdminChallanController;
+use App\Http\Controllers\Admin\AdminClientAccountController;
 use App\Http\Controllers\Admin\AdminClientProductController;
 use App\Http\Controllers\Admin\AdminClientsController;
 use App\Http\Controllers\Admin\AdminCostIncurredController;
@@ -103,6 +104,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Route For Project Documents
     Route::resource('/project-document', ProjectDocumentController::class);
+
+
+    // Client Account
+    Route::resource('/client-account', AdminClientAccountController::class);
 
 
 

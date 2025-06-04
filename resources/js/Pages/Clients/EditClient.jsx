@@ -71,8 +71,6 @@ export default function EditClient({ client }) {
                   <InputError message={errors.client_name} />
                 </div>
 
-                {
-                  client.service_charge && (
                     <div className="mb-3">
                       <InputLabel
                         htmlFor="site_name"
@@ -84,11 +82,10 @@ export default function EditClient({ client }) {
                         name="site_name"
                         placeholder={isServiceClient ? "Enter Site Name" : "Enter Product Type"}
                         value={data.site_name}
+                        onChange={e => setData('site_name', e.target.value)}
                       />
                       <InputError message={errors.site_name} />
                     </div>
-                  )
-                }
 
 
                 <div className="mb-3">

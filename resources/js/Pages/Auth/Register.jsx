@@ -31,12 +31,12 @@ export default function Register() {
                 <div className="col-12">
                     <ul className="app-line-breadcrumbs mb-3">
                         <li>
-                            <Link href={route('inventory.index')} className="f-s-14 f-w-500">
+                            <Link href={route('dashboard')} className="f-s-14 f-w-500">
                                 <span><i className="iconoir-home-alt"></i></span>
                             </Link>
                         </li>
                         <li className="active">
-                            <Link href={route('inventory.index')} className="f-s-14 f-w-500">Back</Link>
+                            <Link href={route('users.index')} className="f-s-14 f-w-500">Back</Link>
                         </li>
                     </ul>
                 </div>
@@ -111,19 +111,6 @@ export default function Register() {
                                         </div>
                                     </div>
 
-                                    {/* Remember Me */}
-                                    <div className="col-md-12">
-                                        <div className="form-check mb-4">
-                                            <input
-                                                type="checkbox"
-                                                className="form-check-input"
-                                                id="rememberMe"
-                                            />
-                                            <label className="form-check-label" htmlFor="rememberMe">
-                                                Remember me
-                                            </label>
-                                        </div>
-                                    </div>
 
                                     {/* Submit */}
                                     <div className="col-12">

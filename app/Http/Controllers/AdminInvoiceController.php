@@ -54,9 +54,7 @@ class AdminInvoiceController extends Controller
 
         try {
 
-
             $data = $request->validated();
-
 
             $invoice_refrence = InvoiceRefrence::create([
                 'invoice_number' => uniqid('INV-'),
@@ -103,7 +101,6 @@ class AdminInvoiceController extends Controller
             return redirect()->route('clients.show', [$invoice_refrence->client_id])
                 ->with('message', 'Proforma Created Successfully');
         } catch (Exception $e) {
-            Log::error('Failed to create proforma: ' . $e->getMessage());
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to Create Proforma: ' . $e->getMessage());
         }
@@ -156,7 +153,6 @@ class AdminInvoiceController extends Controller
 
         try {
             $data = $request->validated();
-
 
             $invoice = InvoiceRefrence::findOrFail($id);
 
@@ -233,7 +229,6 @@ class AdminInvoiceController extends Controller
                 ->with('message', 'Invoice Updated Successfully');
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Error updating Invoice: ' . $e->getMessage());
             return redirect()->back()
                 ->with('error', 'Failed to Update Invoice: ' . $e->getMessage());
         }

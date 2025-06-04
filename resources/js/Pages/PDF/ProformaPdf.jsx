@@ -110,19 +110,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     minHeight: 25
   },
-  col1: { width: '8%', fontSize: 8, paddingRight: 3, color: 'white' },
-  col2: { width: '25%', fontSize: 8, paddingRight: 3, color: 'white' },
-  col3: { width: '12%', fontSize: 8, paddingRight: 3, color: 'white' },
-  col4: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'right', color: 'white' },
-  col5: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right', color: 'white' },
-  col6: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right', color: 'white' },
-  col7: { width: '21%', fontSize: 8, color: 'white' },
-  dataCol1: { width: '8%', fontSize: 8, paddingRight: 3 },
-  dataCol2: { width: '25%', fontSize: 8, paddingRight: 3 },
-  dataCol3: { width: '12%', fontSize: 8, paddingRight: 3 },
-  dataCol4: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
-  dataCol5: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
-  dataCol6: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
+ col1: { width: '8%', fontSize: 8, paddingRight: 3, color: 'white' },
+col2: { width: '20%', fontSize: 8, paddingRight: 3, color: 'white' },
+col3: { width: '20%', fontSize: 8, paddingRight: 3, color: 'white' }, // Increased description width
+col4: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'right', color: 'white' },
+col5: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right', color: 'white' },
+col6: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right', color: 'white' },
+col7: { width: '18%', fontSize: 8, color: 'white' },
+
+dataCol1: { width: '8%', fontSize: 8, paddingRight: 3 },
+dataCol2: { width: '20%', fontSize: 8, paddingRight: 3 },
+dataCol3: { width: '20%', fontSize: 8, paddingRight: 3 }, // Match header
+dataCol4: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
+dataCol5: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
+dataCol6: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
+
   totalsSection: {
     width: '100%',
     marginBottom: 20
@@ -269,6 +271,13 @@ const styles = StyleSheet.create({
   }
 });
 
+
+
+
+
+
+
+
 const Header = ({ company_profile, title }) => (
   <View style={styles.header}>
     <View style={styles.logoSection}>
@@ -294,7 +303,6 @@ const Header = ({ company_profile, title }) => (
 
 const BankDetails = ({ bankAccount }) => {
   if (!bankAccount) return null;
-
   return (
     <View style={styles.bankDetailsSection}>
       <Text style={styles.sectionTitle}>Bank Details</Text>
@@ -353,19 +361,13 @@ const SignatureSection = ({ bankAccount }) => (
   <View style={styles.signatureSection}>
     <View style={styles.signatureBox}>
       {bankAccount?.signiture_image && (
-        <Image
-          style={styles.signatureImage}
-          src={`/storage/${bankAccount.signiture_image}`}
-        />
+        <Image style={styles.signatureImage} src={`/storage/${bankAccount.signiture_image}`} />
       )}
       <Text style={styles.signatureLine}>Authorized Signature</Text>
     </View>
     <View style={styles.signatureBox}>
       {bankAccount?.company_stamp_image && (
-        <Image
-          style={styles.signatureImage}
-          src={`/storage/${bankAccount?.company_stamp_image}`}
-        />
+        <Image style={styles.signatureImage} src={`/storage/${bankAccount?.company_stamp_image}`} />
       )}
       <Text style={styles.signatureLine}>Company Stamp</Text>
     </View>
@@ -377,13 +379,11 @@ export const ProformaPdf = ({ client, CompanyProfile, data }) => {
   const products = proforma.products || [];
   const bankAccount = client?.bank_account || null;
   const currentDate = new Date().toLocaleDateString();
-  
+
   let grandSubtotal = 0;
   let grandTotalTax = 0;
   let grandServiceCharge = 0;
-  let hasVisiblePrices = false;
 
-  // Flatten all items into a single array
   const allItems = [];
   let serialNo = 1;
 
@@ -394,23 +394,19 @@ export const ProformaPdf = ({ client, CompanyProfile, data }) => {
       const taxRate = parseFloat(item.tax) || 0;
       const serviceRate = parseFloat(item.service_charge) || 0;
       const isVisible = item.is_price_visible;
-      
+
       const itemTotal = quantity * price;
       const itemTax = (itemTotal * taxRate) / 100;
       const itemService = (itemTotal * serviceRate) / 100;
-      
-      if (isVisible) {
-        hasVisiblePrices = true;
-        grandSubtotal += itemTotal;
-        grandTotalTax += itemTax;
-        grandServiceCharge += itemService;
-      }
 
-      // Parse dimensions if available
+      grandSubtotal += itemTotal;
+      grandTotalTax += itemTax;
+      grandServiceCharge += itemService;
+
       let dimensions = [];
       try {
         dimensions = JSON.parse(item.additional_description || '[]');
-      } catch (e) {
+      } catch {
         dimensions = [];
       }
 
@@ -433,26 +429,20 @@ export const ProformaPdf = ({ client, CompanyProfile, data }) => {
   });
 
   const grandTotal = grandSubtotal + grandTotalTax + grandServiceCharge;
-  const formattedDate = proforma.created_at 
-    ? new Date(proforma.created_at).toLocaleDateString() 
+  const formattedDate = proforma.created_at
+    ? new Date(proforma.created_at).toLocaleDateString()
     : currentDate;
 
   return (
     <Document>
-      {/* Main Proforma Page */}
       <Page size="A4" style={styles.page}>
-        {/* Watermark */}
         <Text style={styles.watermark}>PROFORMA</Text>
-
-        {/* Header */}
         <Header company_profile={CompanyProfile} title="PROFORMA" />
 
-        {/* Proforma Number */}
         <Text style={[styles.value, { textAlign: 'right', fontSize: 10, marginBottom: 10 }]}>
           No: {proforma.proforma_number || 'N/A'}
         </Text>
 
-        {/* Client and Proforma Information */}
         <View style={styles.invoiceInfo}>
           <View style={styles.column}>
             <Text style={styles.sectionTitle}>Bill To:</Text>
@@ -460,12 +450,8 @@ export const ProformaPdf = ({ client, CompanyProfile, data }) => {
               {client?.client_name || 'Client Name'}
             </Text>
             <Text style={styles.value}>{client?.client_address || 'Client Address'}</Text>
-            <Text style={styles.value}>
-              Phone: {client?.client_phone || 'N/A'}
-            </Text>
-            <Text style={styles.value}>
-              Email: {client?.client_email || 'N/A'}
-            </Text>
+            <Text style={styles.value}>Phone: {client?.client_phone || 'N/A'}</Text>
+            <Text style={styles.value}>Email: {client?.client_email || 'N/A'}</Text>
             <Text style={[styles.value, { marginTop: 5 }]}>
               Client Type: {client?.client_type || 'N/A'}
             </Text>
@@ -482,7 +468,9 @@ export const ProformaPdf = ({ client, CompanyProfile, data }) => {
             <View style={styles.infoRow}>
               <Text style={styles.label}>Valid Until:</Text>
               <Text style={styles.value}>
-                {proforma.valid_until ? new Date(proforma.valid_until).toLocaleDateString() : 'N/A'}
+                {proforma.valid_until
+                  ? new Date(proforma.valid_until).toLocaleDateString()
+                  : 'N/A'}
               </Text>
             </View>
             <View style={styles.infoRow}>
@@ -499,101 +487,88 @@ export const ProformaPdf = ({ client, CompanyProfile, data }) => {
             <Text style={styles.col2}>ITEM</Text>
             <Text style={styles.col3}>DESCRIPTION</Text>
             <Text style={styles.col4}>QTY</Text>
-            {hasVisiblePrices && (
-              <>
-                <Text style={styles.col5}>PRICE</Text>
-                <Text style={styles.col6}>TOTAL</Text>
-              </>
-            )}
+            <Text style={styles.col5}>PRICE</Text>
+            <Text style={styles.col6}>TOTAL</Text>
           </View>
 
-          {allItems.map((item, itemIndex) => (
-            <View
-              style={[
-                styles.tableRow,
-                { backgroundColor: itemIndex % 2 === 0 ? '#fff' : colors.lightBg }
-              ]}
-              key={itemIndex}
-            >
-              <Text style={styles.dataCol1}>{item.serialNo}</Text>
-              <Text style={styles.dataCol2}>
-                {item.productName} - {item.itemName}
-                {item.dimensions.length > 0 && (
-                  <Text style={{ fontSize: 7, color: colors.textLight }}>
-                    {"\n"}
-                    {item.dimensions.map((dim, i) => (
-                      <Text key={i}>
-                        {dim.type}: {dim.value}{dim.si}
-                        {i < item.dimensions.length - 1 ? ' | ' : ''}
-                      </Text>
-                    ))}
-                  </Text>
-                )}
-              </Text>
-              <Text style={styles.dataCol3}>{item.description || '-'}</Text>
-              <Text style={styles.dataCol4}>{item.quantity}</Text>
-              {item.is_price_visible && hasVisiblePrices && (
-                <>
-                  <Text style={styles.dataCol5}>₹{item.price.toFixed(2)}</Text>
-                  <Text style={styles.dataCol6}>₹{item.itemTotal.toFixed(2)}</Text>
-                </>
-              )}
-            </View>
-          ))}
+          {Object.entries(
+            allItems.reduce((acc, item) => {
+              if (!acc[item.productName]) acc[item.productName] = [];
+              acc[item.productName].push(item);
+              return acc;
+            }, {})
+          ).map(([productName, items]) => {
+            // Calculate subtotal per product
+            const productSubtotal = items.reduce((sum, i) => sum + i.itemTotal, 0);
+            const productTax = items.reduce((sum, i) => sum + i.itemTax, 0);
+            const productServiceCharge = items.reduce((sum, i) => sum + i.itemService, 0);
+            const productTotal = productSubtotal + productTax + productServiceCharge;
+
+            return (
+              <React.Fragment key={productName}>
+                {/* Product Header Row */}
+                <View style={[styles.tableRow, { backgroundColor: colors.lightBg }]}>
+                  <Text style={[styles.dataCol1, { fontWeight: 'bold' }]}>{productName}</Text>
+                  <Text style={styles.dataCol2}></Text>
+                  <Text style={styles.dataCol3}></Text>
+                  <Text style={styles.dataCol4}></Text>
+                  <Text style={styles.dataCol5}></Text>
+                  <Text style={styles.dataCol6}></Text>
+                </View>
+
+                {/* Item Rows */}
+                {items.map(item => (
+                  <View key={item.serialNo} style={styles.tableRow}>
+                    <Text style={styles.dataCol1}>{item.serialNo}</Text>
+                    <Text style={styles.dataCol2}>{item.itemName}</Text>
+                    <Text style={styles.dataCol3}>
+                      {item.description}
+                      {/* Optionally render dimensions if present */}
+                      {item.dimensions.length > 0 && (
+                        <Text>
+                          {'\n'}
+                          {item.dimensions.map((dim, i) => (
+                            <Text key={i}>
+                              {dim.type}: {dim.value}{dim.si}
+                              {i < item.dimensions.length - 1 ? ' | ' : ''}
+                            </Text>
+                          ))}
+                        </Text>
+                      )}
+                    </Text>
+                    <Text style={styles.dataCol4}>{item.quantity}</Text>
+                    <Text style={styles.dataCol5}>
+                      {item.is_price_visible ? item.price.toFixed(2) : '—'}
+                    </Text>
+                    <Text style={styles.dataCol6}>{item.is_price_visible ? item.itemTotal.toFixed(2) : '—'}</Text>
+                  </View>
+                ))}
+              </React.Fragment>
+            );
+          })}
+
+
         </View>
 
         {/* Totals Section */}
-        {hasVisiblePrices && (
-          <View style={styles.totalsSection}>
-            <View style={styles.totalsHeader}>
-              <Text style={[styles.totalsLabelCol, { width: '70%' }]}>SUMMARY</Text>
-              <Text style={[styles.totalsValueCol, { width: '30%' }]}>AMOUNT (₹)</Text>
-            </View>
-            <View style={styles.totalsRow}>
-              <Text style={styles.totalsDataLabelCol}>Subtotal:</Text>
-              <Text style={styles.totalsDataValueCol}>{grandSubtotal.toFixed(2)}</Text>
-            </View>
-            <View style={styles.totalsRow}>
-              <Text style={styles.totalsDataLabelCol}>Tax:</Text>
-              <Text style={styles.totalsDataValueCol}>{grandTotalTax.toFixed(2)}</Text>
-            </View>
-            <View style={styles.totalsRow}>
-              <Text style={styles.totalsDataLabelCol}>Service Charge:</Text>
-              <Text style={styles.totalsDataValueCol}>{grandServiceCharge.toFixed(2)}</Text>
-            </View>
-            <View style={[styles.totalsRow, { backgroundColor: colors.primary }]}>
-              <Text style={[styles.totalsDataLabelCol, { color: 'white', fontWeight: 'bold' }]}>
-                Grand Total:
-              </Text>
-              <Text style={[styles.totalsDataValueCol, { color: 'white', fontWeight: 'bold' }]}>
-                {grandTotal.toFixed(2)}
-              </Text>
-            </View>
+        <View style={styles.totalsSection}>
+          <View style={styles.totalsHeader}>
+            <Text style={[styles.totalsLabelCol]}>SUMMARY</Text>
+            <Text style={[styles.totalsValueCol]}>AMOUNT</Text>
           </View>
-        )}
 
-       
-
+          <View style={styles.totalsRow}>
+            <Text style={styles.totalsDataLabelCol}>Grand Total:</Text>
+            <Text style={styles.totalsDataValueCol}>{grandTotal}</Text>
+          </View>
+        </View>
       </Page>
 
-      {/* Bank Details Page */}
-      {bankAccount && (
-        <Page size="A4" style={styles.page}>
-          <Text style={styles.watermark}>BANK DETAILS</Text>
-          
-          <View>
-            <Text style={styles.pageTitle}>Bank Details & Authorization</Text>
-            
-            <BankDetails bankAccount={bankAccount} />
-            <SignatureSection bankAccount={bankAccount} />
-          </View>
-
-          <View style={styles.footer}>
-            <Text>Proforma generated on {currentDate} | {CompanyProfile?.company_name || 'Company Name'}</Text>
-            <Text>This is a proforma invoice and not a tax invoice</Text>
-          </View>
-        </Page>
-      )}
+      {/* New Page for Bank Details */}
+      <Page size="A4" style={styles.page}>
+        <BankDetails bankAccount={bankAccount} />
+        <SignatureSection bankAccount={bankAccount} />
+      </Page>
     </Document>
   );
 };

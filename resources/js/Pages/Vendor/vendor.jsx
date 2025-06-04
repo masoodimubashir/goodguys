@@ -141,7 +141,6 @@ export default function Vendor({ vendors: initialVendors }) {
     };
 
     const breadcrumbs = [
-        { href: '/dashboard', label: 'Dashboard' },
         { href: '/vendor', label: 'Vendors', active: true }
     ];
 
@@ -158,51 +157,55 @@ export default function Vendor({ vendors: initialVendors }) {
                 </div>
 
                 <div className="col-12">
-                                <Table ref={tableRef} responsive hover size="sm" bordered>
-                                    <thead className="table-light">
-                                        <tr>
-                                            {tableHead.map((head, index) => (
-                                                <th key={index} className="text-nowrap">{head}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {vendors.length > 0 ? (
-                                            vendors.map((vendor) => (
-                                                <tr key={vendor.id}>
-                                                    <td>{vendor.vendor_name}</td>
-                                                    <td>{vendor.contact_number}</td>
-                                                    <td>{vendor.email || <span className="text-muted">N/A</span>}</td>
-                                                    <td>{vendor.address || <span className="text-muted">N/A</span>}</td>
-                                                    <td>{vendor.description || <span className="text-muted">N/A</span>}</td>
-                                                    <td>{new Date(vendor.created_at).toLocaleString()}</td>
-                                                    <td>
-                                                        <div className="d-flex">
-                                                            <Link
-                                                                className="dropdown-item"
-                                                                title="Edit"
-                                                                href={route('vendor.edit', vendor.id)}
-                                                            >
-                                                                <i className="ti ti-edit me-2"></i>
-                                                            </Link>
-                                                            <button
-                                                                className="dropdown-item text-danger"
-                                                                title="Delete"
-                                                                onClick={() => handleDelete(vendor.id)}
-                                                            >
-                                                                <i className="ti ti-trash me-2"></i>
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td className="text-center" colSpan={tableHead.length}>No vendors found.</td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </Table>
+                    <Table ref={tableRef} responsive hover size="sm" bordered>
+                        <thead className="table-light">
+                            <tr>
+                                {tableHead.map((head, index) => (
+                                    <th key={index} className="text-nowrap">{head}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {vendors.length > 0 ? (
+                                vendors.map((vendor) => (
+                                    <tr key={vendor.id}>
+                                        <td>
+                                            <Link className="text-primary" href={route('vendor.show', vendor.id)}>
+                                                {vendor.vendor_name}
+                                            </Link>
+                                        </td>
+                                        <td>{vendor.contact_number}</td>
+                                        <td>{vendor.email || <span className="text-muted">N/A</span>}</td>
+                                        <td>{vendor.address || <span className="text-muted">N/A</span>}</td>
+                                        <td>{vendor.description || <span className="text-muted">N/A</span>}</td>
+                                        <td>{new Date(vendor.created_at).toLocaleString()}</td>
+                                        <td>
+                                            <div className="d-flex">
+                                                <Link
+                                                    className="dropdown-item"
+                                                    title="Edit"
+                                                    href={route('vendor.edit', vendor.id)}
+                                                >
+                                                    <i className="ti ti-edit me-2"></i>
+                                                </Link>
+                                                <button
+                                                    className="dropdown-item text-danger"
+                                                    title="Delete"
+                                                    onClick={() => handleDelete(vendor.id)}
+                                                >
+                                                    <i className="ti ti-trash me-2"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td className="text-center" colSpan={tableHead.length}>No vendors found.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </Table>
                 </div>
             </div>
 

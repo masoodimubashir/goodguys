@@ -14,12 +14,12 @@ import Button from "@/Components/Button";
 export default function EditModule({ module, fields = [] }) {
     // Improved parser that handles both string and object formats
     const parseModuleFields = () => {
-        if (!module.fields) return [{ field_name: '', si_unit: '', dimension_value: '' }];
+        if (!module.fields) return [{ field_name: '', dimension_value: '', si_unit: '', }];
 
         return module.fields.map(field => {
             // Handle string format (e.g., "length,20,m")
             if (typeof field === 'string') {
-                const [field_name, dimension_value, si_unit] = field.split(',');
+                const [field_name, si_unit, dimension_value] = field.split(',');
                 return {
                     field_name: field_name || '',
                     dimension_value: dimension_value || '',
@@ -31,7 +31,7 @@ export default function EditModule({ module, fields = [] }) {
             return {
                 field_name: field.field_name || '',
                 si_unit: field.si_unit || '',
-                dimension_value: field.dimension_value || ''
+                dimension_value: field.dimension_value || '',
             };
         });
     };
@@ -80,6 +80,7 @@ export default function EditModule({ module, fields = [] }) {
             // Clear all fields if selection is cleared
             updated[index] = { field_name: '', si_unit: '', dimension_value: '' };
         }
+
 
         setData('fields', updated);
     };
@@ -203,8 +204,8 @@ export default function EditModule({ module, fields = [] }) {
                                 <div className="col-12 mb-3">
                                     <div className="d-flex justify-content-between align-items-center mb-2">
                                         <InputLabel value="Fields" />
-                                        <button type="button" className="btn btn-secondary btn-sm" onClick={addRow}>
-                                            + Add Field
+                                        <button type="button" className="btn btn-success btn-sm" onClick={addRow}>
+                                            +
                                         </button>
                                     </div>
 
@@ -234,13 +235,7 @@ export default function EditModule({ module, fields = [] }) {
                                                             dimension_value: attr.dimension_value,
                                                             si_unit: attr.si_unit
                                                         } : null}
-                                                    // options={prepareOptions()}
-                                                    // formatOptionLabel={(option) => (
-                                                    //     <div>
-                                                    //         <strong>{option.field_name}</strong>
-                                                    //         {option.dimension_value && ` (${option.dimension_value} ${option.si_unit})`}
-                                                    //     </div>
-                                                    // )}
+
                                                     />
                                                 </div>
 

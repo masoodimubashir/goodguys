@@ -8,6 +8,7 @@ import ChallanPdf from '../PDF/ChallanPdf';
 import ChallanToInvoice from '../PDF/ChallanToPdf';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import Swal from 'sweetalert2';
+import { ClientInfoCard } from '@/Components/ClientInfoCard';
 
 const ViewChallans = ({ client, company_profile, }) => {
 
@@ -23,18 +24,38 @@ const ViewChallans = ({ client, company_profile, }) => {
     const clientStats = {
         totalChallans: client.challan_refrences.length,
         totalInvoices: client.invoices?.length || 0,
+
         totalAmount: client.challan_refrences.reduce((sum, ref) => {
+
             const items = ref.challans || [];
-            const subtotal = items.reduce((sum, item) => {
-                return item.qty > 0 ? sum + (item.price * item.qty) : item.price;
+
+            const subtotal = items.reduce((subSum, item) => {
+                const qty = parseFloat(item.qty) || 0;
+                const price = parseFloat(item.price) || 0;
+                const unitType = item.unit_type;
+
+                const value = qty > 1 ? price * qty : price;
+                const signedValue = unitType === 'out' ? -value : value;
+
+                return subSum + signedValue;
             }, 0);
-            return sum + subtotal + (subtotal * (ref.service_charge || 0) / 100);
+
+            // Add service charge
+            const serviceCharge = (ref.service_charge || 0);
+            const totalWithServiceCharge = subtotal + (subtotal * serviceCharge / 100);
+
+            return sum + totalWithServiceCharge;
         }, 0),
 
-
         paidAmount: client.invoices?.reduce((sum, inv) => sum + (inv.paid_amount || 0), 0) || 0,
-        pendingAmount: client.invoices?.reduce((sum, inv) => sum + (inv.total - (inv.paid_amount || 0)), 0) || 0
+
+        pendingAmount: client.invoices?.reduce((sum, inv) => {
+            const paid = inv.paid_amount || 0;
+            const total = inv.total || 0;
+            return sum + (total - paid);
+        }, 0) || 0
     };
+
 
     // Handle checkbox selection
     const handleCheckboxChange = (challanId) => {
@@ -150,40 +171,7 @@ const ViewChallans = ({ client, company_profile, }) => {
                 {/* Client Information Card */}
                 <Card className="mb-4">
                     <Card.Body>
-                        <Row>
-                            <Col md={8}>
-                                <div className="d-flex align-items-center mb-3">
-                                    <div className="bg-primary bg-opacity-10 p-3 rounded me-3">
-                                        <User size={24} className="text-white" />
-                                    </div>
-                                    <div>
-                                        <h4 className="mb-0">{client.client_name}</h4>
-                                        <p className="text-muted mb-0">Client since {new Date(client.created_at).toLocaleDateString()}</p>
-                                    </div>
-                                </div>
-                                <Row className="g-3">
-                                    <Col xs={6} md={4}>
-                                        <div className="d-flex align-items-center">
-                                            <Mail size={16} className="me-2 text-muted" />
-                                            <span>{client.client_email || 'No email'}</span>
-                                        </div>
-                                    </Col>
-                                    <Col xs={6} md={4}>
-                                        <div className="d-flex align-items-center">
-                                            <Phone size={16} className="me-2 text-muted" />
-                                            <span>{client.client_phone || 'No phone'}</span>
-                                        </div>
-                                    </Col>
-                                    <Col xs={12} md={4}>
-                                        <div className="d-flex align-items-center">
-                                            <MapPin size={16} className="me-2 text-muted" />
-                                            <span>{client.client_address || 'No address'}</span>
-                                        </div>
-                                    </Col>
-                                </Row>
-                            </Col>
-
-                        </Row>
+                        <ClientInfoCard client={client} />
                     </Card.Body>
                 </Card>
 
@@ -296,13 +284,23 @@ const ViewChallans = ({ client, company_profile, }) => {
                         <tbody>
                             {client.challan_refrences.map((ref) => {
                                 const items = ref.challans || [];
+
                                 const subtotal = items.reduce((sum, item) => {
-                                    return item.qty > 0 ? sum + (item.price * item.qty) : item.price;
+                                    const qty = parseFloat(item.qty) || 0;
+                                    const price = parseFloat(item.price) || 0;
+                                    const unitType = item.unit_type;
+
+                                    const value = qty > 0 ? price * qty : price;
+                                    const signedValue = unitType === 'out' ? -value : value;
+
+                                    return sum + signedValue;
                                 }, 0);
+
                                 const serviceRate = Number(ref.service_charge) || 0;
                                 const serviceCharge = subtotal * serviceRate / 100;
                                 const total = subtotal + serviceCharge;
                                 const isInvoiced = ref.invoice_id !== null;
+
 
                                 return (
                                     <tr key={ref.id}>

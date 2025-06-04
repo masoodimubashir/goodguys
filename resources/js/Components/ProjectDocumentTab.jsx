@@ -214,7 +214,6 @@ const ProjectDocumentTab = ({ client }) => {
                                     <tr>
                                         <th>#</th>
                                         <th>Document Preview</th>
-                                        <th>Client ID</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -258,7 +257,6 @@ const ProjectDocumentTab = ({ client }) => {
                                                 )}
                                             </td>
 
-                                            <td>{doc.client_id}</td>
 
                                             <td>
                                                 {editingId === doc.id ? (

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePurchaseListRequest;
 use App\Http\Requests\UpdatePurchaseListRequest;
+use App\Models\Client;
+use App\Models\ClientAccount;
 use App\Models\PurchasedItem;
 use App\Models\PurchaseList;
 use App\Models\Vendor;
@@ -19,18 +21,40 @@ class AdminPurchaseListController extends Controller
     /**
      * Display a listing of the resource.
      */
+
+
+
     public function index(Request $request)
     {
+
+
+        $client_id = $request->client_id;
+        $vendor_id = $request->vendor_id;
+
+        $vendor = Vendor::findOrFail($vendor_id);
+
+        $purchaseLists = PurchaseList::with(['purchaseManagments', 'returnLists', 'client'])
+            ->where('client_id', $client_id)
+            ->where('vendor_id', $vendor_id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+
+
         return Inertia::render("PurchaseManagment/purchases", [
-            'vendor' => Vendor::with([
-                'purchaseLists' => function ($query) {
-                    $query->with([
-                        'purchaseManagments',
-                        'returnLists',
-                        'client',
-                    ]);
-                }
-            ])->find($request->vendor_id),
+            'vendor' => $vendor,
+            'purchaseLists' => $purchaseLists,
+            'Client' => $purchaseLists->first()?->client,
+            'filters' => $request->only(['search']),
+            'clientAccountInTotal' => ClientAccount::where([
+                'client_id' => $client_id,
+                'payment_flow' => 1
+            ])->sum('amount'),
+            'clientAccountOutTotal' => ClientAccount::where([
+                'client_id' => $client_id,
+                'payment_flow' => 0
+            ])->sum('amount'),
         ]);
     }
 
@@ -60,7 +84,7 @@ class AdminPurchaseListController extends Controller
                 'client_id' => $purchase_list->client_id,
                 'unit_type' => $purchase_list->list_name,
                 'description' => $purchase_list->vendor->vendor_name,
-                'qty' => 0,
+                'qty' => 1,
                 'price' => $purchase_list->bill_total,
                 'narration' => $purchase_list->bill_description,
                 'total' => $purchase_list->bill_total,
@@ -69,7 +93,7 @@ class AdminPurchaseListController extends Controller
 
             return redirect()->back()->with('message', 'Purchase list created successfully');
         } catch (\Throwable $e) {
-          
+
             return redirect()->back()->with('error', 'Failed to create purchase list');
         }
     }

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { act, useEffect, useRef, useState } from 'react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
@@ -7,6 +7,7 @@ import 'datatables.net';
 import 'datatables.net-responsive';
 import { Table } from 'react-bootstrap';
 import Swal from 'sweetalert2';
+import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 
 export default function User({ users: initialUsers }) {
     const [users, setUsers] = useState(initialUsers);
@@ -78,7 +79,13 @@ export default function User({ users: initialUsers }) {
         <AuthenticatedLayout>
             <Head title="Users" />
             <div className="row g-4 mt-4">
-                <div className="d-flex justify-content-end align-items-center">
+                <div className="d-flex justify-content-between align-items-center">
+
+                    <BreadCrumbHeader
+                        breadcrumbs={[
+                            { href: route('users.index'), label: 'Users', active:true },
+                        ]}
+                    />
 
                     {auth.user.role === 'admin' && (
                         <Link href={route('register')} className="btn btn-primary me-2 btn-sm">
@@ -107,9 +114,7 @@ export default function User({ users: initialUsers }) {
                                         {auth.user.role === 'admin' && (
                                             <td className="">
                                                 <div className='d-flex gap-4'>
-                                                    <Link href={route('users.edit', user.id)} title='Edit'>
-                                                        <i className="ti ti-edit"></i>
-                                                    </Link>
+
                                                     <button className="dropdown-item" onClick={() => handleDelete(user.id)} title='Delete'>
                                                         <i className="ti ti-trash text-danger"></i>
                                                     </button>

@@ -3,6 +3,7 @@ import { useForm, usePage, Head } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
+import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 
 const CreateVendor = () => {
 
@@ -16,8 +17,8 @@ const CreateVendor = () => {
         description: '',
     });
 
-    console.log(errors);
-    
+
+
 
     // Handle flash messages
     useEffect(() => {
@@ -44,14 +45,25 @@ const CreateVendor = () => {
         });
     };
 
-  
+
+
+    const breadcrumbs = [
+        { href: '/vendor', label: 'Vendors', active: true }
+    ];
 
     return (
         <>
             <Head title="Create Vendor" />
-            
+
             <AuthenticatedLayout>
                 <div className="row">
+
+                    <div className="d-flex justify-content-between align-items-center">
+                        <BreadCrumbHeader breadcrumbs={breadcrumbs} />
+
+                       
+                    </div>
+
                     <div className="col-12">
                         <div className="card">
                             <div className="card-body">

@@ -35,13 +35,13 @@ class UpdateProformaRequest extends FormRequest
             'products.*.items.*.source' => ['required', 'in:custom,module,inventory'],
             'products.*.items.*.source_id' => ['nullable', 'integer'],
             'products.*.items.*.name' => ['required', 'string'],
-            'products.*.items.*.description' => ['required', 'string'],
+            'products.*.items.*.description' => ['nullable', 'string'],
             'products.*.items.*.price' => ['required', 'integer', 'min:0'],
             'products.*.items.*.quantity' => ['required', 'integer', 'min:1'],
-            'products.*.items.*.item_dimensions' => ['required', 'array', 'min:1'],
-            'products.*.items.*.item_dimensions.*.type' => ['required', 'string'],
-            'products.*.items.*.item_dimensions.*.value' => ['required', 'numeric'],
-            'products.*.items.*.item_dimensions.*.si' => ['required', 'string'],
+            'products.*.items.*.item_dimensions' => ['nullable', 'array', 'min:1'],
+            'products.*.items.*.item_dimensions.*.type' => ['nullable', 'string'],
+            'products.*.items.*.item_dimensions.*.value' => ['nullable', 'numeric'],
+            'products.*.items.*.item_dimensions.*.si' => ['nullable', 'string'],
 
         ];
     }

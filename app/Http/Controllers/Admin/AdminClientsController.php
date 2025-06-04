@@ -9,6 +9,7 @@ use App\Models\Client;
 use App\Models\CompanyProfile;
 use App\Models\Inventory;
 use App\Models\Module;
+use App\Models\PurchasedItem;
 use App\Models\ServiceCharge;
 use App\Models\Vendor;
 use Exception;
@@ -82,14 +83,18 @@ class AdminClientsController extends Controller
 
         $clientVendors = Vendor::whereIn('id', $clientVendorIds)->orderBy('vendor_name')->get();
 
+        $purchase_items = PurchasedItem::where('client_id', $client->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
         if ($client->client_type === 'Service Client') {
-            
+
             return Inertia::render('Clients/ShowServiceClient', [
                 'client' => $client,
                 'client_vendors' => $clientVendors,
                 'vendors' => Vendor::orderBy('vendor_name')->get(),
+                'purchase_items' => $purchase_items,
             ]);
-
         } else {
 
             return Inertia::render('Clients/ShowProductClient', [
@@ -98,6 +103,8 @@ class AdminClientsController extends Controller
                 'inventoryOptions' => Inventory::latest()->get(),
                 'company_profile' => CompanyProfile::first(),
                 'vendors' => Vendor::orderBy('vendor_name')->get(),
+                'purchase_items' => $purchase_items,
+
 
             ]);
         }

@@ -9,6 +9,7 @@ import "datatables.net-responsive";
 import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
 import { Table } from "react-bootstrap";
 import { Edit2, Trash } from "lucide-react";
+import Swal from "sweetalert2";
 
 export default function Module({ modules: initialModules }) {
     const [modules, setModules] = useState(initialModules);
@@ -53,14 +54,29 @@ export default function Module({ modules: initialModules }) {
 
     /** Delete module */
     const handleDelete = (id) => {
-        destroy(route("module.destroy", id), {
-            preserveScroll: true,
-            onSuccess: () => {
-                setModules((prev) => prev.filter((module) => module.id !== id));
-                ShowMessage("success", "Module deleted successfully.");
-            },
-            onError: () => ShowMessage("error", "Failed to delete module."),
-        });
+
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                destroy(route("module.destroy", id), {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setModules((prev) => prev.filter((module) => module.id !== id));
+                        ShowMessage("success", "Module deleted successfully.");
+                    },
+                    onError: () => ShowMessage("error", "Failed to delete module."),
+                });
+            }
+        })
+
+
     };
 
     const breadcrumbs = [

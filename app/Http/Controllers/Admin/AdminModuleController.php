@@ -31,9 +31,7 @@ class AdminModuleController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Modules/CreateModule', [
-            'fields' => Field::latest()->get(),
-        ]);
+        return Inertia::render('Modules/CreateModule');
     }
 
     /**
@@ -47,6 +45,7 @@ class AdminModuleController extends Controller
             DB::beginTransaction();
 
             $fields = [];
+
 
             foreach ($request->input('attributes', []) as $attribute) {
 
@@ -82,7 +81,6 @@ class AdminModuleController extends Controller
             return redirect()->route('module.index')->with('message', 'Module created.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error($e->getMessage());
             return redirect()->route('module.index')->with('error', 'Failed to create: ' . $e->getMessage());
         }
     }

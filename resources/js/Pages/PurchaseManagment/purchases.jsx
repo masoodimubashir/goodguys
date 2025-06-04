@@ -10,16 +10,19 @@ import {
 import { Card, Table, Form, Button, Badge, ProgressBar, Row, Col, Tooltip, OverlayTrigger } from 'react-bootstrap';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import { ClientInfoCard } from '@/Components/ClientInfoCard';
 import VendorInfoCard from '@/Components/VendorInfoCard';
 import Swal from 'sweetalert2';
 
-const Purchases = ({ vendor }) => {
+const Purchases = ({ vendor, purchaseLists, Client, clientAccountInTotal, clientAccountOutTotal }) => {
+
+
+
     // Extract data from vendor prop
-    const client = vendor.purchase_lists?.[0]?.client || {};
-    const purchases = vendor.purchase_lists || [];
+    const client = Client || {};
+    const purchases = purchaseLists.data || [];
 
     // State management
     const [expandedPurchases, setExpandedPurchases] = useState([]);
@@ -29,18 +32,30 @@ const Purchases = ({ vendor }) => {
     const [editedReturns, setEditedReturns] = useState({});
     const [newAllocations, setNewAllocations] = useState({});
     const [newReturns, setNewReturns] = useState({});
-    const [showAnalytics, setShowAnalytics] = useState(true);
+    const [showAnalytics, setShowAnalytics] = useState(false);
     const [animatingCards, setAnimatingCards] = useState(new Set());
 
     // Enhanced calculations
+    const client_advance_payment_in = clientAccountInTotal || 0;
+    const client_advance_payment_out = clientAccountOutTotal || 0;
+    const clientContribution = client_advance_payment_in - client_advance_payment_out;
+
+    // Totals
     const totalPurchases = purchases.reduce((sum, p) => sum + parseFloat(p.bill_total || 0), 0);
     const totalAllocated = purchases.reduce((sum, p) =>
         sum + (p.purchase_managments || []).reduce((aSum, a) => aSum + parseFloat(a.amount || 0), 0), 0);
     const totalReturns = purchases.reduce((sum, p) =>
         sum + (p.return_lists || []).reduce((rSum, r) => rSum + parseFloat(r.price || 0), 0), 0);
-    const totalRemaining = totalPurchases - totalAllocated - totalReturns;
-    const allocationPercentage = totalPurchases > 0 ? ((totalAllocated + totalReturns) / totalPurchases) * 100 : 0;
 
+    // Final remaining budget (after accounting for contributions)
+    const totalRemaining = totalPurchases - totalAllocated - totalReturns + clientContribution;
+
+    // Allocation progress
+    const allocationPercentage = totalPurchases > 0
+        ? ((totalAllocated + totalReturns) / totalPurchases) * 100
+        : 0;
+
+    // Utility: Budget remaining for a single purchase
     const getRemainingBudget = (purchase) => {
         const allocated = (purchase.purchase_managments || []).reduce((sum, a) => sum + parseFloat(a.amount || 0), 0);
         const returned = (purchase.return_lists || []).reduce((sum, r) => sum + parseFloat(r.price || 0), 0);
@@ -627,6 +642,26 @@ const Purchases = ({ vendor }) => {
                                             </span>
                                             <Badge bg="warning" className="px-2 py-1">
                                                 {purchases.reduce((sum, p) => sum + (p.return_lists?.length || 0), 0)}
+                                            </Badge>
+                                        </div>
+
+                                        <div className="d-flex justify-content-between align-items-center mt-2">
+                                            <span className="text-muted d-flex align-items-center gap-2">
+                                                <IndianRupee size={14} />
+                                                Advance Payment In
+                                            </span>
+                                            <Badge bg="warning" className="px-2 py-1">
+                                                {client_advance_payment_in}
+                                            </Badge>
+                                        </div>
+
+                                        <div className="d-flex justify-content-between align-items-center mt-2">
+                                            <span className="text-muted d-flex align-items-center gap-2">
+                                                <IndianRupee size={14} />
+                                                Advance Payment Out
+                                            </span>
+                                            <Badge bg="warning" className="px-2 py-1">
+                                                {client_advance_payment_out}
                                             </Badge>
                                         </div>
 
@@ -1485,8 +1520,43 @@ const Purchases = ({ vendor }) => {
                                 </tr>
                             )}
                         </tbody>
+
+
                     </Table>
+
+                    <div className="card-footer mt-2 d-flex justify-content-end align-items-center">
+                        <ul className="pagination justify-content-center">
+
+
+                            {/* Optional: Add page numbers */}
+                            {purchaseLists.links.map((link, index) => {
+                                // Skip prev/next links as they're handled separately
+                                if (link.label === 'Previous' || link.label === 'Next') return null;
+
+                                return (
+                                    <li
+                                        key={index}
+                                        className={`page-item ${link.active ? 'active' : ''} ${!link.url ? 'disabled' : ''}`}
+                                    >
+                                        <Link
+                                            className="page-link"
+                                            href={link.url || '#'}
+                                            preserveScroll
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    </li>
+                                );
+                            })}
+
+
+                        </ul>
+                    </div>
+
+
                 </div>
+
+
+
 
 
             </div>

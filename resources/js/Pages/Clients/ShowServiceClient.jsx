@@ -4,12 +4,10 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
 import Modal from 'react-bootstrap/Modal';
 import PurchaseListTab from '@/Components/PurchaseListTab';
-import $ from 'jquery';
-import 'datatables.net';
-import 'datatables.net-responsive';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import {
-    Card, Table, Button, Badge, ProgressBar, Row, Col, Form, Tabs, Tab, InputGroup
+    Card, Table, Button, Badge, ProgressBar, Row, Form, Tabs, Tab, InputGroup,
+    Col
 } from 'react-bootstrap';
 import {
     ShoppingCart, Plus, Edit, Trash2, Save, XCircle, ChevronDown, ChevronRight,
@@ -26,36 +24,41 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import ProjectDocumentTab from '@/Components/ProjectDocumentTab';
 import Swal from 'sweetalert2';
+import PurchaseItemsTab from '@/Components/PurchaseItemsTab';
+import ClientAccountModal from '@/Components/ClientAccountModal';
 
-export default function ShowServiceClient({ client, vendors = [], client_vendors = [] }) {
-
-
+export default function ShowServiceClient({ client, vendors = [], client_vendors = [], purchase_items }) {
     // State management
-
     const { delete: destroy } = useForm();
     const flash = usePage().props.flash;
 
     const [activeTab, setActiveTab] = useState('purchase-items');
-    const [purchaseItems, setPurchaseItems] = useState(client.purchase_items || []);
-    const [filteredItems, setFilteredItems] = useState(client.purchase_items || []);
-    const [expandedItems, setExpandedItems] = useState([]);
+    const [purchaseItems, setPurchaseItems] = useState(purchase_items.data || []);
+    const [filteredItems, setFilteredItems] = useState(purchase_items.data || []);
     const [editingItemId, setEditingItemId] = useState(null);
     const [editedItems, setEditedItems] = useState({});
     const [newItem, setNewItem] = useState({
-        client_id: client.id,
+        client_id: '',
         unit_type: '',
         description: '',
-        qty: '',
+        qty: 1,
         price: '',
         narration: '',
         show: false
     });
-    const [showAnalytics, setShowAnalytics] = useState(true);
+    const [showAnalytics, setShowAnalytics] = useState(false);
     const [animatingCards, setAnimatingCards] = useState(new Set());
+
     const [isCreating, setIsCreating] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [dateRange, setDateRange] = useState([null, null]);
     const [startDate, endDate] = dateRange;
+
+    // Modal states
+    const [showPurchaseListModal, setShowPurchaseListModal] = useState(false);
+    const [showClientAccountModal, setShowClientAccountModal] = useState(false);
+    const [currentPurchaseList, setCurrentPurchaseList] = useState(null);
+    const [currentClientAccount, setCurrentClientAccount] = useState(null);
 
     // Challan state
     const [challanState, setChallanState] = useState({
@@ -72,7 +75,23 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         is_price_visible: true,
     });
 
+    const purchaseListForm = useInertiaForm({
+        vendor_id: '',
+        client_id: client.id || '',
+        list_name: '',
+        purchase_date: new Date().toISOString().split('T')[0],
+        bill: null,
+        bill_total: '',
+        bill_description: '',
+    });
 
+    const clientAccountForm = useInertiaForm({
+        client_id: client.id || '',
+        payment_type: '',
+        payment_flow: '',
+        amount: '',
+        narration: ''
+    });
 
     // Format currency
     const formatCurrency = (amount) => {
@@ -111,13 +130,27 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
     // Calculate analytics based on filtered items
     const calculateAnalytics = () => {
         const totalValue = filteredItems.reduce((sum, item) => {
-            const qty = parseInt(item.qty);
-            const price = parseFloat(item.price);
-            return qty > 0 ? sum + (price * qty) : item.price;
+            const qty = parseFloat(item.qty) || 0;
+            const price = parseFloat(item.price) || 0;
+            const unitType = item.unit_type;
+
+            // Determine the base value
+            const value = qty > 1 ? qty : qty * price;
+
+            // Apply sign based on unit type
+            const signedValue = unitType === 'out' ? -value : value;
+
+            return sum + signedValue;
         }, 0);
 
-        const averagePrice = filteredItems.length > 0 ?
-            filteredItems.reduce((sum, item) => sum + parseFloat(item.price), 0) / filteredItems.length : 0;
+        const averagePrice = filteredItems.length > 0
+            ? filteredItems.reduce((sum, item) => sum + parseFloat(item.price || 0), 0) / filteredItems.length
+            : 0;
+
+        const totalQuantity = filteredItems.reduce((sum, item) => {
+            const qty = parseFloat(item.qty) || 0;
+            return sum + qty;
+        }, 0);
 
         const categories = {};
         filteredItems.forEach(item => {
@@ -125,14 +158,16 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             categories[category] = (categories[category] || 0) + 1;
         });
 
-        const topCategory = Object.keys(categories).reduce((a, b) => categories[a] > categories[b] ? a : b, '');
+        const topCategory = Object.keys(categories).reduce((a, b) =>
+            categories[a] > categories[b] ? a : b, '');
+
         const topCategoryCount = topCategory ? categories[topCategory] : 0;
 
         return {
             totalValue,
             averagePrice,
             totalItems: filteredItems.length,
-            totalQuantity: filteredItems.reduce((sum, item) => sum + parseInt(item.qty), 0),
+            totalQuantity,
             topCategory,
             topCategoryCount,
             topCategoryPercentage: filteredItems.length > 0
@@ -141,11 +176,8 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         };
     };
 
+
     const analytics = calculateAnalytics();
-
-
-
-
 
     // Handle field changes for editing
     const handleItemChange = (itemId, field, value) => {
@@ -169,7 +201,6 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
     // Save edited item
     const saveItem = (item) => {
         if (!item?.id) {
-            console.error('Cannot save item - missing ID:', item);
             ShowMessage('Error', 'Cannot save item - missing ID');
             return;
         }
@@ -213,7 +244,6 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                 ShowMessage('Success', 'Item updated successfully');
             },
             onError: (errors) => {
-                console.error('Error saving item:', errors);
                 ShowMessage('Error', 'Failed to update item');
             }
         });
@@ -221,7 +251,6 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
     // Delete item
     const deleteItem = (itemId) => {
-
         Swal.fire({
             title: 'Are you sure?',
             text: 'You are about to delete this item. This action cannot be undone.',
@@ -237,14 +266,11 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                         ShowMessage('Success', 'Item deleted successfully');
                     },
                     onError: (errors) => {
-                        console.error('Error deleting item:', errors);
                         ShowMessage('Error', 'Failed to delete item');
                     }
                 });
             }
         });
-
-
     };
 
     // Create new item
@@ -291,7 +317,6 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                 });
             },
             onError: (errors) => {
-                console.error('Error creating item:', errors);
                 ShowMessage('Error', 'Failed to create item');
             },
             onFinish: () => {
@@ -310,58 +335,6 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         </div>
     );
 
-
-    // State management
-    const [state, setState] = useState({
-        showPurchaseListModal: false,
-        isEditingPurchaseList: false,
-        currentAccountId: null,
-        currentPurchaseListId: null,
-        isLoading: false
-    });
-
-    // Refs
-    const refs = {
-        tableRef: useRef(null),
-        purchaseListRef: useRef(null),
-    };
-
-    const purchaseListForm = useInertiaForm({
-        vendor_id: '',
-        client_id: client.id || '',
-        list_name: '',
-        purchase_date: new Date().toISOString().split('T')[0],
-        bill: null,
-        bill_total: '',
-        bill_description: '',
-    });
-
-    useEffect(() => {
-        const initializeDataTables = () => {
-            const tables = [
-                refs.tableRef.current?.querySelector('table'),
-                refs.purchaseListRef.current?.querySelector('table'),
-            ].filter(Boolean);
-
-            tables.forEach(table => {
-                if ($.fn.DataTable.isDataTable(table)) {
-                    $(table).DataTable().destroy();
-                }
-                $(table).DataTable({
-                    responsive: true,
-                    pageLength: 10,
-                    lengthMenu: [[10, 20, 40, -1], [10, 20, 40, "All"]]
-                });
-            });
-        };
-
-        initializeDataTables();
-
-        return () => {
-            $('.dataTable').DataTable().destroy().clear();
-        };
-    }, [client.invoices, client.proformas, client.purchase_lists]);
-
     // Flash messages
     useEffect(() => {
         if (flash.message) ShowMessage('success', flash.message);
@@ -369,77 +342,128 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
     }, [flash]);
 
     // Modal handlers
-    const openModal = (type, item = null) => {
-        setState(prev => ({
-            ...prev,
-            showPurchaseListModal: true,
-            isEditingPurchaseList: !!item,
-            currentPurchaseListId: item?.id || null
-        }));
-        purchaseListForm.reset();
-        if (item) purchaseListForm.setData(item);
+    const openPurchaseListModal = (item = null) => {
+        setCurrentPurchaseList(item);
+        if (item) {
+            purchaseListForm.setData(item);
+        } else {
+            purchaseListForm.reset();
+        }
+        setShowPurchaseListModal(true);
     };
 
+    const openClientAccountModal = (item = null) => {
+        setCurrentClientAccount(item);
+        if (item) {
+            clientAccountForm.setData(item);
+        } else {
+            clientAccountForm.reset();
+        }
+        setShowClientAccountModal(true);
+    };
+
+
+
+
+
     // Form submission handlers
-    const handleSubmit = async (type, e) => {
+    const handlePurchaseListSubmit = async (e) => {
         e.preventDefault();
 
-        let form, isEditing, currentId;
-
-        form = purchaseListForm;
-        isEditing = state.isEditingPurchaseList;
-        currentId = state.currentPurchaseListId;
-        form.reset();
-
         const formData = new FormData();
-        for (const key in form.data) {
-            if (form.data[key] !== null) {
-                formData.append(key, form.data[key]);
+        for (const key in purchaseListForm.data) {
+            if (purchaseListForm.data[key] !== null) {
+                formData.append(key, purchaseListForm.data[key]);
             }
         }
 
-        const pascalType = type.split('-').map(word =>
-            word.charAt(0).toUpperCase() + word.slice(1)
-        ).join('');
+        const isEditing = !!currentPurchaseList;
+        const currentId = currentPurchaseList?.id;
 
         const options = {
             preserveScroll: true,
             onSuccess: () => {
-                form.reset();
-                setState(prev => ({
-                    ...prev,
-                    [`show${pascalType}Modal`]: false,
-                    [`isEditing${pascalType}`]: false,
-                    [`current${pascalType}Id`]: null
-                }));
-                ShowMessage('success', `${type.replace('-', ' ')} ${isEditing ? 'updated' : 'created'} successfully`);
+
+                purchaseListForm.reset();
+                setShowPurchaseListModal(false);
+                setCurrentPurchaseList(null);
+                ShowMessage('success', `Purchase list ${isEditing ? 'updated' : 'created'} successfully`);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            },
+            onError: (errors) => {
+                ShowMessage('error', 'Failed to save purchase list');
             }
         };
 
         if (isEditing && currentId) {
             formData.append('_method', 'PUT');
-            router.post(route(`${type}.update`, currentId), formData, options);
+            router.post(route('purchase-list.update', currentId), formData, options);
         } else {
-            form.post(route(`${type}.store`), formData, options);
+            purchaseListForm.post(route('purchase-list.store'), formData, options);
         }
+
+
+    };
+
+    const handleClientAccountSubmit = async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData();
+        for (const key in clientAccountForm.data) {
+            if (clientAccountForm.data[key] !== null) {
+                formData.append(key, clientAccountForm.data[key]);
+            }
+        }
+
+        const isEditing = !!currentClientAccount;
+        const currentId = currentClientAccount?.id;
+
+        const options = {
+            preserveScroll: true,
+            onSuccess: () => {
+                // Refresh data by reloading the page
+                clientAccountForm.reset();
+                setShowClientAccountModal(false);
+                setCurrentClientAccount(null);
+                router.reload();
+                ShowMessage('success', `Client account ${isEditing ? 'updated' : 'created'} successfully`);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+
+            },
+            onError: (errors) => {
+                ShowMessage('error', 'Failed to save client account');
+            }
+        };
+
+        if (isEditing && currentId) {
+            formData.append('_method', 'PUT');
+            router.post(route('client-account.update', currentId), formData, options);
+        } else {
+            clientAccountForm.post(route('client-account.store'), formData, options);
+        }
+
+
+
+
+
     };
 
     // Delete handler
     const handleDelete = (itemId, type) => {
-        const url = type + '.' + 'destroy';
-        destroy(route(url, itemId), {
+        destroy(route(`${type}.destroy`, itemId), {
             preserveScroll: true,
             onSuccess: () => {
-                Object.values(refs).forEach(ref => {
-                    if (ref.current && $.fn.DataTable.isDataTable(ref.current)) {
-                        $(ref.current).DataTable().ajax.reload();
-                    }
-                });
+                ShowMessage('success', 'Item deleted successfully');
+            },
+            onError: () => {
+                ShowMessage('error', 'Failed to delete item');
             }
         });
     };
-
-
 
     // Toggle product selection for challan
     const toggleProductSelection = (id) => {
@@ -462,51 +486,62 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         setChallanState(prev => ({ ...prev, showChallanForm: true }));
     };
 
+    // Handle challan creation
+    const handleCreateChallan = (e) => {
+        e.preventDefault();
 
-
-    // Alternative Option 2: Use router.post directly
-const handleCreateChallan = (e) => {
-    e.preventDefault();
-
-    const selectedItems = purchaseItems
-        .filter(product => challanState.selectedProducts[product.id])
-        .map(product => ({
-            item_id: product.id,
-            description: product.description,
-            unit_type: product.unit_type,
-            price: product.price,
-            narration: product.narration || '',
-            is_price_visible: challanForm.data.is_price_visible,
-            qty: product.qty,
-            total: product.total,
-        }));
-
-    const payload = {
-        ...challanForm.data,
-        challan: selectedItems
-    };
-
-    router.post(route('challan.store'), payload, {
-        preserveScroll: true,
-        onSuccess: () => {
-            setChallanState(prev => ({
-                ...prev,
-                selectedProducts: {},
-                showChallanForm: false
+        const selectedItems = purchaseItems
+            .filter(product => challanState.selectedProducts[product.id])
+            .map(product => ({
+                item_id: product.id,
+                description: product.description,
+                unit_type: product.unit_type,
+                price: product.price,
+                narration: product.narration || '',
+                is_price_visible: challanForm.data.is_price_visible,
+                qty: product.qty,
+                total: product.total,
             }));
-            ShowMessage('success', 'Challan created successfully');
-        },
-        onError: (errors) => {
-            console.error('Error creating challan:', errors);
-            ShowMessage('error', 'Failed to create challan');
-        }
-    });
-};
 
+        const payload = {
+            ...challanForm.data,
+            challan: selectedItems
+        };
+
+        router.post(route('challan.store'), payload, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setChallanState(prev => ({
+                    ...prev,
+                    selectedProducts: {},
+                    showChallanForm: false
+                }));
+                ShowMessage('success', 'Challan created successfully');
+                router.reload();
+            },
+            onError: (errors) => {
+                ShowMessage('error', 'Failed to create challan');
+            }
+        });
+    };
 
     // Reset date filter
     const resetDateFilter = () => {
         setDateRange([null, null]);
+    };
+
+    // Handle analytics refresh
+    const handleAnalytics = () => {
+        // Add animation to cards
+        setAnimatingCards(new Set(['total-value', 'total-items']));
+
+        // Remove animation after 1 second
+        setTimeout(() => {
+            setAnimatingCards(new Set());
+        }, 1000);
+
+        // Toggle analytics visibility
+        setShowAnalytics(!showAnalytics);
     };
 
     return (
@@ -524,30 +559,33 @@ const handleCreateChallan = (e) => {
                         <RefreshCw size={14} />
                     </Button>
 
+                    <Button variant="outline-primary" size="sm" onClick={() => handleAnalytics()}>
+                        {showAnalytics ? <Eye size={13} /> : <EyeOff size={14} />} Analytics
+                    </Button>
+
                     <div className="dropdown">
                         <button className="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                             Create
                         </button>
                         <ul className="dropdown-menu dropdown-menu-end">
-
                             <li>
                                 <Link href={route('bank-account.create', { client_id: client.id })} className="dropdown-item">
                                     <i className="ti ti-building-bank me-2"></i> Bank Account
                                 </Link>
                             </li>
-                            {/* <li>
-                                <Link href={route('purchased-item.index', { client_id: client.id })} className="dropdown-item">
-                                    <i className="ti ti-building-bank me-2"></i> Purchase Item
-                                </Link>
-                            </li> */}
                             <li>
                                 <Link href={route('challan.show', client.id)} className="dropdown-item">
                                     <i className="ti ti-building-bank me-2"></i> Challans
                                 </Link>
                             </li>
                             <li>
-                                <button className="dropdown-item" onClick={() => openModal('purchase-list')}>
+                                <button className="dropdown-item" onClick={() => openPurchaseListModal()}>
                                     <i className="ti ti-shopping-cart me-2"></i> Purchase List
+                                </button>
+                            </li>
+                            <li>
+                                <button onClick={() => openClientAccountModal()} className="dropdown-item">
+                                    <i className="ti ti-building-bank me-2"></i> Add Payment
                                 </button>
                             </li>
                         </ul>
@@ -555,83 +593,85 @@ const handleCreateChallan = (e) => {
                 </div>
             </div>
 
-            <div>
-                {/* Client Summary */}
-                <Row >
-                    <ClientInfoCard client={client} />
-                    {client.bank_account && <BankAccountCard BankProfile={client.bank_account} />}
-                </Row>
+            {showAnalytics && (
+                <div>
+                    {/* Client Summary */}
+                    <Row>
+                        <ClientInfoCard client={client} />
+                        {client.bank_account && <BankAccountCard BankProfile={client.bank_account} />}
+                    </Row>
 
-                {/* Analytics Cards */}
-                <Row className="g-3">
-                    <Col md={3}>
-                        <Card className={`border-0 shadow-sm h-100 card-hover gradient-bg ${animatingCards.has('total-value') ? 'pulse-animation' : ''}`}>
-                            <Card.Body className="p-3">
-                                <div className="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <h6 className="mb-1">Total Inventory Value</h6>
-                                        <h6 className="mb-0 fw-bold ">{formatCurrency(analytics.totalValue)}</h6>
-                                        <small className="">
-                                            <TrendingUp size={12} className="me-1" />
-                                            Avg: {formatCurrency(analytics.averagePrice)} per unit
-                                        </small>
+                    {/* Analytics Cards */}
+                    <Row className="g-3">
+                        <Col md={3}>
+                            <Card className={`border-0 shadow-sm h-100 card-hover gradient-bg ${animatingCards.has('total-value') ? 'pulse-animation' : ''}`}>
+                                <Card.Body className="p-3">
+                                    <div className="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <h6 className="mb-1">Total Inventory Value</h6>
+                                            <h6 className="mb-0 fw-bold ">{formatCurrency(analytics.totalValue)}</h6>
+                                            <small className="">
+                                                <TrendingUp size={12} className="me-1" />
+                                                Avg: {formatCurrency(analytics.averagePrice)} per unit
+                                            </small>
+                                        </div>
+                                        <div className="bg-white bg-opacity-20 p-3 rounded-circle">
+                                            <Receipt size={28} className="" />
+                                        </div>
                                     </div>
-                                    <div className="bg-white bg-opacity-20 p-3 rounded-circle">
-                                        <Receipt size={28} className="" />
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                        <Col md={3}>
+                            <Card className={`border-0 shadow-sm h-100 card-hover gradient-success ${animatingCards.has('total-items') ? 'pulse-animation' : ''}`}>
+                                <Card.Body className="p-3">
+                                    <div className="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <h6 className="mb-1">Total Items</h6>
+                                            <h6 className="mb-0 fw-bold">{analytics.totalItems}</h6>
+                                            <small>
+                                                <Percent size={12} className="me-1" />
+                                                {analytics.totalQuantity} Total Quantity
+                                            </small>
+                                        </div>
+                                        <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
+                                            <Package size={28} className="" />
+                                        </div>
                                     </div>
-                                </div>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                    <Col md={3}>
-                        <Card className={`border-0 shadow-sm h-100 card-hover gradient-success ${animatingCards.has('total-items') ? 'pulse-animation' : ''}`}>
-                            <Card.Body className="p-3">
-                                <div className="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <h6 className="mb-1">Total Items</h6>
-                                        <h6 className="mb-0 fw-bold">{analytics.totalItems}</h6>
-                                        <small>
-                                            <Percent size={12} className="me-1" />
-                                            {analytics.totalQuantity} Total Quantity
-                                        </small>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                        <Col md={6}>
+                            <Card className="border-0 shadow-sm h-100">
+                                <Card.Body className="p-3">
+                                    <h6 className="mb-3 d-flex align-items-center gap-2">
+                                        <BarChart3 size={18} className="text-primary" />
+                                        Quick Stats
+                                    </h6>
+                                    <div className="d-flex justify-content-between">
+                                        <div className="text-center">
+                                            <h6 className="mb-1 fw-bold">{analytics.totalItems}</h6>
+                                            <small className="text-muted">Total Items</small>
+                                        </div>
+                                        <div className="text-center">
+                                            <h6 className="mb-1 fw-bold">{analytics.totalQuantity}</h6>
+                                            <small className="text-muted">Total Quantity</small>
+                                        </div>
+                                        <div className="text-center">
+                                            <h6 className="mb-1 fw-bold">{formatCurrency(analytics.averagePrice)}</h6>
+                                            <small className="text-muted">Avg. Price</small>
+                                        </div>
+                                        <div className="text-center">
+                                            <h6 className="mb-1 fw-bold">{formatCurrency(analytics.totalValue)}</h6>
+                                            <small className="text-muted">Total Value</small>
+                                        </div>
                                     </div>
-                                    <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
-                                        <Package size={28} className="" />
-                                    </div>
-                                </div>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                    <Col md={6}>
-                        <Card className="border-0 shadow-sm h-100">
-                            <Card.Body className="p-3">
-                                <h6 className="mb-3 d-flex align-items-center gap-2">
-                                    <BarChart3 size={18} className="text-primary" />
-                                    Quick Stats
-                                </h6>
-                                <div className="d-flex justify-content-between">
-                                    <div className="text-center">
-                                        <h6 className="mb-1 fw-bold">{analytics.totalItems}</h6>
-                                        <small className="text-muted">Total Items</small>
-                                    </div>
-                                    <div className="text-center">
-                                        <h6 className="mb-1 fw-bold">{analytics.totalQuantity}</h6>
-                                        <small className="text-muted">Total Quantity</small>
-                                    </div>
-                                    <div className="text-center">
-                                        <h6 className="mb-1 fw-bold">{formatCurrency(analytics.averagePrice)}</h6>
-                                        <small className="text-muted">Avg. Price</small>
-                                    </div>
-                                    <div className="text-center">
-                                        <h6 className="mb-1 fw-bold">{formatCurrency(analytics.totalValue)}</h6>
-                                        <small className="text-muted">Total Value</small>
-                                    </div>
-                                </div>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                </Row>
-            </div>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                    </Row>
+                </div>
+            )}
 
             {/* Tab Navigation */}
             <Tabs
@@ -643,455 +683,37 @@ const handleCreateChallan = (e) => {
                         <Package size={16} /> Ledger
                     </span>
                 }>
-                    <div className="">
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                            <div className="d-flex align-items-center gap-2">
-                                <Badge bg="primary" pill>
-                                    {filteredItems.length} items
-                                </Badge>
-                            </div>
-                            <div className="d-flex gap-2">
-                                <Button
-                                    variant="primary"
-                                    className="d-flex align-items-center gap-2"
-                                    size="sm"
-                                    onClick={() => setNewItem(prev => ({ ...prev, show: true }))}
-                                >
-                                    <Plus size={16} /> Add Entry
-                                </Button>
-                                <Button
-                                    variant="success"
-                                    className="d-flex align-items-center gap-2"
-                                    size="sm"
-                                    onClick={openChallanForm}
-                                    disabled={!Object.values(challanState.selectedProducts).some(selected => selected)}
-                                >
-                                    <ShoppingCart size={16} /> Create Challan
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Search and Filter Section */}
-                        <div className=" d-flex gap-3">
-                            <div className="flex-grow-1">
-                                <InputGroup>
-                                    <InputGroup.Text>
-                                        <Search size={14} />
-                                    </InputGroup.Text>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Search items..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                </InputGroup>
-                            </div>
-                            <div className="d-flex gap-2">
-                                <div className="d-flex align-items-center gap-2">
-                                    <DatePicker
-                                        selectsRange={true}
-                                        startDate={startDate}
-                                        endDate={endDate}
-                                        onChange={(update) => setDateRange(update)}
-                                        isClearable={true}
-                                        placeholderText="Filter by date range"
-                                        className="form-control form-control-sm"
-                                    />
-                                    {(startDate || endDate) && (
-                                        <Button
-                                            variant="outline-secondary"
-                                            size="sm"
-                                            onClick={resetDateFilter}
-                                            title="Clear date filter"
-                                        >
-                                            <XCircle size={14} />
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-
-
-                        <Table hover responsive size='sm' className="mb-0">
-                            <thead className="table-light">
-                                <tr>
-                                    <th>
-                                        <Button
-                                            variant="link"
-                                            className="p-0"
-                                            onClick={() => {
-                                                const allSelected = purchaseItems.every(item => challanState.selectedProducts[item.id]);
-                                                const newSelection = {};
-                                                purchaseItems.forEach(item => {
-                                                    newSelection[item.id] = !allSelected;
-                                                });
-                                                setChallanState(prev => ({
-                                                    ...prev,
-                                                    selectedProducts: newSelection
-                                                }));
-                                            }}
-                                            title="Select all for challan"
-                                        >
-                                            <Check
-                                                size={18}
-                                                className={purchaseItems.length > 0 && purchaseItems.every(item => challanState.selectedProducts[item.id])
-                                                    ? "text-danger"
-                                                    : "text-muted"}
-                                            />
-                                        </Button>
-                                    </th>
-                                    <th>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <FileText size={14} />
-                                            Description
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <Package size={14} />
-                                            Unit Type
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <Activity size={14} />
-                                            Quantity
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <IndianRupee size={14} />
-                                            Price
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <IndianRupee size={14} />
-                                            Total
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <Text size={14} />
-                                            Narration
-                                        </div>
-                                    </th>
-                                    <th style={{ width: '140px' }}>Actions</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {/* New Item Row */}
-                                {newItem.show && (
-                                    <tr className="table-warning bounce-in" key={newItem.id}>
-                                        <td></td>
-                                        <td>
-                                            <Form.Control
-                                                size="sm"
-                                                type="text"
-                                                placeholder="Item description"
-                                                value={newItem.description}
-                                                onChange={e => handleNewItemChange('description', e.target.value)}
-                                            />
-                                        </td>
-                                        <td>
-                                            <Form.Control
-                                                size="sm"
-                                                type="text"
-                                                placeholder="Unit type"
-                                                value={newItem.unit_type}
-                                                onChange={e => handleNewItemChange('unit_type', e.target.value)}
-                                            />
-                                        </td>
-                                        <td>
-                                            <Form.Control
-                                                size="sm"
-                                                type="number"
-                                                min="1"
-                                                placeholder="Quantity"
-                                                value={newItem.qty > 0 ? newItem.qty : newItem.qty}
-                                                onChange={e => handleNewItemChange('qty', e.target.value)}
-                                            />
-                                        </td>
-                                        <td>
-                                            <Form.Control
-                                                size="sm"
-                                                type="number"
-                                                min="0"
-                                                placeholder="Price"
-                                                value={newItem.price}
-                                                onChange={e => handleNewItemChange('price', e.target.value)}
-                                            />
-                                        </td>
-                                        <td>
-                                            {newItem.qty > 0 ?
-                                                formatCurrency((parseFloat(newItem.price) || 0) * (parseInt(newItem.qty) || 1)) : newItem.qty}
-                                        </td>
-                                        <td>
-                                            <Form.Control
-                                                size="sm"
-                                                as={'textArea'}
-                                                min="0"
-                                                placeholder="enter narration"
-                                                value={newItem.narration}
-                                                onChange={e => handleNewItemChange('narration', e.target.value)}
-                                            />
-                                        </td>
-                                        <td>
-                                            <div className="d-flex gap-1">
-                                                <CustomTooltip>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="success"
-                                                        onClick={createItem}
-                                                        disabled={!newItem.description || !newItem.unit_type || !newItem.qty || !newItem.price}
-                                                        className="bounce-in"
-                                                    >
-                                                        <Save size={12} />
-                                                    </Button>
-                                                </CustomTooltip>
-                                                <CustomTooltip>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline-secondary"
-                                                        onClick={() => setNewItem(prev => ({
-                                                            client_id: client.id,
-                                                            unit_type: '',
-                                                            description: '',
-                                                            qty: '',
-                                                            price: '',
-                                                            narration: '',
-                                                            show: false
-                                                        }))}
-                                                    >
-                                                        <XCircle size={12} />
-                                                    </Button>
-                                                </CustomTooltip>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {filteredItems.map((item, index) => {
-                                    const isExpanded = expandedItems.includes(item.id);
-                                    const isEditing = editingItemId === item.id;
-                                    const totalValue = item.qty > 0 ? (parseFloat(item.price) || 0) * (parseInt(item.qty) || 1) : item.price;
-
-                                    return (
-                                        <React.Fragment key={item.id}>
-                                            <tr className={`align-middle`}>
-                                                <td>
-                                                    <Button
-                                                        variant="link"
-                                                        className="p-0"
-                                                        onClick={() => toggleProductSelection(item.id)}
-                                                        title="Select for challan"
-                                                    >
-                                                        <Check
-                                                            size={18}
-                                                            className={challanState.selectedProducts[item.id] ? "text-danger" : "text-muted"}
-                                                        />
-                                                    </Button>
-                                                </td>
-                                                <td>
-                                                    {isEditing ? (
-                                                        <Form.Control
-                                                            size="sm"
-                                                            type="text"
-                                                            value={editedItems[item.id]?.description || item.description}
-                                                            onChange={e => handleItemChange(item.id, 'description', e.target.value)}
-                                                        />
-                                                    ) : (
-                                                        <div>
-                                                            <span className="fw-bold">{item.description}</span>
-                                                            <br />
-                                                            <small className="text-muted">
-                                                                ID: #{item.id}
-                                                            </small>
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td>
-                                                    {isEditing ? (
-                                                        <Form.Control
-                                                            size="sm"
-                                                            type="text"
-                                                            value={editedItems[item.id]?.unit_type || item.unit_type}
-                                                            onChange={e => handleItemChange(item.id, 'unit_type', e.target.value)}
-                                                        />
-                                                    ) : (
-                                                        <span className="fw-medium">{item.unit_type}</span>
-                                                    )}
-                                                </td>
-                                                <td>
-                                                    {isEditing ? (
-                                                        <Form.Control
-                                                            size="sm"
-                                                            type="number"
-                                                            min="0"
-                                                            value={editedItems[item.id]?.qty ?? ''}
-                                                            onChange={e => handleItemChange(
-                                                                item.id,
-                                                                'qty',
-                                                                e.target.value === '' ? '' : parseInt(e.target.value) || 0
-                                                            )}
-                                                            onFocus={e => e.target.select()}
-                                                            placeholder="Enter quantity"
-                                                        />
-                                                    ) : (
-                                                        <span className="fw-bold">{item.qty > 0 ? item.qty : 'NA'}</span>
-                                                    )}
-                                                </td>
-                                                <td>
-                                                    {isEditing ? (
-                                                        <Form.Control
-                                                            size="sm"
-                                                            type="number"
-                                                            min="0"
-                                                            step="0.01"
-                                                            value={editedItems[item.id]?.price ?? ''}
-                                                            onChange={e => handleItemChange(
-                                                                item.id,
-                                                                'price',
-                                                                e.target.value === '' ? '' : parseFloat(e.target.value) || 0
-                                                            )}
-                                                            onFocus={e => e.target.select()}
-                                                            placeholder="Enter price"
-                                                        />
-                                                    ) : (
-                                                        <span
-                                                            className="fw-bold text-primary">
-                                                            {formatCurrency(item.price)}
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td>
-                                                    <span
-                                                        className="fw-bold text-success">
-                                                        {formatCurrency(totalValue)}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    {isEditing ? (
-                                                        <Form.Control
-                                                            as="textarea"
-                                                            rows={3}
-                                                            className="fade-in"
-                                                            value={editedItems[item.id]?.narration || item.narration || ''}
-                                                            onChange={e => handleItemChange(item.id, 'narration', e.target.value)}
-                                                            placeholder="Enter item narration..."
-                                                            style={{
-                                                                minWidth: '200px',
-                                                                transition: 'all 0.3s ease',
-                                                                border: '1px solid #dee2e6',
-                                                                borderRadius: '4px',
-                                                                fontSize: '14px'
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <div
-                                                            className={`text-truncate ${!item.narration ? 'text-muted' : ''}`}
-                                                        >
-                                                            {item.narration || (
-                                                                <small className="d-flex align-items-center gap-1 text-muted">
-                                                                    <FileText size={12} />
-                                                                    Click to add narration
-                                                                </small>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td>
-                                                    {isEditing ? (
-                                                        <div className="d-flex gap-1">
-                                                            <CustomTooltip>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="success"
-                                                                    onClick={() => saveItem(item)}
-                                                                    className="bounce-in"
-                                                                >
-                                                                    <Save size={12} />
-                                                                </Button>
-                                                            </CustomTooltip>
-                                                            <CustomTooltip>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="outline-secondary"
-                                                                    onClick={() => {
-                                                                        setEditingItemId(null);
-                                                                        setEditedItems(prev => {
-                                                                            const newState = { ...prev };
-                                                                            delete newState[item.id];
-                                                                            return newState;
-                                                                        });
-                                                                    }}
-                                                                >
-                                                                    <XCircle size={12} />
-                                                                </Button>
-                                                            </CustomTooltip>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="d-flex gap-1">
-                                                            <CustomTooltip>
-                                                                <Button
-                                                                    variant="link"
-                                                                    className="p-1 text-primary"
-                                                                    onClick={() => {
-                                                                        setEditingItemId(item.id);
-                                                                        setEditedItems(prev => ({
-                                                                            ...prev,
-                                                                            [item.id]: {
-                                                                                id: item.id,
-                                                                                unit_type: item.unit_type,
-                                                                                description: item.description,
-                                                                                qty: item.qty,
-                                                                                price: item.price,
-                                                                                narration: item.narration
-                                                                            }
-                                                                        }));
-                                                                    }}
-                                                                >
-                                                                    <Edit size={14} />
-                                                                </Button>
-                                                            </CustomTooltip>
-                                                            <CustomTooltip>
-                                                                <Button
-                                                                    variant="link"
-                                                                    className="p-1 text-danger"
-                                                                    onClick={() => deleteItem(item.id)}
-                                                                >
-                                                                    <Trash2 size={14} />
-                                                                </Button>
-                                                            </CustomTooltip>
-                                                        </div>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        </React.Fragment>
-                                    );
-                                })}
-
-                                {/* Empty State for Purchase Items */}
-                                {filteredItems.length === 0 && !newItem.show && (
-                                    <tr>
-                                        <td colSpan={8} className="text-center py-5">
-                                            <div className="text-muted">
-                                                <Package size={20} className="mb-3 opacity-50" />
-                                                <h5 className="mb-2">No Items Found</h5>
-                                                {searchTerm || (startDate || endDate) ? (
-                                                    <p>No items match your search criteria</p>
-                                                ) : (
-                                                    <p>No items available for this client</p>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </Table>
-                    </div>
+                    <PurchaseItemsTab
+                        filteredItems={filteredItems}
+                        purchaseItems={purchaseItems}
+                        setPurchaseItems={setPurchaseItems}
+                        editingItemId={editingItemId}
+                        setEditingItemId={setEditingItemId}
+                        editedItems={editedItems}
+                        setEditedItems={setEditedItems}
+                        newItem={newItem}
+                        setNewItem={setNewItem}
+                        challanState={challanState}
+                        setChallanState={setChallanState}
+                        searchTerm={searchTerm}
+                        setSearchTerm={setSearchTerm}
+                        dateRange={dateRange}
+                        setDateRange={setDateRange}
+                        startDate={startDate}
+                        endDate={endDate}
+                        handleItemChange={handleItemChange}
+                        handleNewItemChange={handleNewItemChange}
+                        saveItem={saveItem}
+                        deleteItem={deleteItem}
+                        createItem={createItem}
+                        toggleProductSelection={toggleProductSelection}
+                        openChallanForm={openChallanForm}
+                        resetDateFilter={resetDateFilter}
+                        formatCurrency={formatCurrency}
+                        CustomTooltip={CustomTooltip}
+                        isCreating={isCreating}
+                        purchase_items={purchase_items}
+                    />
                 </Tab>
 
                 <Tab eventKey="purchase-lists" title={
@@ -1101,8 +723,7 @@ const handleCreateChallan = (e) => {
                 }>
                     <PurchaseListTab
                         client={client}
-                        tableRef={useRef(null)}
-                        handleEditAccount={(purchase_list) => openModal('purchase-list', purchase_list)}
+                        handleEditAccount={(purchase_list) => openPurchaseListModal(purchase_list)}
                         handleDeleteItem={handleDelete}
                         clientVendors={client_vendors}
                     />
@@ -1121,13 +742,23 @@ const handleCreateChallan = (e) => {
 
             {/* Purchase List Modal */}
             <PurchaseListModal
-                show={state.showPurchaseListModal}
-                onHide={() => setState(prev => ({ ...prev, showPurchaseListModal: false }))}
+                show={showPurchaseListModal}
+                onHide={() => setShowPurchaseListModal(false)}
                 form={purchaseListForm}
                 errors={purchaseListForm.errors}
-                isEditing={state.isEditingPurchaseList}
-                handleSubmit={(e) => handleSubmit('purchase-list', e)}
+                isEditing={!!currentPurchaseList}
+                handleSubmit={handlePurchaseListSubmit}
                 vendors={vendors}
+            />
+
+            {/* Client Account Modal */}
+            <ClientAccountModal
+                show={showClientAccountModal}
+                onHide={() => setShowClientAccountModal(false)}
+                form={clientAccountForm}
+                errors={clientAccountForm.errors}
+                isEditing={!!currentClientAccount}
+                handleSubmit={handleClientAccountSubmit}
             />
 
             {/* Challan Creation Modal */}
@@ -1212,7 +843,7 @@ const handleCreateChallan = (e) => {
                                                     <td>{item.unit_type}</td>
                                                     <td>
                                                         {
-                                                            item.qty > 0 ? item.qty : 'NA'
+                                                            item.qty > 1 ? item.qty : 'NA'
                                                         }
                                                     </td>
                                                     <td>{formatCurrency(item.price)}</td>
