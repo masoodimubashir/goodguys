@@ -1,4 +1,4 @@
-import '../../css/Welcome.css';
+// import '../../css/Welcome.css';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link, usePage } from '@inertiajs/react';
