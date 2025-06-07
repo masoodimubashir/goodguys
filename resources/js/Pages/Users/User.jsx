@@ -1,53 +1,53 @@
-import React, { act, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
-import $ from 'jquery';
-import 'datatables.net';
-import 'datatables.net-responsive';
 import { Table } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function User({ users: initialUsers }) {
-    const [users, setUsers] = useState(initialUsers);
-    const tableHead = ['Name', 'Email', 'Actions'];
-    const tableRef = useRef(null);
+export default function User({ users: initialPaginatedData }) {
+    const [paginatedData, setPaginatedData] = useState(initialPaginatedData);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredData, setFilteredData] = useState(initialPaginatedData.data);
     const { flash, auth } = usePage().props;
-    const { delete: destroy } = useForm();
+    const { delete: destroy, get } = useForm();
+
+    const tableHead = ['Name', 'Email', 'Actions'];
 
     useEffect(() => {
-        if (flash.message) {
-            ShowMessage('success', flash.message);
-        }
-        if (flash.error) {
-            ShowMessage('error', flash.error);
-        }
+        if (flash.message) ShowMessage('success', flash.message);
+        if (flash.error) ShowMessage('error', flash.error);
     }, [flash]);
 
-    const initializeDataTable = () => {
-        if (tableRef.current) {
-            if ($.fn.DataTable.isDataTable(tableRef.current)) {
-                $(tableRef.current).DataTable().destroy();
-            }
-            if (users.length > 0) {
-                $(tableRef.current).DataTable({
-                    responsive: true,
-                    pageLength: 10,
-                    lengthMenu: [[10, 20, 40, -1], [10, 20, 40, "All"]],
-                });
-            }
+    // Frontend search function
+    const handleSearch = (e) => {
+        const term = e.target.value.toLowerCase();
+        setSearchTerm(term);
+        
+        if (term === '') {
+            setFilteredData(paginatedData.data);
+        } else {
+            const filtered = paginatedData.data.filter(user => 
+                user.name.toLowerCase().includes(term) ||
+                user.email.toLowerCase().includes(term)
+            );
+            setFilteredData(filtered);
         }
     };
 
-    useEffect(() => {
-        initializeDataTable();
-        return () => {
-            if ($.fn.DataTable.isDataTable(tableRef.current)) {
-                $(tableRef.current).DataTable().destroy();
+    // Pagination functions
+    const goToPage = (url) => {
+        get(url, {
+            preserveState: true,
+            onSuccess: (data) => {
+                setPaginatedData(data.props.users);
+                setFilteredData(data.props.users.data);
+                setSearchTerm(''); // Reset search on page change
             }
-        };
-    }, [users]);
+        });
+    };
 
     const handleDelete = (id) => {
         Swal.fire({
@@ -57,45 +57,63 @@ export default function User({ users: initialUsers }) {
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!',
+            confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
                 destroy(route('users.destroy', id), {
                     preserveScroll: true,
                     onSuccess: () => {
-                        if ($.fn.DataTable.isDataTable(tableRef.current)) {
-                            $(tableRef.current).DataTable().destroy();
-                        }
-                        setUsers(users.filter(user => user.id !== id));
-                        ShowMessage('success', 'User deleted successfully');
+                        // Refresh the current page after deletion
+                        get(route('users.index', { page: paginatedData.current_page }), {
+                            preserveState: true,
+                            onSuccess: (data) => {
+                                setPaginatedData(data.props.users);
+                                setFilteredData(data.props.users.data);
+                                ShowMessage('success', flash.message || 'User deleted successfully');
+                            }
+                        });
                     },
-                    onError: () => ShowMessage('error', 'Failed to delete user'),
+                    onError: () => ShowMessage('error', flash.error || 'Failed to delete user'),
                 });
             }
-        })
+        });
     };
 
     return (
         <AuthenticatedLayout>
             <Head title="Users" />
+            
             <div className="row g-4 mt-4">
                 <div className="d-flex justify-content-between align-items-center">
-
-                    <BreadCrumbHeader
-                        breadcrumbs={[
-                            { href: route('users.index'), label: 'Users', active:true },
-                        ]}
-                    />
+                    <BreadCrumbHeader breadcrumbs={[
+                        { href: route('users.index'), label: 'Users', active: true }
+                    ]} />
 
                     {auth.user.role === 'admin' && (
-                        <Link href={route('register')} className="btn btn-primary me-2 btn-sm">
+                        <Link href={route('register')} className="btn btn-primary btn-sm">
                             <i className="ti ti-plus me-1"></i> Add User
                         </Link>
                     )}
-
                 </div>
+
+                {/* Search Input */}
                 <div className="col-12">
-                    <Table responsive size='sm' hover bordered ref={tableRef} >
+                    <div className="input-group mb-3">
+                        <span className="input-group-text">
+                            <Search size={16} />
+                        </span>
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search users..."
+                            value={searchTerm}
+                            onChange={handleSearch}
+                        />
+                    </div>
+                </div>
+
+                <div className="col-12">
+                    <Table responsive size="sm" hover bordered>
                         <thead>
                             <tr>
                                 {tableHead.map((head, index) => (
@@ -106,20 +124,22 @@ export default function User({ users: initialUsers }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {users.length > 0 ? (
-                                users.map((user) => (
+                            {filteredData.length > 0 ? (
+                                filteredData.map((user) => (
                                     <tr key={user.id}>
                                         <td>{user.name}</td>
                                         <td>{user.email}</td>
                                         {auth.user.role === 'admin' && (
-                                            <td className="">
-                                                <div className='d-flex gap-4'>
-
-                                                    <button className="dropdown-item" onClick={() => handleDelete(user.id)} title='Delete'>
+                                            <td className="text-end">
+                                                <div className="d-flex gap-4 justify-content-end">
+                                                    <button 
+                                                        className="dropdown-item" 
+                                                        onClick={() => handleDelete(user.id)} 
+                                                        title="Delete"
+                                                    >
                                                         <i className="ti ti-trash text-danger"></i>
                                                     </button>
                                                 </div>
-
                                             </td>
                                         )}
                                         {auth.user.role !== 'admin' && <td></td>}
@@ -127,11 +147,56 @@ export default function User({ users: initialUsers }) {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={tableHead.length} className="text-center">No users found</td>
+                                    <td colSpan={tableHead.length} className="text-center">
+                                        {searchTerm ? 'No matching users found' : 'No users found'}
+                                    </td>
                                 </tr>
                             )}
                         </tbody>
                     </Table>
+
+                    {/* Pagination Controls */}
+                    {filteredData.length > 0 && !searchTerm && (
+                        <div className="d-flex justify-content-between align-items-center mt-3">
+                            <div>
+                                Showing {paginatedData.from} to {paginatedData.to} of {paginatedData.total} entries
+                            </div>
+                            <div className="d-flex">
+                                <ul className="pagination pagination-sm mb-0">
+                                    <li className={`page-item ${!paginatedData.prev_page_url ? 'disabled' : ''}`}>
+                                        <button 
+                                            className="page-link" 
+                                            onClick={() => goToPage(paginatedData.prev_page_url)}
+                                            disabled={!paginatedData.prev_page_url}
+                                        >
+                                            <ChevronLeft size={16} />
+                                        </button>
+                                    </li>
+                                    
+                                    {Array.from({ length: paginatedData.last_page }, (_, i) => i + 1).map(page => (
+                                        <li key={page} className={`page-item ${page === paginatedData.current_page ? 'active' : ''}`}>
+                                            <button 
+                                                className="page-link" 
+                                                onClick={() => goToPage(`${paginatedData.path}?page=${page}`)}
+                                            >
+                                                {page}
+                                            </button>
+                                        </li>
+                                    ))}
+                                    
+                                    <li className={`page-item ${!paginatedData.next_page_url ? 'disabled' : ''}`}>
+                                        <button 
+                                            className="page-link" 
+                                            onClick={() => goToPage(paginatedData.next_page_url)}
+                                            disabled={!paginatedData.next_page_url}
+                                        >
+                                            <ChevronRight size={16} />
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </AuthenticatedLayout>

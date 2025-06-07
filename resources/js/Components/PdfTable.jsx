@@ -7,7 +7,7 @@ import { Table } from 'react-bootstrap';
 import { Download, Edit, FileText, RefreshCw, Trash2 } from 'lucide-react';
 import { InvoicePdf } from '@/Pages/PDF/InvoicePdf';
 
-export default function PdfTable({ client, pdfRef, CompanyProfile }) {
+export default function PdfTable({ client,  CompanyProfile, BankProfile }) {
 
     
 
@@ -209,9 +209,9 @@ export default function PdfTable({ client, pdfRef, CompanyProfile }) {
                                             <PDFDownloadLink
                                                 document={
                                                     entry.type === 'Invoice' ? (
-                                                        <InvoicePdf client={client} CompanyProfile={CompanyProfile} data={entry} />
+                                                        <InvoicePdf client={client} CompanyProfile={CompanyProfile} data={entry} BankProfile={BankProfile} />
                                                     ) : (
-                                                        <ProformaPdf client={client} CompanyProfile={CompanyProfile} data={entry} />
+                                                        <ProformaPdf client={client} CompanyProfile={CompanyProfile} data={entry} BankProfile={BankProfile} />
                                                     )
                                                 }
                                                 fileName={`${entry.type.toLowerCase()}-${entry.reference_number}.pdf`}

@@ -11,16 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('purchased_items', function (Blueprint $table) {
+        Schema::create('purchase_list_payments', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('vendor_id')->constrained('vendors')->onDelete('cascade');
             $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
-            $table->string('unit_type')->nullable();
-            $table->text('description')->nullable();
-            $table->integer('qty')->default(1);
-            $table->integer('price',);
-            $table->integer('total',);
-            $table->boolean('is_credited')->default(false);
-            $table->text('narration')->nullable();
+            $table->integer('amount');
+            $table->string('narration');
+            $table->date('transaction_date');
             $table->tinyInteger('created_by')->nullable();
             $table->tinyInteger('updated_by')->nullable();
             $table->timestamps();
@@ -32,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('purchased_items');
+        Schema::dropIfExists('purchase_list_payments');
     }
 };

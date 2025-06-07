@@ -32,7 +32,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
     const { delete: destroy } = useForm();
     const flash = usePage().props.flash;
 
-    const [activeTab, setActiveTab] = useState('purchase-items');
+    const [activeTab, setActiveTab] = useState('vendor-lists');
     const [purchaseItems, setPurchaseItems] = useState(purchase_items.data || []);
     const [filteredItems, setFilteredItems] = useState(purchase_items.data || []);
     const [editingItemId, setEditingItemId] = useState(null);
@@ -127,33 +127,47 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         setFilteredItems(results);
     }, [searchTerm, dateRange, purchaseItems]);
 
+
     // Calculate analytics based on filtered items
     const calculateAnalytics = () => {
-        const totalValue = filteredItems.reduce((sum, item) => {
-            const qty = parseFloat(item.qty) || 0;
-            const price = parseFloat(item.price) || 0;
-            const unitType = item.unit_type;
+        // Calculate separate sums for in, out, and total values (excluding is_created === 1)
+        const validItems = filteredItems.filter(item => item.is_credited !== 1);
 
-            // Determine the base value
-            const value = qty > 1 ? qty : qty * price;
+        console.log(validItems);
+        
 
-            // Apply sign based on unit type
-            const signedValue = unitType === 'out' ? -value : value;
+        const sumIn = validItems
+            .filter(item => item.unit_type === 'in')
+            .reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
 
-            return sum + signedValue;
-        }, 0);
+        const sumOut = validItems
+            .filter(item => item.unit_type === 'out')
+            .reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
 
-        const averagePrice = filteredItems.length > 0
-            ? filteredItems.reduce((sum, item) => sum + parseFloat(item.price || 0), 0) / filteredItems.length
+        const sumTotal = validItems.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0) - sumIn - sumOut;
+
+
+        console.log("sumIn:", sumIn);
+        console.log("sumOut:", sumOut);
+        console.log("sumTotal:", sumTotal);
+        
+
+        // Final calculation: sum of in - sum of out - sum of total
+        const totalValue = sumIn - sumOut - sumTotal;
+
+        // validItems already defined above for consistency
+
+        const averagePrice = validItems.length > 0
+            ? validItems.reduce((sum, item) => sum + parseFloat(item.price || 0), 0) / validItems.length
             : 0;
 
-        const totalQuantity = filteredItems.reduce((sum, item) => {
+        const totalQuantity = validItems.reduce((sum, item) => {
             const qty = parseFloat(item.qty) || 0;
             return sum + qty;
         }, 0);
 
         const categories = {};
-        filteredItems.forEach(item => {
+        validItems.forEach(item => {
             const category = item.unit_type || 'Uncategorized';
             categories[category] = (categories[category] || 0) + 1;
         });
@@ -166,16 +180,15 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         return {
             totalValue,
             averagePrice,
-            totalItems: filteredItems.length,
+            totalItems: validItems.length,
             totalQuantity,
             topCategory,
             topCategoryCount,
-            topCategoryPercentage: filteredItems.length > 0
-                ? Math.round((topCategoryCount / filteredItems.length) * 100)
+            topCategoryPercentage: validItems.length > 0
+                ? Math.round((topCategoryCount / validItems.length) * 100)
                 : 0
         };
     };
-
 
     const analytics = calculateAnalytics();
 
@@ -384,13 +397,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             preserveScroll: true,
             onSuccess: () => {
 
-                purchaseListForm.reset();
-                setShowPurchaseListModal(false);
-                setCurrentPurchaseList(null);
-                ShowMessage('success', `Purchase list ${isEditing ? 'updated' : 'created'} successfully`);
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
+
             },
             onError: (errors) => {
                 ShowMessage('error', 'Failed to save purchase list');
@@ -404,6 +411,13 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             purchaseListForm.post(route('purchase-list.store'), formData, options);
         }
 
+        purchaseListForm.reset();
+        setShowPurchaseListModal(false);
+        setCurrentPurchaseList(null);
+        ShowMessage('success', `Purchase list ${isEditing ? 'updated' : 'created'} successfully`);
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
 
     };
 
@@ -424,20 +438,16 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             preserveScroll: true,
             onSuccess: () => {
                 // Refresh data by reloading the page
-                clientAccountForm.reset();
-                setShowClientAccountModal(false);
-                setCurrentClientAccount(null);
-                router.reload();
-                ShowMessage('success', `Client account ${isEditing ? 'updated' : 'created'} successfully`);
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
+
 
             },
             onError: (errors) => {
                 ShowMessage('error', 'Failed to save client account');
             }
+
         };
+
+
 
         if (isEditing && currentId) {
             formData.append('_method', 'PUT');
@@ -446,7 +456,14 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             clientAccountForm.post(route('client-account.store'), formData, options);
         }
 
-
+        clientAccountForm.reset();
+        setShowClientAccountModal(false);
+        setCurrentClientAccount(null);
+        router.reload();
+        ShowMessage('success', `Client account ${isEditing ? 'updated' : 'created'} successfully`);
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
 
 
 
@@ -488,6 +505,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
     // Handle challan creation
     const handleCreateChallan = (e) => {
+        
         e.preventDefault();
 
         const selectedItems = purchaseItems
@@ -495,12 +513,13 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             .map(product => ({
                 item_id: product.id,
                 description: product.description,
-                unit_type: product.unit_type,
+                unit_type: product.unit_type ?? 'NA',
                 price: product.price,
                 narration: product.narration || '',
                 is_price_visible: challanForm.data.is_price_visible,
                 qty: product.qty,
                 total: product.total,
+                is_credited: product.is_credited,
             }));
 
         const payload = {
@@ -555,11 +574,11 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                 ]} />
 
                 <div className="d-flex gap-2">
-                    <Button variant="outline-primary" size="sm" onClick={() => window.location.reload()}>
+                    <Button variant="primary" size="sm" onClick={() => window.location.reload()}>
                         <RefreshCw size={14} />
                     </Button>
 
-                    <Button variant="outline-primary" size="sm" onClick={() => handleAnalytics()}>
+                    <Button className="d-flex align-items-center gap-2" size="sm" onClick={() => handleAnalytics()}>
                         {showAnalytics ? <Eye size={13} /> : <EyeOff size={14} />} Analytics
                     </Button>
 
@@ -568,11 +587,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                             Create
                         </button>
                         <ul className="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <Link href={route('bank-account.create', { client_id: client.id })} className="dropdown-item">
-                                    <i className="ti ti-building-bank me-2"></i> Bank Account
-                                </Link>
-                            </li>
+
                             <li>
                                 <Link href={route('challan.show', client.id)} className="dropdown-item">
                                     <i className="ti ti-building-bank me-2"></i> Challans
@@ -598,49 +613,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                     {/* Client Summary */}
                     <Row>
                         <ClientInfoCard client={client} />
-                        {client.bank_account && <BankAccountCard BankProfile={client.bank_account} />}
-                    </Row>
 
-                    {/* Analytics Cards */}
-                    <Row className="g-3">
-                        <Col md={3}>
-                            <Card className={`border-0 shadow-sm h-100 card-hover gradient-bg ${animatingCards.has('total-value') ? 'pulse-animation' : ''}`}>
-                                <Card.Body className="p-3">
-                                    <div className="d-flex align-items-center justify-content-between">
-                                        <div>
-                                            <h6 className="mb-1">Total Inventory Value</h6>
-                                            <h6 className="mb-0 fw-bold ">{formatCurrency(analytics.totalValue)}</h6>
-                                            <small className="">
-                                                <TrendingUp size={12} className="me-1" />
-                                                Avg: {formatCurrency(analytics.averagePrice)} per unit
-                                            </small>
-                                        </div>
-                                        <div className="bg-white bg-opacity-20 p-3 rounded-circle">
-                                            <Receipt size={28} className="" />
-                                        </div>
-                                    </div>
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                        <Col md={3}>
-                            <Card className={`border-0 shadow-sm h-100 card-hover gradient-success ${animatingCards.has('total-items') ? 'pulse-animation' : ''}`}>
-                                <Card.Body className="p-3">
-                                    <div className="d-flex align-items-center justify-content-between">
-                                        <div>
-                                            <h6 className="mb-1">Total Items</h6>
-                                            <h6 className="mb-0 fw-bold">{analytics.totalItems}</h6>
-                                            <small>
-                                                <Percent size={12} className="me-1" />
-                                                {analytics.totalQuantity} Total Quantity
-                                            </small>
-                                        </div>
-                                        <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
-                                            <Package size={28} className="" />
-                                        </div>
-                                    </div>
-                                </Card.Body>
-                            </Card>
-                        </Col>
                         <Col md={6}>
                             <Card className="border-0 shadow-sm h-100">
                                 <Card.Body className="p-3">
@@ -657,10 +630,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                                             <h6 className="mb-1 fw-bold">{analytics.totalQuantity}</h6>
                                             <small className="text-muted">Total Quantity</small>
                                         </div>
-                                        <div className="text-center">
-                                            <h6 className="mb-1 fw-bold">{formatCurrency(analytics.averagePrice)}</h6>
-                                            <small className="text-muted">Avg. Price</small>
-                                        </div>
+
                                         <div className="text-center">
                                             <h6 className="mb-1 fw-bold">{formatCurrency(analytics.totalValue)}</h6>
                                             <small className="text-muted">Total Value</small>
@@ -670,6 +640,10 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                             </Card>
                         </Col>
                     </Row>
+
+                    {/* Analytics Cards */}
+
+
                 </div>
             )}
 
@@ -678,6 +652,20 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                 activeKey={activeTab}
                 onSelect={(k) => setActiveTab(k)}
             >
+
+                <Tab eventKey="vendor-lists" title={
+                    <span className="d-flex align-items-center gap-1">
+                        <ShoppingBag size={16} /> Vendor List
+                    </span>
+                }>
+                    <PurchaseListTab
+                        client={client}
+                        handleEditAccount={(purchase_list) => openPurchaseListModal(purchase_list)}
+                        handleDeleteItem={handleDelete}
+                        clientVendors={client_vendors}
+                    />
+                </Tab>
+
                 <Tab eventKey="purchase-items" title={
                     <span className="d-flex align-items-center gap-1">
                         <Package size={16} /> Ledger
@@ -716,18 +704,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                     />
                 </Tab>
 
-                <Tab eventKey="purchase-lists" title={
-                    <span className="d-flex align-items-center gap-1">
-                        <ShoppingBag size={16} /> Vendor List
-                    </span>
-                }>
-                    <PurchaseListTab
-                        client={client}
-                        handleEditAccount={(purchase_list) => openPurchaseListModal(purchase_list)}
-                        handleDeleteItem={handleDelete}
-                        clientVendors={client_vendors}
-                    />
-                </Tab>
+
 
                 <Tab eventKey="project-document-lists" title={
                     <span className="d-flex align-items-center gap-1">
@@ -839,8 +816,8 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                                             .filter(item => challanState.selectedProducts[item.id])
                                             .map(item => (
                                                 <tr key={item.id}>
-                                                    <td>{item.description}</td>
-                                                    <td>{item.unit_type}</td>
+                                                    <td>{item.description ?? 'NA'}</td>
+                                                    <td>{item.unit_type ?? 'NA'}</td>
                                                     <td>
                                                         {
                                                             item.qty > 1 ? item.qty : 'NA'

@@ -1,91 +1,64 @@
 import { Link } from "@inertiajs/react";
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
-import $ from 'jquery';
-import 'datatables.net';
-import 'datatables.net-responsive';
-import Swal from 'sweetalert2';
 import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
-import { Row, Form, Table } from "react-bootstrap";
+import { Table } from "react-bootstrap";
+import { Edit2, Trash, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import Swal from "sweetalert2";
 
-export default function Vendor({ vendors: initialVendors }) {
+export default function Vendor({ vendors: initialPaginatedData }) {
+    const [paginatedData, setPaginatedData] = useState(initialPaginatedData);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredData, setFilteredData] = useState(initialPaginatedData.data);
+    const { flash, auth } = usePage().props;
+    const { delete: destroy, get } = useForm();
 
-
-    const [vendors, setVendors] = useState(initialVendors);
-    const [showModal, setShowModal] = useState(false);
-    const [currentVendor, setCurrentVendor] = useState(null);
-    const tableRef = useRef(null);
-    const { flash } = usePage().props;
-
-    const { data, setData, post, put, delete: destroy, processing, errors, reset } = useForm({
-        vendor_name: '',
-        contact_number: '',
-        email: '',
-        address: '',
-        description: '',
-    });
-
-    const tableHead = ['Vendor Name', 'Contact', 'Email', 'Address', 'Description', 'Created At', 'Actions'];
-
-    useEffect(() => {
-        setVendors(initialVendors);
-    }, [initialVendors]);
+    const tableHead = [
+        'Vendor Name',
+        'Contact',
+        'Email',
+        'Address',
+        'Description',
+        'Created At',
+        'Actions'
+    ];
 
     useEffect(() => {
         if (flash.message) ShowMessage('success', flash.message);
         if (flash.error) ShowMessage('error', flash.error);
     }, [flash]);
 
-    const initializeDataTable = () => {
-        if (tableRef.current) {
-            if ($.fn.DataTable.isDataTable(tableRef.current)) {
-                $(tableRef.current).DataTable().destroy();
-            }
+    // Frontend search function
+    const handleSearch = (e) => {
+        const term = e.target.value.toLowerCase();
+        setSearchTerm(term);
 
-            if (vendors.length > 0) {
-                $(tableRef.current).DataTable({
-                    responsive: true,
-                    pageLength: 10,
-                    lengthMenu: [[10, 20, 40, -1], [10, 20, 40, "All"]],
-                    columnDefs: [{ targets: -1, responsivePriority: 1 }],
-                });
-            }
+        if (term === '') {
+            setFilteredData(paginatedData.data);
+        } else {
+            const filtered = paginatedData.data.filter(vendor =>
+                vendor.vendor_name.toLowerCase().includes(term) ||
+                (vendor.contact_number && vendor.contact_number.toLowerCase().includes(term)) ||
+                (vendor.email && vendor.email.toLowerCase().includes(term)) ||
+                (vendor.address && vendor.address.toLowerCase().includes(term)) ||
+                (vendor.description && vendor.description.toLowerCase().includes(term))
+            );
+            setFilteredData(filtered);
         }
     };
 
-    useEffect(() => {
-        initializeDataTable();
-        return () => {
-            if (tableRef.current && $.fn.DataTable.isDataTable(tableRef.current)) {
-                $(tableRef.current).DataTable().destroy();
+    // Pagination functions
+    const goToPage = (url) => {
+        get(url, {
+            preserveState: true,
+            onSuccess: (data) => {
+                setPaginatedData(data.props.vendors);
+                setFilteredData(data.props.vendors.data);
+                setSearchTerm(''); // Reset search on page change
             }
-        };
-    }, [vendors]);
-
-    const handleSubmit = (e) => {
-
-        e.preventDefault();
-
-        const options = {
-            preserveScroll: true,
-            onSuccess: (page) => {
-                setShowModal(false);
-                reset();
-                setVendors(page.props.vendors);
-                ShowMessage('success', currentVendor ? 'Updated successfully' : 'Created successfully');
-            },
-            onError: () => {
-                ShowMessage('error', 'Please check the form for errors');
-            }
-        };
-
-        if (currentVendor) {
-            put(route('vendor.update', currentVendor.id), data, options);
-        } else {
-            post(route('vendor.store'), data, options);
-        }
+        });
     };
 
     const handleDelete = (id) => {
@@ -101,43 +74,21 @@ export default function Vendor({ vendors: initialVendors }) {
             if (result.isConfirmed) {
                 destroy(route('vendor.destroy', id), {
                     preserveScroll: true,
-                    onSuccess: (page) => {
-                        if (tableRef.current && $.fn.DataTable.isDataTable(tableRef.current)) {
-                            $(tableRef.current).DataTable().destroy();
-                        }
-                        setVendors(page.props.vendors);
-                        ShowMessage('success', 'Vendor deleted');
+                    onSuccess: () => {
+                        // Refresh the current page after deletion
+                        get(route('vendor.index', { page: paginatedData.current_page }), {
+                            preserveState: true,
+                            onSuccess: (data) => {
+                                setPaginatedData(data.props.vendors);
+                                setFilteredData(data.props.vendors.data);
+                                ShowMessage('success', flash.message);
+                            }
+                        });
                     },
-                    onError: () => {
-                        ShowMessage('error', 'Error deleting');
-                    },
+                    onError: () => ShowMessage('error', flash.error),
                 });
             }
         });
-    };
-
-    const openCreateModal = () => {
-        setCurrentVendor(null);
-        reset({
-            vendor_name: '',
-            contact_number: '',
-            email: '',
-            address: '',
-            description: '',
-        });
-        setShowModal(true);
-    };
-
-    const openEditModal = (vendor) => {
-        setCurrentVendor(vendor);
-        setData({
-            vendor_name: vendor.vendor_name,
-            contact_number: vendor.contact_number,
-            email: vendor.email,
-            address: vendor.address,
-            description: vendor.description || '',
-        });
-        setShowModal(true);
     };
 
     const breadcrumbs = [
@@ -147,17 +98,33 @@ export default function Vendor({ vendors: initialVendors }) {
     return (
         <AuthenticatedLayout>
             <Head title="Vendors" />
+
             <div className="row g-4 mt-4">
                 <div className="d-flex justify-content-between align-items-center">
                     <BreadCrumbHeader breadcrumbs={breadcrumbs} />
-
                     <Link href={route('vendor.create')} className="btn btn-sm btn-primary">
-                        {'Add Vendor'}
+                        <i className="ti ti-plus me-1"></i> Add Vendor
                     </Link>
                 </div>
 
+                {/* Search Input */}
                 <div className="col-12">
-                    <Table ref={tableRef} responsive hover size="sm" bordered>
+                    <div className="input-group mb-3">
+                        <span className="input-group-text">
+                            <Search size={16} />
+                        </span>
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search vendors..."
+                            value={searchTerm}
+                            onChange={handleSearch}
+                        />
+                    </div>
+                </div>
+
+                <div className="col-12">
+                    <Table size="sm" hover bordered>
                         <thead className="table-light">
                             <tr>
                                 {tableHead.map((head, index) => (
@@ -166,8 +133,8 @@ export default function Vendor({ vendors: initialVendors }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {vendors.length > 0 ? (
-                                vendors.map((vendor) => (
+                            {filteredData.length > 0 ? (
+                                filteredData.map((vendor) => (
                                     <tr key={vendor.id}>
                                         <td>
                                             <Link className="text-primary" href={route('vendor.show', vendor.id)}>
@@ -180,20 +147,12 @@ export default function Vendor({ vendors: initialVendors }) {
                                         <td>{vendor.description || <span className="text-muted">N/A</span>}</td>
                                         <td>{new Date(vendor.created_at).toLocaleString()}</td>
                                         <td>
-                                            <div className="d-flex">
-                                                <Link
-                                                    className="dropdown-item"
-                                                    title="Edit"
-                                                    href={route('vendor.edit', vendor.id)}
-                                                >
-                                                    <i className="ti ti-edit me-2"></i>
+                                            <div className="d-flex align-items-center justify-items-center">
+                                                <Link className="dropdown-item" href={route('vendor.edit', vendor.id)} title="Edit">
+                                                    <Edit2 size={16}></Edit2>
                                                 </Link>
-                                                <button
-                                                    className="dropdown-item text-danger"
-                                                    title="Delete"
-                                                    onClick={() => handleDelete(vendor.id)}
-                                                >
-                                                    <i className="ti ti-trash me-2"></i>
+                                                <button className="dropdown-item text-danger" onClick={() => handleDelete(vendor.id)} title="Delete">
+                                                    <Trash size={16}></Trash>
                                                 </button>
                                             </div>
                                         </td>
@@ -201,15 +160,59 @@ export default function Vendor({ vendors: initialVendors }) {
                                 ))
                             ) : (
                                 <tr>
-                                    <td className="text-center" colSpan={tableHead.length}>No vendors found.</td>
+                                    <td colSpan={tableHead.length} className="text-center text-muted py-4">
+                                        <i className="ti ti-users fs-4 d-block mb-2"></i>
+                                        {searchTerm ? 'No matching vendors found' : 'No vendors found'}
+                                    </td>
                                 </tr>
                             )}
                         </tbody>
                     </Table>
+
+                    {/* Pagination Controls */}
+                    {filteredData.length > 0 && !searchTerm && (
+                        <div className="d-flex justify-content-between align-items-center mt-3">
+                            <div>
+                                Showing {paginatedData.from} to {paginatedData.to} of {paginatedData.total} entries
+                            </div>
+                            <div className="d-flex">
+                                <ul className="pagination pagination-sm mb-0">
+                                    <li className={`page-item ${!paginatedData.prev_page_url ? 'disabled' : ''}`}>
+                                        <button
+                                            className="page-link"
+                                            onClick={() => goToPage(paginatedData.prev_page_url)}
+                                            disabled={!paginatedData.prev_page_url}
+                                        >
+                                            <ChevronLeft size={16} />
+                                        </button>
+                                    </li>
+
+                                    {Array.from({ length: paginatedData.last_page }, (_, i) => i + 1).map(page => (
+                                        <li key={page} className={`page-item ${page === paginatedData.current_page ? 'active' : ''}`}>
+                                            <button
+                                                className="page-link"
+                                                onClick={() => goToPage(`${paginatedData.path}?page=${page}`)}
+                                            >
+                                                {page}
+                                            </button>
+                                        </li>
+                                    ))}
+
+                                    <li className={`page-item ${!paginatedData.next_page_url ? 'disabled' : ''}`}>
+                                        <button
+                                            className="page-link"
+                                            onClick={() => goToPage(paginatedData.next_page_url)}
+                                            disabled={!paginatedData.next_page_url}
+                                        >
+                                            <ChevronRight size={16} />
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
-
-
         </AuthenticatedLayout>
     );
 }

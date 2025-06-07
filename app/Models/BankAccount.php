@@ -9,7 +9,6 @@ class BankAccount extends Model
 
 
     protected $fillable = [
-        'client_id',
         'qr_code_image',
         'bank_name',
         'ifsc_code',

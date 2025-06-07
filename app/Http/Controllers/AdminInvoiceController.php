@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateInvoiceRequest;
 use App\Models\Client;
 use App\Models\Inventory;
 use App\Models\Invoice;
+use App\Models\InvoiceModule;
 use App\Models\InvoiceRefrence;
 use App\Models\Module;
 use App\Models\Product;
@@ -257,58 +258,57 @@ class AdminInvoiceController extends Controller
 
     public function createInvoiceFromPdf($id)
     {
-
         DB::beginTransaction();
 
-
         try {
-
             $proforma_ref = ProformaRefrence::with([
-                'products' => fn($query) => $query->with('proformas'),
+                'proformas.proformaModule',
                 'client' => fn($query) => $query->with('serviceCharge'),
             ])->findOrFail($id);
 
+            // Mark proforma as converted
             $proforma_ref->update([
                 'is_converted_to_invoice' => 1,
             ]);
 
-            // Create new invoice
+            // Create new invoice reference
             $invoice = InvoiceRefrence::create([
                 'invoice_number' => uniqid('INV-'),
                 'client_id' => $proforma_ref->client_id,
             ]);
 
-            // Copy products and items
-            foreach ($proforma_ref->products as $product) {
+            // Group proforma items by module
+            $groupedItems = $proforma_ref->proformas->groupBy('proforma_module_id');
 
-                $newProduct = $invoice->products()->create([
-                    'product_name' => $product->product_name,
-                    'invoice_refrence_id' => $invoice->id,
+            // Process each module (product)
+            foreach ($groupedItems as $moduleId => $items) {
+                $module = $items->first()->proformaModule;
+
+                // Create InvoiceModule (equivalent to ProformaModule)
+                $invoiceModule = InvoiceModule::create([
+                    'module_name' => $module->module_name,
                 ]);
 
-                foreach ($product->proformas as $item) {
-
-                    $newProduct->invoices()->create([
+                // Process each item in the module
+                foreach ($items as $item) {
+                    // Create Invoice (equivalent to Proforma)
+                    Invoice::create([
                         'item_name' => $item->item_name,
-                        'product_id' => $newProduct->id,
+                        'invoice_module_id' => $invoiceModule->id,
+                        'invoice_refrence_id' => $invoice->id,
                         'description' => $item->description,
                         'additional_description' => $item->additional_description,
                         'count' => $item->count,
                         'price' => $item->price,
-                        'tax' => $item->tax,
                         'service_charge' => $item->service_charge,
-                        'source_type' => $item->source_type,
-                        'source_id' => $item->source_id,
                         'is_price_visible' => $item->is_price_visible,
+                        'created_by' => auth()->id(),
                     ]);
-
                 }
             }
 
             DB::commit();
-
-            return redirect()->back()->with('message' , 'Invoice created successfully');
-
+            return redirect()->back()->with('message', 'Invoice created successfully');
         } catch (Exception $e) {
             Log::error('Error creating invoice: ' . $e->getMessage());
             DB::rollBack();

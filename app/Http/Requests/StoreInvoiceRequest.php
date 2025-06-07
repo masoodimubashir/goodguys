@@ -27,6 +27,7 @@ class StoreInvoiceRequest extends FormRequest
             'client_name' => ['required', 'string'],
             'client_address' => ['required', 'string'],
             'show_all_prices' => ['required', 'boolean'],
+            'module_name' => ['required', 'integer'],
             'products' => ['required', 'array', 'min:1'],
             'products.*.product_name' => ['required', 'string'],
             'products.*.items' => ['required', 'array', 'min:1'],

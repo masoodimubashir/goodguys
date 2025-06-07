@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreChallanRequest;
 use App\Http\Requests\UpdateChallanRequest;
+use App\Models\BankAccount;
 use App\Models\Challan;
 use App\Models\ChallanRefrence;
 use App\Models\Client;
@@ -65,6 +66,7 @@ class AdminChallanController extends Controller
                     'total' => $item['total'],
                     'created_by' => auth()->user()->id,
                     'created_at' => now(),
+                    'is_credited' => $item['is_credited'],
                 ];
             }
 
@@ -77,6 +79,7 @@ class AdminChallanController extends Controller
             return redirect()->route('clients.show', $validated['client_id'])->with('success', 'Challan created successfully.');
         } catch (Exception $e) {
 
+            Log::error('Error creating Challan: ' . $e->getMessage());
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to create Challan. Please try again.');
         }
@@ -90,11 +93,11 @@ class AdminChallanController extends Controller
 
         $client = Client::with([
             'challanRefrences.challans',
-            'bankAccount'
         ])->find($id);
 
         return Inertia::render("Challan/ViewChallans", [
             'client' => $client,
+            'bankAccount' => BankAccount::first(),
             'company_profile' => CompanyProfile::first()
         ]);
     }

@@ -20,6 +20,8 @@ class Invoice extends Model
         'description',
         'is_price_visible',
         'product_id',
+        'invoice_refrence_id',
+        'invoice_module_id'
 
     ]; 
 
@@ -37,5 +39,14 @@ class Invoice extends Model
         return $this->belongsTo(Module::class);
     }
 
+    /**
+     * Get the invoiceModule that owns the Invoice
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function invoiceModule(): BelongsTo
+    {
+        return $this->belongsTo(InvoiceModule::class);
+    }
 
 }

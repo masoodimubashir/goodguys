@@ -14,6 +14,7 @@ class PurchasedItem extends Model
         'price',
         'narration',
         'total',
+        'is_credited',
         'created_by',
         'updated_by',
     ];

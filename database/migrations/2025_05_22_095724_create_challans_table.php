@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('price')->default(0);
             $table->integer('qty')->default(0);
             $table->integer('total')->default(0);
+            $table->boolean('is_credited')->default(0);
             $table->longText('description');
             $table->longText('narration');
             $table->string('unit_type');

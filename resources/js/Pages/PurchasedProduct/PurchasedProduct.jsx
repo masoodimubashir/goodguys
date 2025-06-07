@@ -4,96 +4,77 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import { IndianRupee, Percent, Calculator, Search, User, ChevronDown, ChevronUp, FileText, ArrowDown, ArrowUp, CreditCard } from 'lucide-react';
 
-export default function PurchasedProduct({ vendor, groupedPurchaseLists }) {
+export default function PurchasedProduct({ vendor, clientAccounts, purchaseListsPagination }) {
+
 
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedClient, setExpandedClient] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [clientsPerPage] = useState(10);
 
-    // Calculate analytics with client accounts
+    // Transform clientAccounts into array and calculate grand totals
     const { clientSummaries, grandTotals } = useMemo(() => {
-        const summaries = Object.entries(groupedPurchaseLists).map(([clientId, lists]) => {
-            const client = lists[0].client || {};
-            const totalRaw = lists.reduce((sum, list) => sum + (parseFloat(list.bill_total) || 0), 0);
-
-            // Calculate service charges
-            const serviceRate = client.service_charge?.service_charge || 0;
-            const serviceChargeTotal = (totalRaw * serviceRate) / 100;
-            const totalWithService = totalRaw + serviceChargeTotal;
-
-            // Calculate account totals
-            const accountInTotal = parseFloat(client.clientAccountInTotal) || 0;
-            const accountOutTotal = parseFloat(client.clientAccountOutTotal) || 0;
-            const netAccountBalance = accountInTotal - accountOutTotal;
+        const summaries = Object.values(clientAccounts).map(account => {
+            const serviceChargeTotal = account.total_purchases;
+            const totalWithService = account.total_purchases + serviceChargeTotal;
 
             return {
-                client,
-                lists,
-                totalRaw,
-                totalWithService,
+                ...account,
                 serviceChargeTotal,
-                serviceRate,
-                accountInTotal,
-                accountOutTotal,
-                netAccountBalance
+                totalWithService
             };
         });
 
-        // Calculate grand totals
-        const grandTotals = summaries.reduce((acc, curr) => ({
-            raw: acc.raw + curr.totalRaw,
-            withService: acc.withService + curr.totalWithService,
+        const totals = summaries.reduce((acc, curr) => ({
+            purchases: acc.purchases + curr.total_purchases,
+            returns: acc.returns + curr.total_returns,
+            payments: acc.payments + curr.total_payments,
+            balance: acc.balance + curr.balance,
             serviceCharge: acc.serviceCharge + curr.serviceChargeTotal,
-            accountIn: acc.accountIn + curr.accountInTotal,
-            accountOut: acc.accountOut + curr.accountOutTotal,
-            netAccount: acc.netAccount + curr.netAccountBalance
+            withService: acc.withService + curr.totalWithService
         }), {
-            raw: 0,
-            withService: 0,
+            purchases: 0,
+            returns: 0,
+            payments: 0,
+            balance: 0,
             serviceCharge: 0,
-            accountIn: 0,
-            accountOut: 0,
-            netAccount: 0
+            withService: 0
         });
 
-        return { clientSummaries: summaries, grandTotals };
-    }, [groupedPurchaseLists]);
+        return { clientSummaries: summaries, grandTotals: totals };
+    }, [clientAccounts]);
 
-    // Filter clients based on search
+    // Filter and paginate clients
     const filteredClients = useMemo(() => {
-        if (!searchTerm) return clientSummaries;
-        return clientSummaries.filter(({ client }) =>
+        const filtered = clientSummaries.filter(({ client }) =>
             client.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            client.client_email.toLowerCase().includes(searchTerm.toLowerCase())
+            client.client_email?.toLowerCase().includes(searchTerm.toLowerCase())
         );
-    }, [clientSummaries, searchTerm]);
 
-    // Get current clients for pagination
-    const indexOfLastClient = currentPage * clientsPerPage;
-    const indexOfFirstClient = indexOfLastClient - clientsPerPage;
-    const currentClients = filteredClients.slice(indexOfFirstClient, indexOfLastClient);
-    const totalPages = Math.ceil(filteredClients.length / clientsPerPage);
+        const startIdx = (currentPage - 1) * clientsPerPage;
+        return filtered.slice(startIdx, startIdx + clientsPerPage);
+    }, [clientSummaries, searchTerm, currentPage]);
+
+    console.log(filteredClients);
+    
+
+    const totalPages = Math.ceil(clientSummaries.length / clientsPerPage);
 
     const toggleClientExpand = (clientId) => {
         setExpandedClient(expandedClient === clientId ? null : clientId);
     };
 
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
     const breadcrumbs = [
         { href: '/vendor', label: 'Vendor', active: false },
-        { href: `/vendor/${vendor.id}`, label: `${vendor.vendor_name}`, active: true }
+        { href: `/vendor/${vendor.id}`, label: vendor.vendor_name, active: true }
     ];
 
     return (
         <AuthenticatedLayout>
-            <BreadCrumbHeader
-                breadcrumbs={breadcrumbs}
-            />
+            <BreadCrumbHeader breadcrumbs={breadcrumbs} />
 
             {/* Analytics Summary Cards */}
-            <Row className="g-3">
+            <Row className="g-3 mb-4">
                 <Col md={3}>
                     <Card className="h-100 border-0 shadow-sm">
                         <Card.Body className="p-3">
@@ -103,7 +84,7 @@ export default function PurchasedProduct({ vendor, groupedPurchaseLists }) {
                                 </div>
                                 <div>
                                     <h6 className="text-muted mb-0">Total Purchases</h6>
-                                    <h5 className="mb-0">₹{grandTotals.raw.toLocaleString('en-IN')}</h5>
+                                    <h5 className="mb-0">₹{grandTotals.purchases.toLocaleString('en-IN')}</h5>
                                 </div>
                             </div>
                         </Card.Body>
@@ -113,12 +94,12 @@ export default function PurchasedProduct({ vendor, groupedPurchaseLists }) {
                     <Card className="h-100 border-0 shadow-sm">
                         <Card.Body className="p-3">
                             <div className="d-flex align-items-center">
-                                <div className="bg-warning bg-opacity-10 p-2 rounded me-3">
-                                    <Percent size={20} className="text-white" />
+                                <div className="bg-danger bg-opacity-10 p-2 rounded me-3">
+                                    <ArrowDown size={20} className="text-white" />
                                 </div>
                                 <div>
-                                    <h6 className="text-muted mb-0">Service Charges</h6>
-                                    <h5 className="mb-0">₹{grandTotals.serviceCharge.toLocaleString('en-IN')}</h5>
+                                    <h6 className="text-muted mb-0">Total Returns</h6>
+                                    <h5 className="mb-0">₹{grandTotals.returns.toLocaleString('en-IN')}</h5>
                                 </div>
                             </div>
                         </Card.Body>
@@ -129,11 +110,11 @@ export default function PurchasedProduct({ vendor, groupedPurchaseLists }) {
                         <Card.Body className="p-3">
                             <div className="d-flex align-items-center">
                                 <div className="bg-success bg-opacity-10 p-2 rounded me-3">
-                                    <Calculator size={20} className="text-white" />
+                                    <ArrowUp size={20} className="text-white" />
                                 </div>
                                 <div>
-                                    <h6 className="text-muted mb-0">Grand Total</h6>
-                                    <h5 className="mb-0">₹{grandTotals.withService.toLocaleString('en-IN')}</h5>
+                                    <h6 className="text-muted mb-0">Total Payments</h6>
+                                    <h5 className="mb-0">₹{grandTotals.payments.toLocaleString('en-IN')}</h5>
                                 </div>
                             </div>
                         </Card.Body>
@@ -147,8 +128,8 @@ export default function PurchasedProduct({ vendor, groupedPurchaseLists }) {
                                     <CreditCard size={20} className="text-white" />
                                 </div>
                                 <div>
-                                    <h6 className="text-muted mb-0">Net Account Balance</h6>
-                                    <h5 className="mb-0">₹{grandTotals.netAccount.toLocaleString('en-IN')}</h5>
+                                    <h6 className="text-muted mb-0">Net Balance</h6>
+                                    <h5 className="mb-0">₹{grandTotals.balance.toLocaleString('en-IN')}</h5>
                                 </div>
                             </div>
                         </Card.Body>
@@ -156,49 +137,49 @@ export default function PurchasedProduct({ vendor, groupedPurchaseLists }) {
                 </Col>
             </Row>
 
-            {/* Search Bar */}
-            <Card className=" border-0 shadow-sm">
-                <Card.Body>
-                    <InputGroup>
-                        <InputGroup.Text className="border-0">
-                            <Search size={16} />
-                        </InputGroup.Text>
-                        <Form.Control
-                            placeholder="Search clients by name or email..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="border-0"
-                        />
-                    </InputGroup>
-                </Card.Body>
-            </Card>
-
-            {/* Clients Table */}
+            {/* Search and Client Table */}
             <Card className="border-0 shadow-sm">
                 <Card.Body className="p-0">
+                    <div className="p-3 border-bottom">
+                        <InputGroup>
+                            <InputGroup.Text className="border-0">
+                                <Search size={16} />
+                            </InputGroup.Text>
+                            <Form.Control
+                                placeholder="Search clients by name or email..."
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                                className="border-0"
+                            />
+                        </InputGroup>
+                    </div>
+
                     <Table hover responsive className="mb-0">
                         <thead>
                             <tr>
                                 <th style={{ width: '40px' }}></th>
                                 <th>Client</th>
                                 <th className="text-end">Purchases</th>
-                                <th className="text-end">Service</th>
-                                <th className="text-end">Total</th>
-                                <th className="text-center">Account Balance</th>
+                                <th className="text-end">Returns</th>
+                                <th className="text-end">Payments</th>
+                                <th className="text-end">Balance</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {currentClients.length > 0 ? (
-                                currentClients.map(({
+                            {filteredClients.length > 0 ? (
+                                filteredClients.map(({
                                     client,
-                                    lists,
-                                    totalRaw,
-                                    totalWithService,
-                                    serviceChargeTotal,
+                                    total_purchases,
+                                    total_returns,
+                                    total_payments,
+                                    balance,
+                                    purchase_lists,
                                     serviceRate,
-                                    accountInTotal,
-                                    accountOutTotal,
-                                    netAccountBalance
+                                    serviceChargeTotal,
+                                    totalWithService
                                 }) => (
                                     <React.Fragment key={client.id}>
                                         <tr
@@ -209,8 +190,7 @@ export default function PurchasedProduct({ vendor, groupedPurchaseLists }) {
                                             <td className="text-center">
                                                 {expandedClient === client.id ?
                                                     <ChevronUp size={18} /> :
-                                                    <ChevronDown size={18} />
-                                                }
+                                                    <ChevronDown size={18} />}
                                             </td>
                                             <td>
                                                 <div className="d-flex align-items-center">
@@ -218,147 +198,94 @@ export default function PurchasedProduct({ vendor, groupedPurchaseLists }) {
                                                         <User size={16} />
                                                     </div>
                                                     <div>
-                                                        <strong>{client.client_name}
-                                                            <Badge
-                                                                bg={client.client_type === 'Service Client' ? 'info' : 'warning'}
-                                                                className="mt-1 ms-2"
-                                                            >
-                                                                {client.client_type}
-                                                            </Badge>
-                                                        </strong>
+                                                        <strong>{client.client_name}</strong>
                                                         <div className="small text-muted">
-                                                            {client.client_email} | {client.client_phone}
+                                                            {client.client_email || 'No email'} | {client.client_phone || 'No phone'}
                                                         </div>
-
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="text-end">
-                                                <div className="fw-bold">₹{totalRaw.toLocaleString('en-IN')}</div>
+                                                <div className="fw-bold">₹{total_purchases.toLocaleString('en-IN')}</div>
                                             </td>
                                             <td className="text-end">
-                                                <div className="text-warning">
-                                                    {serviceRate}% (₹{serviceChargeTotal.toLocaleString('en-IN')})
-                                                </div>
+                                                <div className="text-danger">₹{total_returns.toLocaleString('en-IN')}</div>
                                             </td>
                                             <td className="text-end">
-                                                <div className="fw-bold text-success">₹{totalWithService.toLocaleString('en-IN')}</div>
+                                                <div className="text-success">₹{total_payments.toLocaleString('en-IN')}</div>
                                             </td>
-                                            <td className="text-center">
-                                                <Badge bg={netAccountBalance >= 0 ? 'success' : 'danger'} pill>
-                                                    ₹{netAccountBalance.toLocaleString('en-IN')}
+                                            <td className="text-end">
+                                                <Badge bg={balance >= 0 ? 'success' : 'danger'} pill>
+                                                    ₹{Math.abs(balance).toLocaleString('en-IN')}
+                                                    {balance < 0 && ' (Cr)'}
                                                 </Badge>
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td colSpan={6} className="p-0 border-0">
+                                            <td colSpan={12} className="p-0 border-0">
                                                 <Collapse in={expandedClient === client.id}>
                                                     <div className="p-3">
                                                         <Row>
-                                                            <Col md={12}>
+                                                            {/* <Col md={12}>
                                                                 <h6 className="mb-3 d-flex align-items-center">
                                                                     <FileText size={18} className="me-2" />
-                                                                    Purchase Lists for {client.client_name}
+                                                                    Payments
                                                                 </h6>
-                                                                <Table bordered size="sm" className="">
-                                                                    <thead>
-                                                                        <tr>
-                                                                            <th>List Name</th>
-                                                                            <th>Description</th>
-                                                                            <th className="text-end">Amount</th>
-                                                                            <th className="text-end">Service %</th>
-                                                                            <th className="text-end">Total</th>
-                                                                            <th>Date</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        {lists.map((list, index) => {
-                                                                            const billTotal = parseFloat(list.bill_total) || 0;
-                                                                            const serviceRate = client.service_charge?.service_charge || 0;
-                                                                            const serviceCharge = (billTotal * serviceRate) / 100;
-                                                                            const finalTotal = billTotal + serviceCharge;
+                                                                <div className="table-responsive">
+                                                                    <Table bordered size="sm">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th>Date</th>
+                                                                                <th>List Name</th>
+                                                                                <th className="text-end">Amount</th>
+                                                                                <th className="text-end">Service</th>
+                                                                                <th className="text-end">Total</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {
+                                                                                purchase_lists.map((list) => (
+                                                                                    <tr key={list.id}>
+                                                                                        <td>{new Date(list.created_at).toLocaleDateString()}</td>
+                                                                                        <td>{list.list_name}</td>
+                                                                                        <td className="text-end">₹{parseFloat(list.total_amount).toLocaleString('en-IN')}</td>
+                                                                                        <td className="text-end">{serviceRate}%</td>
+                                                                                        <td className="text-end fw-bold">
+                                                                                            ₹{(parseFloat(list.total_amount) + (parseFloat(list.total_amount) * serviceRate / 100)).toLocaleString('en-IN')}
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                ))
 
-                                                                            return (
-                                                                                <tr key={index}>
-
-                                                                                    <td className="text-muted">
-                                                                                        <strong>{list.list_name}</strong>
-                                                                                    </td>
-                                                                                    <td>
-                                                                                        <small className="text-muted">
-                                                                                            {list.bill_description}
-                                                                                        </small>
-                                                                                    </td>
-                                                                                    <td className="text-end">
-                                                                                        ₹{billTotal.toLocaleString('en-IN')}
-                                                                                    </td>
-                                                                                    <td className="text-end">
-                                                                                        {serviceRate}%
-                                                                                    </td>
-                                                                                    <td className="text-end fw-bold">
-                                                                                        ₹{finalTotal.toLocaleString('en-IN')}
-                                                                                    </td>
-                                                                                    <td>
-                                                                                        {list.purchase_date}
-                                                                                    </td>
-                                                                                </tr>
-                                                                            );
-                                                                        })}
-                                                                    </tbody>
-                                                                </Table>
-                                                            </Col>
+                                                                            }
+                                                                        </tbody>
+                                                                    </Table>
+                                                                </div>
+                                                            </Col> */}
                                                             <Col md={12}>
                                                                 <h6 className="mb-3 d-flex align-items-center">
                                                                     <CreditCard size={18} className="me-2" />
-                                                                    Account Transactions
+                                                                    Account Summary
                                                                 </h6>
-                                                                <Card className="mb-3">
+                                                                <Card>
                                                                     <Card.Body>
                                                                         <div className="d-flex justify-content-between mb-2">
-                                                                            <span>Total In:</span>
-                                                                            <strong className="text-success">
-                                                                                <ArrowUp size={16} className="me-1" />
-                                                                                ₹{accountInTotal.toLocaleString('en-IN')}
-                                                                            </strong>
+                                                                            <span>Total Purchases:</span>
+                                                                            <strong>₹{total_purchases.toLocaleString('en-IN')}</strong>
+                                                                        </div>
+                                                                      
+                                                                        <div className="d-flex justify-content-between mb-2">
+                                                                            <span>Total Returns:</span>
+                                                                            <strong className="text-danger">₹{total_returns.toLocaleString('en-IN')}</strong>
                                                                         </div>
                                                                         <div className="d-flex justify-content-between mb-2">
-                                                                            <span>Total Out:</span>
-                                                                            <strong className="text-danger">
-                                                                                <ArrowDown size={16} className="me-1" />
-                                                                                ₹{accountOutTotal.toLocaleString('en-IN')}
-                                                                            </strong>
+                                                                            <span>Total Payments:</span>
+                                                                            <strong className="text-success">₹{total_payments.toLocaleString('en-IN')}</strong>
                                                                         </div>
                                                                         <hr />
                                                                         <div className="d-flex justify-content-between">
-                                                                            <span>Net Balance:</span>
-                                                                            <strong className={netAccountBalance >= 0 ? 'text-success' : 'text-danger'}>
-                                                                                ₹{netAccountBalance.toLocaleString('en-IN')}
-                                                                            </strong>
-                                                                        </div>
-                                                                    </Card.Body>
-                                                                </Card>
-
-                                                                <Card>
-                                                                    <Card.Body>
-                                                                        <h6 className="d-flex align-items-center mb-3">
-                                                                            <Calculator size={16} className="me-2" />
-                                                                            Financial Summary
-                                                                        </h6>
-                                                                        <div className="d-flex justify-content-between mb-2">
-                                                                            <span>Total Purchases:</span>
-                                                                            <strong>₹{totalRaw.toLocaleString('en-IN')}</strong>
-                                                                        </div>
-                                                                        <div className="d-flex justify-content-between mb-2">
-                                                                            <span>Service Charges ({serviceRate}%):</span>
-                                                                            <strong className="text-warning">
-                                                                                ₹{serviceChargeTotal.toLocaleString('en-IN')}
-                                                                            </strong>
-                                                                        </div>
-                                                                        <hr />
-                                                                        <div className="d-flex justify-content-between mb-2">
-                                                                            <span>Total Payable:</span>
-                                                                            <strong className="text-success">
-                                                                                ₹{totalWithService.toLocaleString('en-IN')}
+                                                                            <span className="fw-bold">Net Balance:</span>
+                                                                            <strong className={balance >= 0 ? 'text-success' : 'text-danger'}>
+                                                                                ₹{Math.abs(balance).toLocaleString('en-IN')}
                                                                             </strong>
                                                                         </div>
                                                                     </Card.Body>
@@ -384,31 +311,35 @@ export default function PurchasedProduct({ vendor, groupedPurchaseLists }) {
                             )}
                         </tbody>
                     </Table>
+
+                    {/* Pagination */}
+                    {clientSummaries.length > clientsPerPage && (
+                        <div className="d-flex justify-content-center p-3 border-top">
+                            <Pagination className="mb-0">
+                                <Pagination.First onClick={() => setCurrentPage(1)} disabled={currentPage === 1} />
+                                <Pagination.Prev onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} />
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    const page = Math.max(1, Math.min(
+                                        totalPages - 4,
+                                        currentPage - 2
+                                    )) + i;
+                                    return (
+                                        <Pagination.Item
+                                            key={page}
+                                            active={page === currentPage}
+                                            onClick={() => setCurrentPage(page)}
+                                        >
+                                            {page}
+                                        </Pagination.Item>
+                                    );
+                                })}
+                                <Pagination.Next onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} />
+                                <Pagination.Last onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} />
+                            </Pagination>
+                        </div>
+                    )}
                 </Card.Body>
             </Card>
-
-            {/* Pagination */}
-            {filteredClients.length > clientsPerPage && (
-                <div className="d-flex justify-content-center mt-3">
-                    <Pagination>
-                        <Pagination.First onClick={() => paginate(1)} disabled={currentPage === 1} />
-                        <Pagination.Prev onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} />
-                        
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
-                            <Pagination.Item 
-                                key={number} 
-                                active={number === currentPage}
-                                onClick={() => paginate(number)}
-                            >
-                                {number}
-                            </Pagination.Item>
-                        ))}
-                        
-                        <Pagination.Next onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} />
-                        <Pagination.Last onClick={() => paginate(totalPages)} disabled={currentPage === totalPages} />
-                    </Pagination>
-                </div>
-            )}
         </AuthenticatedLayout>
     );
 }

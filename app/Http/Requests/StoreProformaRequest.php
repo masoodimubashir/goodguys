@@ -22,24 +22,30 @@ class StoreProformaRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'client_id' => ['required', 'exists:clients,id'],
-                'client_name' => ['required', 'string'],
-                'client_address' => ['required', 'string'],
-                'show_all_prices' => ['required', 'boolean'],
-                'tax' => ['nullable', 'integer'],
-                'products' => ['required', 'array', 'min:1'],
-                'products.*.product_name' => ['required', 'string'],
-                'products.*.items' => ['required', 'array', 'min:1'],
-                'products.*.items.*.source' => ['required', 'in:custom,module,inventory'],
-                'products.*.items.*.source_id' => ['nullable', 'integer'],
-                'products.*.items.*.name' => ['required', 'string'],
-                'products.*.items.*.description' => ['nullable', 'string'],
-                'products.*.items.*.price' => ['required', 'integer', 'min:0'],
-                'products.*.items.*.quantity' => ['required', 'integer', 'min:1'],
-                'products.*.items.*.item_dimensions' => ['nullable', 'array', 'min:1'],
-                'products.*.items.*.item_dimensions.*.type' => ['nullable', 'string'],
-                'products.*.items.*.item_dimensions.*.value' => ['nullable', 'numeric'],
-                'products.*.items.*.item_dimensions.*.si' => ['nullable', 'string'],
+            'client_id' => ['required', 'exists:clients,id'],
+            'client_name' => ['required', 'string'],
+            'client_address' => ['required', 'string'],
+            'show_all_prices' => ['required', 'boolean'],
+            'service_charge' => ['nullable', 'integer'],
+            'site_name' => ['required', 'string'],
+
+            'products' => ['required', 'array', 'min:1'],
+            'products.*.module_name' => ['required', 'string'],
+            'products.*.items' => ['required', 'array', 'min:1'],
+
+            'products.*.items.*.source' => ['required', 'in:custom,module,inventory'],
+            'products.*.items.*.source_id' => ['nullable', 'integer'],
+            'products.*.items.*.name' => ['required', 'string'],
+            'products.*.items.*.description' => ['nullable', 'string'],
+            'products.*.items.*.price' => ['required', 'integer', 'min:0'],
+            'products.*.items.*.quantity' => ['required', 'integer', 'min:1'],
+
+            // item_dimensions can be fully nullable or omitted
+            'products.*.items.*.item_dimensions' => ['nullable', 'array'],
+            'products.*.items.*.item_dimensions.*.type' => ['nullable', 'string'],
+            'products.*.items.*.item_dimensions.*.value' => ['nullable', 'numeric'],
+            'products.*.items.*.item_dimensions.*.si' => ['nullable', 'string'],
+
         ];
     }
 }

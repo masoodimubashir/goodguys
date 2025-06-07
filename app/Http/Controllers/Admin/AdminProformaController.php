@@ -10,6 +10,7 @@ use App\Models\Inventory;
 use App\Models\Module;
 use App\Models\Product;
 use App\Models\Proforma;
+use App\Models\ProformaModule;
 use App\Models\ProformaRefrence;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,22 +52,26 @@ class AdminProformaController extends Controller
         DB::beginTransaction();
 
         try {
-
             $data = $request->validated();
 
-            $proforma_refrence = ProformaRefrence::create([
+
+
+            // Step 1: Create Proforma Reference
+            $proformaRefrence = ProformaRefrence::create([
                 'proforma_number' => uniqid('PRF-'),
                 'client_id' => $data['client_id'],
             ]);
 
-            foreach ($data['products'] as $productData) {
+            // Step 2: Loop through each module (product)
+            foreach ($data['products'] as $moduleData) {
 
-                $product = Product::create([
-                    'proforma_refrence_id' => $proforma_refrence->id,
-                    'product_name' => $productData['product_name'],
+                // Step 2a: Create ProformaModule
+                $proformaModule = ProformaModule::create([
+                    'module_name' => $moduleData['module_name'],
                 ]);
 
-                foreach ($productData['items'] as $item) {
+                // Step 2b: Loop through each item in the module
+                foreach ($moduleData['items'] as $item) {
                     $item_dimensions = [];
 
                     if (!empty($item['item_dimensions']) && is_array($item['item_dimensions'])) {
@@ -79,15 +84,15 @@ class AdminProformaController extends Controller
                         }
                     }
 
+                    // Step 2c: Save Proforma
                     Proforma::create([
-                        'client_id' => $data['client_id'],
                         'item_name' => $item['name'],
-                        'product_id' => $product->id,
+                        'proforma_module_id' => $proformaModule->id,
+                        'proforma_refrence_id' => $proformaRefrence->id,
                         'description' => $item['description'],
                         'additional_description' => json_encode($item_dimensions),
                         'count' => $item['quantity'],
                         'price' => $item['price'],
-                        'tax' => $item['tax'] ?? 0,
                         'service_charge' => $data['service_charge'] ?? 0,
                         'is_price_visible' => $data['show_all_prices'],
                         'created_by' => auth()->id(),
@@ -96,7 +101,7 @@ class AdminProformaController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('clients.show', [$proforma_refrence->client_id])
+            return redirect()->route('clients.show', [$proformaRefrence->client_id])
                 ->with('message', 'Proforma Created Successfully');
         } catch (Exception $e) {
             Log::error('Failed to create proforma: ' . $e->getMessage());
@@ -121,8 +126,8 @@ class AdminProformaController extends Controller
         try {
 
             $proforma = ProformaRefrence::with([
-                'products' => fn($query) => $query->with('proformas'),
-                'client' => fn($query) => $query->with('serviceCharge'),
+                'proformas.proformaModule',
+                'client',
             ])->findOrFail($id);
 
             $modules = Module::all();
@@ -133,7 +138,6 @@ class AdminProformaController extends Controller
                 'modules' => $modules,
                 'inventories' => $inventories,
             ]);
-
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'Invoice not found');
         } catch (Exception $e) {
@@ -146,95 +150,83 @@ class AdminProformaController extends Controller
      */
     public function update(UpdateProformaRequest $request, $id)
     {
-        DB::beginTransaction();
+        $data = $request->validated();
 
-        try {
+        // Find the existing proforma reference
+        $proformaReference = ProformaRefrence::findOrFail($id);
 
-            $data = $request->validated();
+        // Reset conversion status on update
+        $proformaReference->update([
+            'is_converted_to_invoice' => 0
+        ]);
 
-            $proformaReference = ProformaRefrence::findOrFail($id);
+        // Track processed modules and items
+        $processedModuleIds = [];
+        $processedItemIds = [];
 
-            $proformaReference->update([
-                'is_converted_to_invoice' => 0
-            ]);
+        // Process each module (product) in the request
+        foreach ($data['products'] as $moduleData) {
 
-            $existingProductIds = Product::where('proforma_refrence_id', $proformaReference->id)->pluck('id')->toArray();
+            // Create or update the module using the module_id from the request
+            $module = ProformaModule::updateOrCreate(
+                [
+                    'id' => $moduleData['module_id'] ?? null,
+                ],
+                [
+                    'proforma_refrence_id' => $proformaReference->id,
+                    'module_name' => $moduleData['module_name'],
+                ]
+            );
 
-            // Track the products we process to determine which ones to delete later
-            $processedProductIds = [];
+            $processedModuleIds[] = $module->id;
 
-            // Process each product in the request
-            foreach ($data['products'] as $productData) {
-                // Create or update the product
-                $product = Product::updateOrCreate(
-                    // If product has an ID in incoming data, use it for lookup
-                    ['id' => $productData['id'] ?? null],
-                    [
-                        'proforma_refrence_id' => $proformaReference->id,
-                        'product_name' => $productData['product_name'],
-                    ]
-                );
+            // First, delete all existing items for this module to avoid duplicates
+            // since items don't have IDs in the request
+            Proforma::where('proforma_module_id', $module->id)->delete();
 
-                $processedProductIds[] = $product->id;
-
-                // Get existing proforma item IDs for this product
-                $existingItemIds = Proforma::where('product_id', $product->id)->pluck('id')->toArray();
-                $processedItemIds = [];
-
-                // Process each item in the product
-                foreach ($productData['items'] as $itemData) {
-                    // Convert item dimensions to the expected format
-                    $itemDimensions = collect($itemData['item_dimensions'])->map(fn($dim) => [
-                        'type' => $dim['type'],
-                        'value' => $dim['value'],
-                        'si' => $dim['si'],
-                    ]);
-
-                    // Create or update the proforma item
-                    $proformaItem = Proforma::updateOrCreate(
-                        ['id' => $itemData['id'] ?? null],
-                        [
-                            'proforma_refrence_id' => $proformaReference->id,
-                            'product_id' => $product->id,
-                            'item_name' => $itemData['name'],
-                            'description' => $itemData['description'] ?? null,
-                            'additional_description' => json_encode($itemDimensions),
-                            'count' => $itemData['quantity'],
-                            'price' => $itemData['price'],
-                            'tax' => $itemData['tax'] ?? 0,
-                            'service_charge' => $data['service_charge'] ?? 0,
-                            'source_type' => $itemData['source'],
-                            'source_id' => $itemData['source_id'],
-                            'updated_by' => auth()->id(),
-                            'created_by' => isset($itemData['id']) ? null : auth()->id(),
-                            'is_price_visible' => $data['show_all_prices'],
-                        ]
-                    );
-
-                    $processedItemIds[] = $proformaItem->id;
+            // Process each item in the module (create new items)
+            foreach ($moduleData['items'] as $itemData) {
+                // Prepare item dimensions
+                $itemDimensions = [];
+                if (!empty($itemData['item_dimensions'])) {
+                    foreach ($itemData['item_dimensions'] as $dimension) {
+                        $itemDimensions[] = [
+                            'type' => $dimension['type'] ?? '',
+                            'value' => $dimension['value'] ?? '',
+                            'si' => $dimension['si'] ?? '',
+                        ];
+                    }
                 }
 
-                Proforma::where('product_id', $product->id)
-                    ->whereNotIn('id', $processedItemIds)
-                    ->delete();
+                // Create new proforma item
+                $proformaItem = Proforma::create([
+                    'proforma_refrence_id' => $proformaReference->id,
+                    'proforma_module_id' => $module->id,
+                    'item_name' => $itemData['name'],
+                    'description' => $itemData['description'] ?? null,
+                    'additional_description' => json_encode($itemDimensions),
+                    'count' => $itemData['quantity'],
+                    'price' => $itemData['price'],
+                    'service_charge' => $data['service_charge'] ?? 0,
+                    'source_type' => $itemData['source'] ?? null,
+                    'source_id' => $itemData['source_id'] ?? null,
+                    'is_price_visible' => $itemData['is_price_visible'] ?? $data['show_all_prices'],
+                    'updated_by' => auth()->id(),
+                ]);
+
+                $processedItemIds[] = $proformaItem->id;
             }
-
-            Product::where('proforma_refrence_id', $proformaReference->id)
-                ->whereNotIn('id', $processedProductIds)
-                ->delete();
-
-            DB::commit();
-
-            return redirect()->route('clients.show', [$proformaReference->client_id])
-                ->with('message', 'Proforma Updated Successfully');
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Error updating proforma: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', 'Failed to Update Proforma: ' . $e->getMessage());
         }
-    }
 
+        // Delete modules that weren't processed (modules removed from the form)
+        ProformaModule::whereNotIn('id', $processedModuleIds)
+            ->delete();
+
+        DB::commit();
+
+        return redirect()->route('clients.show', [$proformaReference->client_id])
+            ->with('message', 'Proforma Updated Successfully');
+    }
 
     /**
      * Remove the specified resource from storage.
@@ -243,15 +235,30 @@ class AdminProformaController extends Controller
     {
         try {
 
-            $proforma = ProformaRefrence::findOrFail($id);
+            DB::beginTransaction();
 
-            $proforma->delete();
+            $proformaReference = ProformaRefrence::findOrFail($id);
 
-            return redirect()->back()->with('message', 'Proforma deleted successfully');
+            $proforma_module_ids = Proforma::where('proforma_refrence_id', $proformaReference->id)->pluck('proforma_module_id');
+
+            foreach ($proforma_module_ids as $module_id) {
+                ProformaModule::find($module_id)->delete();
+            }
+
+            $proformaReference->delete();
+
+            DB::commit();
+
+            return redirect()->back()->with('message', 'Proforma and all related data deleted successfully');
         } catch (ModelNotFoundException $e) {
-            return redirect()->back() > with('error', 'Proforma not found');
+            DB::rollBack();
+            Log::error($e->getMessage());
+
+            return redirect()->back()->with('error', 'Proforma not found');
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to delete proforma');
+            Log::error($e->getMessage());
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to delete proforma: ' . $e->getMessage());
         }
     }
 }

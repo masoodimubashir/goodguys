@@ -5,12 +5,12 @@ import { Button, Card, Table, Badge, Form, Modal, Row, Col, ProgressBar } from '
 import { Trash2, FileText, Edit, Plus, User, Mail, Phone, MapPin, Calendar, CreditCard } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import ChallanPdf from '../PDF/ChallanPdf';
-import ChallanToInvoice from '../PDF/ChallanToPdf';
+import ChallanToInvoice from '../PDF/ChallanToInvoice';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import Swal from 'sweetalert2';
 import { ClientInfoCard } from '@/Components/ClientInfoCard';
 
-const ViewChallans = ({ client, company_profile, }) => {
+const ViewChallans = ({ client, company_profile, bankAccount }) => {
 
     const [selectedChallans, setSelectedChallans] = useState([]);
     const [showInvoiceModal, setShowInvoiceModal] = useState(false);
@@ -241,7 +241,7 @@ const ViewChallans = ({ client, company_profile, }) => {
                                                 company_profile={company_profile}
                                                 challans={client.challan_refrences.filter(ref => selectedChallans.includes(ref.id))}
                                                 client={client}
-
+                                                bankAccount={bankAccount}
                                             />
                                         }
                                         fileName={`${client.client_name}.pdf`}
@@ -347,6 +347,7 @@ const ViewChallans = ({ client, company_profile, }) => {
                                                             company_profile={company_profile}
                                                             challan={ref}
                                                             client={client}
+                                                            bankAccount={bankAccount}
                                                         />
                                                     }
                                                     fileName={`${client.client_name}.pdf`}

@@ -16,7 +16,7 @@ class AdminVendorController extends Controller
     public function index()
     {
         return Inertia::render("Vendor/vendor", [
-            'vendors' => Vendor::orderBy('vendor_name')->get(),
+            'vendors' => Vendor::orderBy('vendor_name')->paginate(10),
         ]);
     }
 
@@ -51,44 +51,55 @@ class AdminVendorController extends Controller
      */
     public function show($id)
     {
+        // Load vendor with relationships
+        $vendor = Vendor::with([
+            'purchaseLists.client', // Load client with each purchase list
+            'purchaseLists.returnLists', // Load return lists for each purchase list
+            'purchaseListPayments' // Load payments made by this vendor
+        ])->findOrFail($id);
 
-        $vendor = Vendor::with(['purchaseLists' => function ($list) {
-            $list->with(['client' => function ($client) {
-                $client->with([
-                    'serviceCharge',
-                    'clientAccounts'
-                ]);
-            }])->paginate(10); // Add pagination here
-        }])->findOrFail($id);
+        // Get paginated purchase lists separately to avoid N+1 issues
+        $paginatedPurchaseLists = $vendor->purchaseLists()->with(['client', 'returnLists'])->paginate(10);
 
+        // Group all purchase lists by client for calculations
         $groupedPurchaseLists = $vendor->purchaseLists->groupBy('client_id');
 
-        // Append client account totals (in/out) to each client
-        $groupedPurchaseLists->transform(function ($lists) {
+        // Calculate totals for each client
+        $clientAccounts = [];
+
+        foreach ($groupedPurchaseLists as $clientId => $lists) {
             $client = $lists->first()->client;
 
-            $client_id = $client->id;
+            // Calculate total purchases (amount vendor owes client)
+            $totalPurchases = $lists->sum('bill_total');
 
-            $clientAccountInTotal = \App\Models\ClientAccount::where([
-                ['client_id', '=', $client_id],
-                ['payment_flow', '=', 1]
-            ])->sum('amount');
+            // Calculate total returns (reduces amount vendor owes)
+            $totalReturns = $lists->flatMap(function ($purchaseList) {
+                return $purchaseList->returnLists;
+            })->sum('price');
 
-            $clientAccountOutTotal = \App\Models\ClientAccount::where([
-                ['client_id', '=', $client_id],
-                ['payment_flow', '=', 0]
-            ])->sum('amount');
+            // Calculate total payments (amount vendor has paid to client)
+            $totalPayments = $vendor->purchaseListPayments
+                ->where('client_id', $clientId)
+                ->sum('amount');
 
-            $client->clientAccountInTotal = $clientAccountInTotal;
-            $client->clientAccountOutTotal = $clientAccountOutTotal;
+            // Calculate current balance (positive means vendor owes client)
+            $balance = ($totalPurchases - $totalReturns) - $totalPayments;
 
-            return $lists;
-        });
+            $clientAccounts[$clientId] = [
+                'client' => $client,
+                'total_purchases' => $totalPurchases,
+                'total_returns' => $totalReturns,
+                'total_payments' => $totalPayments,
+                'balance' => $balance,
+                'purchase_lists' => $lists
+            ];
+        }
 
         return Inertia::render('PurchasedProduct/PurchasedProduct', [
             'vendor' => $vendor,
-            'groupedPurchaseLists' => $groupedPurchaseLists,
-            'purchaseListsPagination' => $vendor->purchaseLists()->paginate(10), 
+            'clientAccounts' => $clientAccounts,
+            'purchaseListsPagination' => $paginatedPurchaseLists,
         ]);
     }
 

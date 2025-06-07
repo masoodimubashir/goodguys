@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\AdminModuleController;
 use App\Http\Controllers\Admin\AdminProformaController;
 use App\Http\Controllers\Admin\AdminPurchasedProductController;
 use App\Http\Controllers\Admin\AdminPurchaseListController;
+use App\Http\Controllers\Admin\AdminPurchaseListPaymentController;
 use App\Http\Controllers\Admin\AdminPurchaseManagmentController;
 use App\Http\Controllers\Admin\AdminReturnListController;
 use App\Http\Controllers\Admin\AdminUsersController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\AdminAdminCompanyProfile;
 use App\Http\Controllers\AdminInvoiceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Models\PurchaseListPayment;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -110,6 +112,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('/client-account', AdminClientAccountController::class);
 
 
+    // Route For PurchaseListpayment
+    Route::resource('purchase-list-payments', AdminPurchaseListPaymentController::class);
 
     
 });

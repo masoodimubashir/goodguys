@@ -1,22 +1,22 @@
 import { Link } from "@inertiajs/react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Head, useForm, usePage } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { ShowMessage } from "@/Components/ShowMessage";
-import $ from "jquery";
-import "datatables.net";
-import "datatables.net-responsive";
 import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
-import { Table } from "react-bootstrap";
+import { Table, Pagination } from "react-bootstrap";
 import { Edit2, Trash } from "lucide-react";
 import Swal from "sweetalert2";
 
 export default function Module({ modules: initialModules }) {
     const [modules, setModules] = useState(initialModules);
-    const tableRef = useRef(null);
     const { flash, auth } = usePage().props;
     const { delete: destroy } = useForm();
 
+    // State for pagination and search
+    const [searchTerm, setSearchTerm] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
     const tableHead = ["Module Name", "Buying Price", "Selling Price", "Total Price", "Count", "Fields", "Actions"];
 
     /** Show success/error messages on load */
@@ -25,36 +25,29 @@ export default function Module({ modules: initialModules }) {
         if (flash.error) ShowMessage("error", flash.error);
     }, [flash]);
 
-    /** Initialize or reinitialize DataTable */
-    const initializeDataTable = () => {
-        if (!tableRef.current) return;
+    // Filter modules based on search term
+    const filteredModules = modules.filter(module => {
+        const term = searchTerm.toLowerCase();
+        return (
+            module.module_name.toLowerCase().includes(term) ||
+            module.fields.some(field => field.toLowerCase().includes(term))
+        );
+    });
 
-        if ($.fn.DataTable.isDataTable(tableRef.current)) {
-            $(tableRef.current).DataTable().destroy();
-        }
+    // Pagination logic
+    const totalItems = filteredModules.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredModules.slice(indexOfFirstItem, indexOfLastItem);
 
-        if (modules.length > 0) {
-            $(tableRef.current).DataTable({
-                responsive: true,
-                pageLength: 10,
-                lengthMenu: [[10, 20, 40, -1], [10, 20, 40, "All"]],
-                columnDefs: [{ targets: -1, responsivePriority: 1 }],
-            });
-        }
-    };
-
+    // Reset to first page when search term changes
     useEffect(() => {
-        initializeDataTable();
-        return () => {
-            if ($.fn.DataTable.isDataTable(tableRef.current)) {
-                $(tableRef.current).DataTable().destroy();
-            }
-        };
-    }, [modules]);
+        setCurrentPage(1);
+    }, [searchTerm]);
 
     /** Delete module */
     const handleDelete = (id) => {
-
         Swal.fire({
             title: "Are you sure?",
             text: "You won't be able to revert this!",
@@ -74,9 +67,7 @@ export default function Module({ modules: initialModules }) {
                     onError: () => ShowMessage("error", "Failed to delete module."),
                 });
             }
-        })
-
-
+        });
     };
 
     const breadcrumbs = [
@@ -84,17 +75,11 @@ export default function Module({ modules: initialModules }) {
     ];
 
     return (
-
-
         <AuthenticatedLayout>
-
-
             <Head title="Modules" />
 
             <div className="row g-4 mt-4">
-
                 <div className="d-flex justify-content-between align-items-center">
-
                     <BreadCrumbHeader
                         homeHref="/module"
                         breadcrumbs={breadcrumbs}
@@ -109,12 +94,38 @@ export default function Module({ modules: initialModules }) {
                             <i className="ti ti-eye me-1"></i> View Fields
                         </Link>
                     </div>
-
-
-
                 </div>
+
+                {/* Search and Pagination Controls */}
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div className="d-flex align-items-center">
+                        <span className="me-2">Show</span>
+                        <select 
+                            className="form-select form-select-sm w-auto"
+                            value={itemsPerPage}
+                            onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                        >
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                        </select>
+                        <span className="ms-2">entries</span>
+                    </div>
+                    
+                    <div style={{ width: '300px' }}>
+                        <input
+                            type="text"
+                            className="form-control form-control-sm"
+                            placeholder="Search modules..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </div>
+
                 <div className="col-12">
-                    <Table ref={tableRef} responsive hover bordered size="sm" >
+                    <Table responsive hover bordered size="sm">
                         <thead className="table-light">
                             <tr>
                                 {tableHead.map((head, index) => (
@@ -123,8 +134,8 @@ export default function Module({ modules: initialModules }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {modules.length > 0 ? (
-                                modules.map((module) => {
+                            {currentItems.length > 0 ? (
+                                currentItems.map((module) => {
                                     const totalPrice = module.selling_price * module.count;
                                     return (
                                         <tr key={module.id}>
@@ -142,7 +153,6 @@ export default function Module({ modules: initialModules }) {
                                                     </div>
                                                 ))}
                                             </td>
-
                                             <td>
                                                 <div className="d-flex">
                                                     <Link className="dropdown-item" href={route("module.edit", module.id)} title="Edit">
@@ -160,14 +170,43 @@ export default function Module({ modules: initialModules }) {
                                 <tr>
                                     <td colSpan={tableHead.length} className="text-center text-muted py-4">
                                         <i className="ti ti-box fs-4 d-block mb-2"></i>
-                                        No modules found.
+                                        {searchTerm ? "No matching modules found" : "No modules found"}
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </Table>
+
+                    {/* Pagination */}
+                    <div className="d-flex justify-content-between align-items-center">
+                        <div>
+                            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, totalItems)} of {totalItems} entries
+                        </div>
+                        
+                        <Pagination className="mb-0">
+                            <Pagination.Prev 
+                                disabled={currentPage === 1} 
+                                onClick={() => setCurrentPage(currentPage - 1)} 
+                            />
+                            
+                            {Array.from({ length: totalPages }, (_, i) => (
+                                <Pagination.Item
+                                    key={i + 1}
+                                    active={i + 1 === currentPage}
+                                    onClick={() => setCurrentPage(i + 1)}
+                                >
+                                    {i + 1}
+                                </Pagination.Item>
+                            ))}
+                            
+                            <Pagination.Next 
+                                disabled={currentPage === totalPages} 
+                                onClick={() => setCurrentPage(currentPage + 1)} 
+                            />
+                        </Pagination>
+                    </div>
                 </div>
             </div>
-        </AuthenticatedLayout >
+        </AuthenticatedLayout>
     );
 }

@@ -1,58 +1,98 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import React from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import Button from '@/Components/Button';
 
-const CreateBankAccount = ({ client }) => {
+const BankAccountForm = ({ bankAccount = null }) => {
+    const isEdit = !!bankAccount;
 
-    const { data, setData, post, errors, processing } = useForm({
-        client_id: client.id,
-        bank_name: '',
-        ifsc_code: '',
-        branch_code: '',
-        holder_name: '',
-        account_number: '',
-        swift_code: '',
-        upi_number: '',
-        upi_address: '',
-        tax_number: '',
+    console.log('isEdit:', isEdit);
+    console.log('bankAccount:', bankAccount);
+    
+
+    const { data, setData, errors, processing } = useForm({
+        bank_name: bankAccount?.bank_name || '',
+        ifsc_code: bankAccount?.ifsc_code || '',
+        holder_name: bankAccount?.holder_name || '',
+        account_number: bankAccount?.account_number || '',
+        upi_number: bankAccount?.upi_number || '',
+        upi_address: bankAccount?.upi_address || '',
+        tax_number: bankAccount?.tax_number || '',
         qr_code_image: null,
-        signiture_image: null,
+        signature_image: null,
         company_stamp_image: null,
+        _method: isEdit ? 'PUT' : 'POST', // Add method spoofing for Laravel
     });
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        post(route('bank-account.store'));
-    };
 
     const handleFileChange = (field, e) => {
         setData(field, e.target.files[0]);
     };
 
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        const formData = new FormData();
+        Object.entries(data).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+                formData.append(key, value);
+            }
+        });
+
+        console.log('Submitting to:', isEdit ? route('bank-account.update', bankAccount.id) : route('bank-account.store'));
+        console.log('Form data:', Object.fromEntries(formData));
+
+        if (isEdit) {
+            // For updates, use POST with method spoofing
+            router.post(
+                route('bank-account.update', bankAccount.id),
+                formData,
+                {
+                    forceFormData: true,
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        console.log('Update successful');
+                    },
+                    onError: (errors) => {
+                        console.log('Update errors:', errors);
+                    }
+                }
+            );
+        } else {
+            // For creation, use POST
+            router.post(
+                route('bank-account.store'),
+                formData,
+                {
+                    forceFormData: true,
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        console.log('Create successful');
+                    },
+                    onError: (errors) => {
+                        console.log('Create errors:', errors);
+                    }
+                }
+            );
+        }
+    };
+
     return (
         <AuthenticatedLayout>
-            <Head title="Create Bank Account" />
+            <Head title={`${isEdit ? 'Edit' : 'Create'} Bank Account`} />
 
             <div className="row m-1">
                 <div className="col-12">
                     <ul className="app-line-breadcrumbs mb-3">
                         <li>
                             <Link href={route('dashboard')} className="f-s-14 f-w-500">
-                                <span><i className="iconoir-home-alt"></i></span>
+                                <i className="iconoir-home-alt"></i>
                             </Link>
                         </li>
-                        <li>
-                            <Link href={route('clients.index')} className="f-s-14 f-w-500">Clients</Link>
-                        </li>
-                        <li>
-                            <Link href={route('clients.show', client.id)} className="f-s-14 f-w-500">{client.name || 'Client Details'}</Link>
-                        </li>
                         <li className="active">
-                            <Link href="#" className="f-s-14 f-w-500">Create Bank Account</Link>
+                            <span className="f-s-14 f-w-500">{isEdit ? 'Edit' : 'Create'} Bank Account</span>
                         </li>
                     </ul>
                 </div>
@@ -62,195 +102,64 @@ const CreateBankAccount = ({ client }) => {
                 <div className="col-12">
                     <div className="card">
                         <div className="card-body">
-                            <form className="app-form" onSubmit={handleSubmit} encType="multipart/form-data">
+                            <form onSubmit={handleSubmit} encType="multipart/form-data">
                                 <div className="row">
-                                    {/* Bank Name */}
-                                    <div className="col-md-4">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="bank_name" value="Bank Name" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter Bank Name"
-                                                id="bank_name"
-                                                onChange={(e) => setData('bank_name', e.target.value)}
-                                                value={data.bank_name}
-                                            />
-                                            <InputError message={errors.bank_name} />
+                                    {[
+                                        { id: 'bank_name', label: 'Bank Name' },
+                                        { id: 'holder_name', label: 'Account Holder Name' },
+                                        { id: 'account_number', label: 'Account Number' },
+                                        { id: 'ifsc_code', label: 'IFSC Code' },
+                                        { id: 'upi_number', label: 'UPI Number' },
+                                        { id: 'upi_address', label: 'UPI Address' },
+                                        { id: 'tax_number', label: 'Tax Number' },
+                                    ].map(({ id, label }) => (
+                                        <div className="col-md-4" key={id}>
+                                            <div className="mb-4">
+                                                <InputLabel htmlFor={id} value={label} />
+                                                <TextInput
+                                                    id={id}
+                                                    className="form-control"
+                                                    placeholder={`Enter ${label}`}
+                                                    value={data[id]}
+                                                    onChange={(e) => setData(id, e.target.value)}
+                                                />
+                                                <InputError message={errors[id]} />
+                                            </div>
                                         </div>
-                                    </div>
+                                    ))}
 
-                                    {/* Holder Name */}
-                                    <div className="col-md-4">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="holder_name" value="Account Holder Name" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter Account Holder Name"
-                                                id="holder_name"
-                                                onChange={(e) => setData('holder_name', e.target.value)}
-                                                value={data.holder_name}
-                                            />
-                                            <InputError message={errors.holder_name} />
+                                    {[
+                                        { id: 'qr_code_image', label: 'QR Code Image' },
+                                        { id: 'signature_image', label: 'Signature Image' },
+                                        { id: 'company_stamp_image', label: 'Company Stamp Image' },
+                                    ].map(({ id, label }) => (
+                                        <div className="col-md-4" key={id}>
+                                            <div className="mb-4">
+                                                <InputLabel htmlFor={id} value={label} />
+                                                <input
+                                                    type="file"
+                                                    id={id}
+                                                    className="form-control"
+                                                    onChange={(e) => handleFileChange(id, e)}
+                                                    accept="image/*"
+                                                />
+                                                <InputError message={errors[id]} />
+                                                {/* Show existing file names for edit mode */}
+                                              
+                                            </div>
                                         </div>
-                                    </div>
+                                    ))}
 
-                                    {/* Account Number */}
-                                    <div className="col-md-4">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="account_number" value="Account Number" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter Account Number"
-                                                id="account_number"
-                                                onChange={(e) => setData('account_number', e.target.value)}
-                                                value={data.account_number}
-                                            />
-                                            <InputError message={errors.account_number} />
-                                        </div>
-                                    </div>
-
-                                    {/* IFSC Code */}
-                                    <div className="col-md-4">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="ifsc_code" value="IFSC Code" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter IFSC Code"
-                                                id="ifsc_code"
-                                                onChange={(e) => setData('ifsc_code', e.target.value)}
-                                                value={data.ifsc_code}
-                                            />
-                                            <InputError message={errors.ifsc_code} />
-                                        </div>
-                                    </div>
-
-                                    {/* Branch Code */}
-                                    <div className="col-md-4">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="branch_code" value="Branch Code" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter Branch Code"
-                                                id="branch_code"
-                                                onChange={(e) => setData('branch_code', e.target.value)}
-                                                value={data.branch_code}
-                                            />
-                                            <InputError message={errors.branch_code} />
-                                        </div>
-                                    </div>
-
-                                    {/* Swift Code */}
-                                    <div className="col-md-4">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="swift_code" value="SWIFT Code" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter SWIFT Code"
-                                                id="swift_code"
-                                                onChange={(e) => setData('swift_code', e.target.value)}
-                                                value={data.swift_code}
-                                            />
-                                            <InputError message={errors.swift_code} />
-                                        </div>
-                                    </div>
-
-                                    {/* UPI Number */}
-                                    <div className="col-md-4">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="upi_number" value="UPI Number" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter UPI Number"
-                                                id="upi_number"
-                                                onChange={(e) => setData('upi_number', e.target.value)}
-                                                value={data.upi_number}
-                                            />
-                                            <InputError message={errors.upi_number} />
-                                        </div>
-                                    </div>
-
-                                    {/* UPI Address */}
-                                    <div className="col-md-4">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="upi_address" value="UPI Address" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter UPI Address"
-                                                id="upi_address"
-                                                onChange={(e) => setData('upi_address', e.target.value)}
-                                                value={data.upi_address}
-                                            />
-                                            <InputError message={errors.upi_address} />
-                                        </div>
-                                    </div>
-
-                                    {/* Tax Number */}
-                                    <div className="col-md-4">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="tax_number" value="Tax Number" />
-                                            <TextInput
-                                                className="form-control"
-                                                placeholder="Enter Tax Number"
-                                                id="tax_number"
-                                                onChange={(e) => setData('tax_number', e.target.value)}
-                                                value={data.tax_number}
-                                            />
-                                            <InputError message={errors.tax_number} />
-                                        </div>
-                                    </div>
-
-                                    {/* QR Code Image */}
-                                    <div className="col-md-4">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="qr_code_image" value="QR Code Image" />
-                                            <input
-                                                id="qr_code_image"
-                                                type="file"
-                                                className="form-control"
-                                                onChange={(e) => handleFileChange('qr_code_image', e)}
-                                            />
-                                            
-                                            <InputError message={errors.qr_code_image} />
-                                        </div>
-                                    </div>
-
-                                    {/* Signature Image */}
-                                    <div className="col-md-4">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="signiture_image" value="Signature Image" />
-                                            <input
-                                                id="signiture_image"
-                                                type="file"
-                                                className="form-control"
-                                                onChange={(e) => handleFileChange('signiture_image', e)}
-                                            />
-                                          
-                                            <InputError message={errors.signiture_image} />
-                                        </div>
-                                    </div>
-
-                                    {/* Company Stamp Image */}
-                                    <div className="col-md-4">
-                                        <div className="mb-4">
-                                            <InputLabel htmlFor="company_stamp_image" value="Company Stamp Image" />
-                                            <input
-                                                id="company_stamp_image"
-                                                type="file"
-                                                className="form-control"
-                                                onChange={(e) => handleFileChange('company_stamp_image', e)}
-                                            />
-                                           
-                                            <InputError message={errors.company_stamp_image} />
-                                        </div>
-                                    </div>
-
-                                    {/* Submit */}
-                                    <div className="col-12">
-                                        <div className="text-end">
-                                            <Button className="btn btn-primary" disabled={processing}>
-                                                {processing ? 'Creating...' : 'Create Bank Account'}
-                                            </Button>
-                                        </div>
+                                    <div className="col-12 text-end">
+                                        <Button className="btn btn-primary" disabled={processing}>
+                                            {processing
+                                                ? isEdit
+                                                    ? 'Updating...'
+                                                    : 'Creating...'
+                                                : isEdit
+                                                ? 'Update Bank Account'
+                                                : 'Create Bank Account'}
+                                        </Button>
                                     </div>
                                 </div>
                             </form>
@@ -262,4 +171,4 @@ const CreateBankAccount = ({ client }) => {
     );
 };
 
-export default CreateBankAccount;
+export default BankAccountForm;

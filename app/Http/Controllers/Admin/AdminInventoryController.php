@@ -16,7 +16,7 @@ class AdminInventoryController extends Controller
     public function index()
     {
         return Inertia::render('Inventory/Inventory', [
-            'inventories' => Inventory::latest()->get(),
+            'inventories' => Inventory::latest()->paginate(10),
         ]);
     }
 

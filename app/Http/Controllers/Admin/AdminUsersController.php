@@ -18,7 +18,7 @@ class AdminUsersController extends Controller
         return Inertia::render('Users/User', [
             'users' => User::whereHas('roles' , function($role) {
                 $role->where('name', 'client');
-            })->orderBy('name')->get(),
+            })->orderBy('name')->paginate(10),
         ]);
     }
 

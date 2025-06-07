@@ -20,6 +20,7 @@ class Challan extends Model
         'updated_by',
         'total',
         'narration',
+        'is_credited'
     ];
               
     public function challanRefrence(): BelongsTo

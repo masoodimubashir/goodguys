@@ -15,9 +15,14 @@ class InvoiceRefrence extends Model
     ];
 
 
-    public function products(): HasMany
+    /**
+     * Get all of the invoices for the InvoiceRefrence
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function invoices(): HasMany
     {
-        return $this->hasMany(Product::class);
+        return $this->hasMany(Invoice::class);
     }
 
     public function client(): BelongsTo

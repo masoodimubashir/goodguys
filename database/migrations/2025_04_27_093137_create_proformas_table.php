@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('proformas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('proforma_refrence_id')->constrained('proforma_refrences')->cascadeOnDelete();
+            $table->foreignId('proforma_module_id')->constrained('proforma_modules')->cascadeOnDelete();
             $table->string('item_name');
             $table->string('description')->nullable();
             $table->json('additional_description')->nullable();
             $table->unsignedBigInteger('count');
             $table->unsignedBigInteger('price')->nullable()->default(0);
-            $table->unsignedBigInteger('tax');
             $table->unsignedBigInteger('service_charge');
             $table->unsignedTinyInteger('created_by')->nullable();
             $table->unsignedTinyInteger('updated_by')->nullable();

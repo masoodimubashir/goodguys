@@ -53,7 +53,7 @@ const ProfileCanvas = ({ Logo }) => {
                             </div>
                             <div className="text-center mt-2">
                                 <h6 className="mb-0">
-                                    
+
                                     {user.name}
 
                                 </h6>
@@ -81,6 +81,15 @@ const ProfileCanvas = ({ Logo }) => {
                             </NavLink>
                         </li>
 
+
+                        <li>
+                            <NavLink
+                                className="f-w-500"
+                                href={route('bank-account.create')}
+                            >
+                                <i className="iconoir-bank pe-1 f-s-20"></i> Add bank
+                            </NavLink>
+                        </li>
 
                         <li>
                             <Link

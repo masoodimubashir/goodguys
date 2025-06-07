@@ -13,14 +13,11 @@ return new class extends Migration
     {
         Schema::create('bank_accounts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('client_id')->constrained('clients')->cascadeOnDelete();
             $table->string('qr_code_image');
             $table->string('bank_name');
             $table->string('ifsc_code');
-            $table->string('branch_code');
             $table->string('holder_name');
             $table->string('account_number');
-            $table->string('swift_code');
             $table->string('upi_number');
             $table->string('upi_address');
             $table->string('signiture_image');

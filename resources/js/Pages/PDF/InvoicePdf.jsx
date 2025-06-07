@@ -108,7 +108,8 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     paddingVertical: 6,
     paddingHorizontal: 5,
-    minHeight: 25
+    minHeight: 25,
+    fontSize: 10
   },
   col1: { width: '8%', fontSize: 8, paddingRight: 3, color: 'white' },
   col2: { width: '20%', fontSize: 8, paddingRight: 3, color: 'white' },
@@ -278,27 +279,39 @@ const styles = StyleSheet.create({
 
 
 
-const Header = ({ company_profile, title }) => (
-  <View style={styles.header}>
-    <View style={styles.logoSection}>
-      {company_profile?.logo && (
-        <Image style={styles.logo} src={`/storage/${company_profile.logo}`} />
-      )}
-      <View style={styles.companyInfo}>
-        <Text style={styles.companyName}>
-          {company_profile?.company_name || 'Company Name'}
-        </Text>
-        <Text style={styles.companyDetails}>
-          {company_profile?.company_address || 'Company Address'}{'\n'}
-          Phone: {company_profile?.company_contact_no || 'N/A'}{'\n'}
-          Email: {company_profile?.company_email || 'N/A'}
-        </Text>
+const Header = ({ company_profile, client }) => (
+  <>
+    <View style={styles.header}>
+      <View style={styles.logoSection}>
+        {company_profile?.logo && (
+          <Image style={styles.logo} src={`/storage/${company_profile.logo}`} />
+        )}
+        <View style={styles.companyInfo}>
+          <Text style={styles.companyName}>
+            {company_profile?.company_name || 'Company Name'}
+          </Text>
+          <Text style={styles.companyDetails}>
+            {company_profile?.company_address || 'Company Address'}{'\n'}
+            Phone: {company_profile?.company_contact_no || 'N/A'}{'\n'}
+            Email: {company_profile?.company_email || 'N/A'}
+          </Text>
+        </View>
+      </View>
+      <View style={styles.invoiceInfo}>
+        <View style={styles.column}>
+          <Text style={styles.sectionTitle}>Bill To:</Text>
+          <Text style={[styles.value, { fontSize: 11, fontWeight: 'bold' }]}>
+            {client?.client_name}
+          </Text>
+          <Text style={styles.value}>{client?.client_address}</Text>
+          <Text style={styles.value}>Phone: {client?.client_phone}</Text>
+          <Text style={styles.value}>Email: {client?.client_email}</Text>
+          <Text style={[styles.value, { marginTop: 5 }]}>Client Type: {client?.client_type}</Text>
+        </View>
       </View>
     </View>
-    <View>
-      <Text style={styles.invoiceTitle}>{title}</Text>
-    </View>
-  </View>
+
+  </>
 );
 
 const BankDetails = ({ bankAccount }) => {
@@ -374,193 +387,123 @@ const SignatureSection = ({ bankAccount }) => (
   </View>
 );
 
-export const InvoicePdf = ({ client, CompanyProfile, data }) => {
-  const invoice = data || {};
-  const products = invoice.products || [];
-  const bankAccount = client?.bank_account || null;
-  const currentDate = new Date().toLocaleDateString();
 
-  let grandSubtotal = 0;
-  let grandTotalTax = 0;
-  let grandServiceCharge = 0;
+export const InvoicePdf = ({ client, CompanyProfile, BankProfile }) => {
+  const groupedModules = {};
 
-  const allItems = [];
-  let serialNo = 1;
-
-  products.forEach(product => {
-    (product.invoices || []).forEach(item => {
-      const quantity = parseFloat(item.count) || 0;
-      const price = parseFloat(item.price) || 0;
-      const taxRate = parseFloat(item.tax) || 0;
-      const serviceRate = parseFloat(item.service_charge) || 0;
-      const isVisible = item.is_price_visible;
-
-      const itemTotal = quantity * price;
-      const itemTax = (itemTotal * taxRate) / 100;
-      const itemService = (itemTotal * serviceRate) / 100;
-
-      grandSubtotal += itemTotal;
-      grandTotalTax += itemTax;
-      grandServiceCharge += itemService;
-
-      let dimensions = [];
-      try {
-        dimensions = JSON.parse(item.additional_description || '[]');
-      } catch {
-        dimensions = [];
+  client?.invoice_refrences?.forEach(ref => {
+    ref.invoices?.forEach(item => {
+      const moduleName = item.invoice_module?.module_name || 'Uncategorized';
+      if (!groupedModules[moduleName]) {
+        groupedModules[moduleName] = [];
       }
-
-      allItems.push({
-        serialNo: serialNo++,
-        productName: product.product_name,
-        itemName: item.item_name,
-        description: item.description,
-        dimensions,
-        quantity,
-        price,
-        taxRate,
-        serviceRate,
-        itemTotal,
-        itemTax,
-        itemService,
-        is_price_visible: isVisible
-      });
+      groupedModules[moduleName].push(item);
     });
   });
 
-  const grandTotal = grandSubtotal + grandTotalTax + grandServiceCharge;
-  const formattedDate = invoice.created_at
-    ? new Date(invoice.created_at).toLocaleDateString()
-    : currentDate;
+  const allItems = Object.entries(groupedModules).flatMap(([moduleName, items]) => [
+    { isModuleHeader: true, moduleName },
+    ...items,
+  ]);
+
+  const ITEMS_PER_PAGE = 20;
+  const pages = [];
+  for (let i = 0; i < allItems.length; i += ITEMS_PER_PAGE) {
+    pages.push(allItems.slice(i, i + ITEMS_PER_PAGE));
+  }
+
+  let globalIndex = 0;
+  let grandTotal = 0;
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.watermark}>INVOICE</Text>
-        <Header company_profile={CompanyProfile} title="INVOICE" />
+      {pages.map((itemsOnPage, pageIndex) => (
+        <Page key={pageIndex} size="A4" style={styles.page} wrap>
+          <Text style={styles.watermark}>PROFORMA</Text>
+          <Header company_profile={CompanyProfile} client={client} />
 
-        <Text style={[styles.value, { textAlign: 'right', fontSize: 10, marginBottom: 10 }]}>
-          Invoice No: {invoice.invoice_number || 'N/A'}
-        </Text>
 
-        <View style={styles.invoiceInfo}>
-          <View style={styles.column}>
-            <Text style={styles.sectionTitle}>Bill To:</Text>
-            <Text style={[styles.value, { fontSize: 11, marginBottom: 3, fontWeight: 'bold' }]}>
-              {client?.client_name || 'Client Name'}
-            </Text>
-            <Text style={styles.value}>{client?.client_address || 'Client Address'}</Text>
-            <Text style={styles.value}>Phone: {client?.client_phone || 'N/A'}</Text>
-            <Text style={styles.value}>Email: {client?.client_email || 'N/A'}</Text>
-            <Text style={[styles.value, { marginTop: 5 }]}>
-              Client Type: {client?.client_type || 'N/A'}
-            </Text>
-          </View>
-          <View style={styles.column}>
-            <View style={styles.infoRow}>
-              <Text style={styles.label}>Invoice Date:</Text>
-              <Text style={styles.value}>{formattedDate}</Text>
+
+          <View style={styles.table}>
+            <View style={styles.tableHeader}>
+              <Text style={styles.col1}>S.No</Text>
+              <Text style={styles.col2}>Item</Text>
+              <Text style={styles.col3}>Description</Text>
+              <Text style={styles.col4}>Qty</Text>
+              <Text style={styles.col5}>Price</Text>
+              <Text style={styles.col6}>Total</Text>
             </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.label}>Reference No:</Text>
-              <Text style={styles.value}>{invoice.reference_number || 'N/A'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.label}>Due Date:</Text>
-              <Text style={styles.value}>
-                {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A'}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.label}>Prepared By:</Text>
-              <Text style={styles.value}>{CompanyProfile?.company_name || 'Company'}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Invoice Items Table */}
-        <View style={styles.table}>
-          <View style={styles.tableHeader}>
-            <Text style={styles.col1}>S.No</Text>
-            <Text style={styles.col2}>ITEM</Text>
-            <Text style={styles.col3}>DESCRIPTION</Text>
-            <Text style={styles.col4}>QTY</Text>
-            <Text style={styles.col5}>PRICE</Text>
-            <Text style={styles.col6}>TOTAL</Text>
-          </View>
-
-          {Object.entries(
-            allItems.reduce((acc, item) => {
-              if (!acc[item.productName]) acc[item.productName] = [];
-              acc[item.productName].push(item);
-              return acc;
-            }, {})
-          ).map(([productName, items]) => {
-            return (
-              <React.Fragment key={productName}>
-                <View style={[styles.tableRow, { backgroundColor: '#f1f1f1' }]}>
-                  <Text style={[styles.dataCol1, { fontWeight: 'bold' }]}>{productName}</Text>
-                  <Text style={styles.dataCol2}></Text>
-                  <Text style={styles.dataCol3}></Text>
-                  <Text style={styles.dataCol4}></Text>
-                  <Text style={styles.dataCol5}></Text>
-                  <Text style={styles.dataCol6}></Text>
-                </View>
-
-                {items.map(item => (
-                  <View key={item.serialNo} style={styles.tableRow}>
-                    <Text style={styles.dataCol1}>{item.serialNo}</Text>
-                    <Text style={styles.dataCol2}>{item.itemName}</Text>
-                    <Text style={styles.dataCol3}>
-                      {item.description}
-                      {item.dimensions.length > 0 && (
-                        <Text>
-                          {'\n'}
-                          {item.dimensions.map((dim, i) => (
-                            <Text key={i}>
-                              {dim.type}: {dim.value}{dim.si}
-                              {i < item.dimensions.length - 1 ? ' | ' : ''}
-                            </Text>
-                          ))}
-                        </Text>
-                      )}
-                    </Text>
-                    <Text style={styles.dataCol4}>{item.quantity}</Text>
-                    <Text style={styles.dataCol5}>
-                      {item.is_price_visible ? item.price.toFixed(2) : '—'}
-                    </Text>
-                    <Text style={styles.dataCol6}>
-                      {item.is_price_visible ? item.itemTotal.toFixed(2) : '—'}
+            {itemsOnPage.map((item, idx) => {
+              if (item.isModuleHeader) {
+                return (
+                  <View key={`module-${item.moduleName}-${idx}`} style={styles.tableRow}>
+                    <Text style={styles.moduleHeader}>
+                      {item.moduleName}
                     </Text>
                   </View>
-                ))}
-              </React.Fragment>
-            );
-          })}
-        </View>
+                );
+              }
 
-        {/* Totals */}
-        <View style={styles.totalsSection}>
-          <View style={styles.totalsHeader}>
-            <Text style={styles.totalsLabelCol}>SUMMARY</Text>
-            <Text style={styles.totalsValueCol}>AMOUNT</Text>
-          </View>
-          <View style={styles.totalsRow}>
-            <Text style={styles.totalsDataLabelCol}>Subtotal:</Text>
-            <Text style={styles.totalsDataValueCol}>{grandSubtotal.toFixed(2)}</Text>
-          </View>
-          <View style={[styles.totalsRow, styles.grandTotalRow]}>
-            <Text style={styles.totalsDataLabelCol}>Grand Total:</Text>
-            <Text style={styles.totalsDataValueCol}>{grandTotal.toFixed(2)}</Text>
-          </View>
-        </View>
-      </Page>
+              const qty = parseFloat(item.count || 0);
+              const price = parseFloat(item.price || 0);
+              const isVisible = item.is_price_visible;
+              const total = qty * price;
+              grandTotal += total;
+              let dimensions = [];
+              try {
+                dimensions = JSON.parse(item.additional_description || '[]');
+              } catch { }
 
-      {/* Bank Details & Signature */}
+              globalIndex++;
+              return (
+                <View key={item.id || globalIndex} style={styles.tableRow}>
+                  <Text style={styles.dataCol1}>{globalIndex}</Text>
+                  <Text style={styles.dataCol2}>{item.item_name}</Text>
+                  <Text style={styles.dataCol3}>
+                    {item.description}
+                    {dimensions.length > 0 && (
+                      <Text>
+                        {'\n'}
+                        {dimensions.map((d, i) => (
+                          <Text key={i}>
+                            {d.type}: {d.value}{d.si}
+                          </Text>
+                        ))}
+                      </Text>
+                    )}
+                  </Text>
+                  <Text style={styles.dataCol4}>{qty}</Text>
+                  <Text style={styles.dataCol5}>{isVisible ? price.toFixed(2) : '—'}</Text>
+                  <Text style={styles.dataCol6}>{isVisible ? total.toFixed(2) : '—'}</Text>
+                </View>
+              );
+            })}
+          </View>
+
+          {pageIndex === pages.length - 1 && (
+            <View style={styles.totalsSection}>
+              <View style={styles.totalsHeader}>
+                <Text style={styles.totalsLabelCol}>SUMMARY</Text>
+                <Text style={styles.totalsValueCol}>AMOUNT</Text>
+              </View>
+              <View style={styles.totalsRow}>
+                <Text style={styles.totalsDataLabelCol}>Grand Total:</Text>
+                <Text style={styles.totalsDataValueCol}>{grandTotal.toFixed(2)}</Text>
+              </View>
+            </View>
+          )}
+        </Page>
+      ))}
+
       <Page size="A4" style={styles.page}>
-        <BankDetails bankAccount={bankAccount} />
-        <SignatureSection bankAccount={bankAccount} />
+        <BankDetails bankAccount={BankProfile} />
+        <SignatureSection bankAccount={BankProfile} />
       </Page>
     </Document>
   );
 };
+
+
+
+
+

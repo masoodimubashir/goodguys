@@ -9,16 +9,16 @@ class Proforma extends Model
 {
     protected $fillable = [
         'item_name',
-        'product_id',
         'description',
         'additional_description',
         'count',
         'price',
-        'tax',
         'service_charge',
         'created_by',
         'updated_by',
         'is_price_visible',
+        'proforma_module_id',
+        'proforma_refrence_id',
     ];
 
 
@@ -26,5 +26,15 @@ class Proforma extends Model
     public function module(): BelongsTo
     {
         return $this->belongsTo(Module::class);
+    }
+
+    /**
+     * Get the proformaModule that owns the Proforma
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function proformaModule(): BelongsTo
+    {
+        return $this->belongsTo(ProformaModule::class);
     }
 }

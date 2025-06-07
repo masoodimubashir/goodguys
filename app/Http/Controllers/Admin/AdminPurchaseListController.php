@@ -9,6 +9,7 @@ use App\Models\Client;
 use App\Models\ClientAccount;
 use App\Models\PurchasedItem;
 use App\Models\PurchaseList;
+use App\Models\PurchaseListPayment;
 use App\Models\Vendor;
 use Exception;
 use Illuminate\Http\Request;
@@ -33,18 +34,25 @@ class AdminPurchaseListController extends Controller
 
         $vendor = Vendor::findOrFail($vendor_id);
 
-        $purchaseLists = PurchaseList::with(['purchaseManagments', 'returnLists', 'client'])
+        // 1. Get all PurchaseLists for this vendor and client (with returnLists and client)
+        $purchaseLists = PurchaseList::with(['returnLists', 'client'])
             ->where('client_id', $client_id)
             ->where('vendor_id', $vendor_id)
             ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
-
+        // 2. Get PurchaseListPayments for this vendor that also match the given client
+        $purchaseListPayments = PurchaseListPayment::query()
+            ->where('vendor_id', $vendor_id)
+            ->where('client_id', $client_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return Inertia::render("PurchaseManagment/purchases", [
             'vendor' => $vendor,
             'purchaseLists' => $purchaseLists,
+            'purchaseListPayments' => $purchaseListPayments,
             'Client' => $purchaseLists->first()?->client,
             'filters' => $request->only(['search']),
             'clientAccountInTotal' => ClientAccount::where([
@@ -89,6 +97,7 @@ class AdminPurchaseListController extends Controller
                 'narration' => $purchase_list->bill_description,
                 'total' => $purchase_list->bill_total,
                 'created_by' => auth()->id(),
+                'is_credited' => true,
             ]);
 
             return redirect()->back()->with('message', 'Purchase list created successfully');
@@ -170,6 +179,7 @@ class AdminPurchaseListController extends Controller
 
             $purchaseList->update(array_merge($validated, [
                 'updated_by' => auth()->id(),
+                'is_credited' => true,
             ]));
 
             return redirect()->back()->with('message', 'Purchase list updated successfully');

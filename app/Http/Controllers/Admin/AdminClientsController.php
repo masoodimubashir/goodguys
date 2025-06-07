@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
+use App\Models\BankAccount;
 use App\Models\Client;
 use App\Models\CompanyProfile;
 use App\Models\Inventory;
@@ -21,7 +22,7 @@ class AdminClientsController extends Controller
     public function index()
     {
         return Inertia::render('Clients/Client', [
-            'clients' => Client::with('serviceCharge')->latest()->get(),
+            'clients' => Client::with('serviceCharge')->latest()->paginate(10),
         ]);
     }
 
@@ -65,19 +66,18 @@ class AdminClientsController extends Controller
 
         $client->load([
             'invoiceRefrences' => fn($query) => $query->with([
-                'products' => fn($query) => $query->with('invoices'),
+                'invoices.invoiceModule',
             ]),
             'proformaRefrences' => fn($query) => $query->with([
-                'products' => fn($query) => $query->with('proformas'),
+                'proformas.proformaModule',
             ]),
             'purchaseLists.vendor',
-            'costIncurreds',
             'accounts',
             'serviceCharge',
-            'bankAccount',
             'purchaseItems',
             'projectDocuments',
         ]);
+
 
         $clientVendorIds = $client->purchaseLists->pluck('vendor_id')->unique();
 
@@ -94,6 +94,7 @@ class AdminClientsController extends Controller
                 'client_vendors' => $clientVendors,
                 'vendors' => Vendor::orderBy('vendor_name')->get(),
                 'purchase_items' => $purchase_items,
+                'BankProfile' => BankAccount::first(),
             ]);
         } else {
 
@@ -104,7 +105,7 @@ class AdminClientsController extends Controller
                 'company_profile' => CompanyProfile::first(),
                 'vendors' => Vendor::orderBy('vendor_name')->get(),
                 'purchase_items' => $purchase_items,
-
+                'BankProfile' => BankAccount::first(),
 
             ]);
         }

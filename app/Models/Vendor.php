@@ -29,5 +29,15 @@ class Vendor extends Model
     }
 
 
+    /**
+     * Get all of the purchaseListPayments for the Vendor
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function purchaseListPayments(): HasMany
+    {
+        return $this->hasMany(PurchaseListPayment::class);
+    }
+
     
 }

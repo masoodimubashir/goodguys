@@ -20,7 +20,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Button, Card, Col, Form, InputGroup, Modal, Row, Table } from 'react-bootstrap';
 
-export default function ShowClient({ client, purchase_items, vendors = [], company_profile = null }) {
+export default function ShowClient({ client, purchase_items, vendors = [], company_profile = null, BankProfile = null }) {
     const flash = usePage().props.flash;
 
     // State management for purchase items
@@ -698,7 +698,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
 
 
                     <div className="tab-pane fade" id="pdf-tab" role="tabpanel">
-                        <PdfTable client={client} CompanyProfile={company_profile || {}} />
+                        <PdfTable client={client} CompanyProfile={company_profile} BankProfile={BankProfile} />
                     </div>
 
                     <div className="tab-pane fade" id="project-document-tab" role="tabpanel">

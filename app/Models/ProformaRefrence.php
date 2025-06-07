@@ -15,15 +15,15 @@ class ProformaRefrence extends Model
         'client_id',
     ];
 
-    /**
-     * Get all of the products for the Product
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function products(): HasMany
-    {
-        return $this->hasMany(Product::class);
-    }
+   /**
+    * Get all of the proformas for the ProformaRefrence
+    *
+    * @return \Illuminate\Database\Eloquent\Relations\HasMany
+    */
+   public function proformas(): HasMany
+   {
+       return $this->hasMany(Proforma::class);
+   }
 
 
     public function client(): BelongsTo

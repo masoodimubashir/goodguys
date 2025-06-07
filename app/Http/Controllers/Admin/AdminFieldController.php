@@ -14,7 +14,7 @@ class AdminFieldController extends Controller
     public function index()
     {
         return Inertia::render('Field/Field', [
-            'fields' => Field::latest()->get(),
+            'fields' => Field::latest()->paginate(10),
         ]);
     }
 

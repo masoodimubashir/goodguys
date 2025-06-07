@@ -52,7 +52,7 @@ const PurchaseItemsTab = ({
     purchase_items,
 }) => {
 
-    
+
 
     return (
         <>
@@ -315,7 +315,7 @@ const PurchaseItemsTab = ({
                                                 />
                                             ) : (
                                                 <div>
-                                                    <span className="fw-bold">{item.description}</span>
+                                                    <span className="fw-bold">{item.description ?? 'NA'}</span>
                                                     <br />
                                                     <small className="text-muted">
                                                         {new Date(item.created_at).toLocaleDateString('en-IN', {
@@ -336,7 +336,7 @@ const PurchaseItemsTab = ({
                                                     onChange={e => handleItemChange(item.id, 'unit_type', e.target.value)}
                                                 />
                                             ) : (
-                                                <span className="fw-medium">{item.unit_type}</span>
+                                                <span className="fw-medium">{item.unit_type ?? 'NA'}</span>
                                             )}
                                         </td>
                                         <td>

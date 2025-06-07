@@ -28,10 +28,10 @@ class AdminBankAccountController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Request $request)
+    public function create()
     {
         return Inertia::render('BankAccount/CreateBankAccount', [
-            'client' => Client::findOrFail($request->get('client_id')),
+            'bankAccount' => BankAccount::first(),
         ]);
     }
 
@@ -111,9 +111,6 @@ class AdminBankAccountController extends Controller
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateBankAccountRequest $request, string $id)
     {
         try {
@@ -121,8 +118,9 @@ class AdminBankAccountController extends Controller
 
             $bankAccount = BankAccount::find($id);
 
+
             if (!$bankAccount) {
-                throw new Exception('Record Not Found');
+                throw new NotFoundHttpException('Record Not Found');
             }
 
             // Image fields to check
@@ -130,31 +128,33 @@ class AdminBankAccountController extends Controller
 
             foreach ($imageFields as $field) {
                 if ($request->hasFile($field)) {
-                    // Delete old file if exists
+                    // Delete old file if it exists
                     if ($bankAccount->$field && Storage::disk('public')->exists($bankAccount->$field)) {
                         Storage::disk('public')->delete($bankAccount->$field);
                     }
-                    // Upload and update field
+                    // Store new file and update value
                     $validated[$field] = $request->file($field)->store('bank-accounts', 'public');
                 } else {
-                    // If no new file uploaded, keep old file
+                    // Prevent overwriting with null if no file uploaded
                     unset($validated[$field]);
                 }
             }
 
-            // Add updated_by field
             $validated['updated_by'] = auth()->id();
 
             $bankAccount->update($validated);
 
-            return redirect()->route('clients.show', $bankAccount->client_id)->with('message', 'Bank Account updated successfully.');
+            return redirect()
+                ->route('clients.show', $bankAccount->client_id)
+                ->with('message', 'Bank Account updated successfully.');
         } catch (NotFoundHttpException $e) {
             return redirect()->back()->with('error', 'Record not found');
-        } catch (Exception $e) {
-            Log::error('Error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Something went wrong');
+        } catch (\Exception $e) {
+            Log::error('BankAccount Update Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Something went wrong while updating the record.');
         }
     }
+
 
     /**
      * Remove the specified resource from storage.
@@ -162,7 +162,7 @@ class AdminBankAccountController extends Controller
     public function destroy(string $id)
     {
         try {
-            
+
             $bankAccount = BankAccount::find($id);
 
             if (!$bankAccount) {
@@ -172,7 +172,6 @@ class AdminBankAccountController extends Controller
             $bankAccount->delete();
 
             return redirect()->back()->with('message', 'Account Deleted');
-
         } catch (NotFoundHttpException $e) {
             return redirect()->back()->with('error', 'Record not found');
         } catch (Exception $e) {
