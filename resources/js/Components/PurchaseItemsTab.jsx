@@ -53,7 +53,6 @@ const PurchaseItemsTab = ({
 }) => {
 
 
-
     return (
         <>
             <div className="">
@@ -81,6 +80,9 @@ const PurchaseItemsTab = ({
                         >
                             <ShoppingCart size={16} /> Create Challan
                         </Button>
+                        <Link href={route('challan.show', client?.id)} className="btn btn-outline-dark btn-sm d-flex align-items-center">
+                            <i className="ti ti-file-invoice me-1"></i> View Challans
+                        </Link>
                     </div>
                 </div>
 
@@ -386,7 +388,7 @@ const PurchaseItemsTab = ({
                                             </span>
                                         </td>
                                         <td>
-                                            {isEditing ? (
+                                            {isEditing &&
                                                 <Form.Control
                                                     as="textarea"
                                                     rows={3}
@@ -402,16 +404,7 @@ const PurchaseItemsTab = ({
                                                         fontSize: '14px'
                                                     }}
                                                 />
-                                            ) : (
-                                                <div className={`text-truncate ${!item.narration ? 'text-muted' : ''}`}>
-                                                    {item.narration || (
-                                                        <small className="d-flex align-items-center gap-1 text-muted">
-                                                            <FileText size={12} />
-                                                            Click to add narration
-                                                        </small>
-                                                    )}
-                                                </div>
-                                            )}
+                                            }
                                         </td>
                                         {/* <td>
                                             {isEditing ? (

@@ -12,6 +12,17 @@ const COLORS = {
   textLight: '#636e72',
 };
 
+// Color Scheme
+const colors = {
+  primary: '#2c3e50', // Navy Blue
+  secondary: '#27ae60', // Green
+  accent: '#e67e22', // Orange
+  lightBg: '#f8f9fa', // Light Gray
+  border: '#dfe6e9', // Light Border
+  textDark: '#2d3436', // Dark Text
+  textLight: '#636e72' // Gray Text
+};
+
 const FONT_SIZES = {
   small: 8,
   medium: 9,
@@ -124,12 +135,12 @@ const styles = StyleSheet.create({
     minHeight: 25,
   },
   colSerial: { width: '8%', fontSize: FONT_SIZES.small },
-  colDesc: { width: '25%', fontSize: FONT_SIZES.small },
-  colUnit: { width: '12%', fontSize: FONT_SIZES.small },
-  colQty: { width: '10%', fontSize: FONT_SIZES.small, textAlign: 'right' },
-  colPrice: { width: '12%', fontSize: FONT_SIZES.small, textAlign: 'right' },
-  colTotal: { width: '12%', fontSize: FONT_SIZES.small, textAlign: 'right' },
-  colRemarks: { width: '21%', fontSize: FONT_SIZES.small },
+  colDesc: { width: '18%', fontSize: FONT_SIZES.small },
+  colUnit: { width: '15%', fontSize: FONT_SIZES.small },
+  colQty: { width: '12%', fontSize: FONT_SIZES.small, textAlign: 'left' },
+  colPrice: { width: '10%', fontSize: FONT_SIZES.small, textAlign: 'left' },
+  colTotal: { width: '10%', fontSize: FONT_SIZES.small, textAlign: 'left' },
+  colRemarks: { width: '34%', fontSize: FONT_SIZES.small, textAlign: 'left' },
   totalsRow: {
     flexDirection: 'row',
     backgroundColor: COLORS.lightBg,
@@ -179,6 +190,60 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     color: COLORS.primary,
   },
+  bankDetailsSection: {
+    marginTop: 30,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 4,
+    backgroundColor: colors.lightBg
+  },
+  bankDetailsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10
+  },
+  bankDetailsColumn: {
+    width: '48%'
+  },
+  bankInfoItem: {
+    flexDirection: 'row',
+    marginBottom: 4
+  },
+  bankInfoLabel: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    width: '40%',
+    color: colors.textLight
+  },
+  bankInfoValue: {
+    fontSize: 9,
+    width: '60%',
+    color: colors.textDark
+  },
+  signatureSection: {
+    marginTop: 30,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end'
+  },
+  signatureBox: {
+    width: '45%',
+    textAlign: 'center'
+  },
+  signatureImage: {
+    width: 100,
+    height: 50,
+    marginBottom: 5
+  },
+  signatureLine: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: 5
+  },
+  dateText: {
+    color: '#888', 
+  }
 });
 
 // Components
@@ -237,23 +302,32 @@ const ItemsTable = ({ items, hasPrices }) => (
       {items.map((item, index) => (
         <View key={index} style={[styles.tableRow, { backgroundColor: index % 2 === 0 ? '#fff' : COLORS.lightBg }]}>
           <Text style={styles.colSerial}>{index + 1}</Text>
-          <Text style={styles.colDesc}>{item.description || 'NA'}</Text>
+          <Text style={styles.colDesc}>
+            {item.description || 'NA'}
+            {'\n'}
+            <Text style={styles.dateText}>
+              {new Date(item.created_at).toLocaleDateString()}
+            </Text>
+          </Text>
           <Text style={styles.colUnit}>{item.unit_type || 'NA'}</Text>
-          <Text style={styles.colQty}>{item.quantity > 1 ? item.quantity : 'NA' }</Text>
+          <Text style={styles.colQty}>{item.qty > 1 ? item.qty : 'NA'}</Text>
           {hasPrices && (
             <>
               <Text style={styles.colPrice}>₹{item.price}</Text>
               <Text style={styles.colTotal}>₹{item.total}</Text>
             </>
           )}
-          <Text style={styles.colRemarks}>{item.narration || '-'}</Text>
+          <Text style={styles.colRemarks}>
+            {wrapBy5Words(item.narration)}
+          </Text>
         </View>
       ))}
     </View>
   </View>
 );
 
-const ChallanPdf = ({ company_profile, challan, client }) => {
+const ChallanPdf = ({ company_profile, challan, client, bankAccount }) => {
+
   const currentDate = new Date().toLocaleDateString();
   const formattedDate = challan?.created_at ? new Date(challan.created_at).toLocaleDateString() : currentDate;
 
@@ -270,7 +344,8 @@ const ChallanPdf = ({ company_profile, challan, client }) => {
     const total = quantity > 1 ? quantity * price : price;
 
     if (item.unit_type === 'in') inTotal += total;
-    else if (item.unit_type === 'out') outTotal += total;
+
+    else if (item.unit_type !== 'in') outTotal += total;
 
     if (item.is_price_visible) subtotal += total;
 
@@ -280,8 +355,8 @@ const ChallanPdf = ({ company_profile, challan, client }) => {
       quantity,
       price,
       itemTotal: total,
-       price,
-       total,
+      price,
+      total,
     };
   });
 
@@ -295,9 +370,7 @@ const ChallanPdf = ({ company_profile, challan, client }) => {
       <Page size="A4" style={styles.page}>
         <Text style={styles.watermark}>CHALLAN</Text>
         <Header company={company_profile} />
-        <Text style={[styles.value, { textAlign: 'right', fontSize: FONT_SIZES.large, marginBottom: 10 }]}>
-          No: {challan?.challan_number || 'N/A'}
-        </Text>
+
         <ClientInfo client={client} challan={{ ...challan, date: formattedDate, prepared_by: company_profile?.company_name }} serviceCharge={serviceCharge} hasPrices={hasPrices} />
         <ItemsTable items={rawItems} hasPrices={hasPrices} />
 
@@ -308,13 +381,40 @@ const ChallanPdf = ({ company_profile, challan, client }) => {
                 <Text style={[styles.totalsLabel, { color: 'white' }]}>BALANCE SUMMARY</Text>
                 <Text style={[styles.totalsValue, { color: 'white' }]}>AMOUNT (₹)</Text>
               </View>
-              <View style={styles.totalsRow}><Text style={styles.totalsLabel}>Total IN:</Text><Text style={styles.totalsValue}>{inTotal.toFixed(2)}</Text></View>
-              <View style={styles.totalsRow}><Text style={styles.totalsLabel}>Total OUT + Service ({serviceCharge}%):</Text><Text style={styles.totalsValue}>{outWithServiceCharge.toFixed(2)}</Text></View>
-              <View style={[styles.totalsRow, { backgroundColor: COLORS.accent }]}><Text style={[styles.totalsLabel, { color: 'white' }]}>Remaining Balance:</Text><Text style={[styles.totalsValue, { color: 'white' }]}>{remainingBalance.toFixed(2)}</Text></View>
+              <View style={styles.totalsRow}><Text style={styles.totalsLabel}>Account Total:</Text>
+                <Text style={styles.totalsValue}>{inTotal.toFixed(2)}</Text>
+              </View>
+
+              <View style={[styles.totalsRow, { backgroundColor: COLORS.accent }]}>
+                <Text style={[styles.totalsLabel, { color: 'white' }]}>Total Spend:</Text>
+                <Text style={[styles.totalsValue, { color: 'white' }]}>{outTotal}</Text>
+              </View>
+
+              <View style={styles.totalsRow}>
+                <Text style={styles.totalsLabel}>Total Payment(Service Charge Included) :</Text>
+                <Text style={styles.totalsValue}>{outWithServiceCharge} ({serviceCharge}%)</Text>
+              </View>
+              <View style={[styles.totalsRow, { backgroundColor: COLORS.accent }]}>
+                <Text style={[styles.totalsLabel, { color: 'white' }]}>Remaining Balance:</Text>
+                <Text style={[styles.totalsValue, { color: 'white' }]}>{remainingBalance}</Text>
+              </View>
+
+
+
+
             </View>
           </View>
         )}
 
+        <View style={styles.footer}>
+          <Text>Challan generated on {currentDate} | {company_profile?.company_name || 'Company Name'}</Text>
+          <Text>Thank you for your business!</Text>
+        </View>
+      </Page>
+
+      <Page size="A4" style={styles.page}>
+        <BankDetails bankAccount={bankAccount} />
+        <SignatureSection bankAccount={bankAccount} />
         <View style={styles.footer}>
           <Text>Challan generated on {currentDate} | {company_profile?.company_name || 'Company Name'}</Text>
           <Text>Thank you for your business!</Text>
@@ -325,3 +425,87 @@ const ChallanPdf = ({ company_profile, challan, client }) => {
 };
 
 export default ChallanPdf;
+
+
+
+
+const BankDetails = ({ bankAccount }) => {
+  if (!bankAccount) return null;
+  return (
+    <View style={styles.bankDetailsSection}>
+      <Text style={styles.sectionTitle}>Bank Details</Text>
+      <View style={styles.bankDetailsRow}>
+        <View style={styles.bankDetailsColumn}>
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>Bank Name:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.bank_name}</Text>
+          </View>
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>Account Number:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.account_number}</Text>
+          </View>
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>Account Holder:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.holder_name}</Text>
+          </View>
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>IFSC Code:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.ifsc_code}</Text>
+          </View>
+        </View>
+        <View style={styles.bankDetailsColumn}>
+
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>UPI ID:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.upi_address}</Text>
+          </View>
+
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>Tax Number:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.tax_number}</Text>
+          </View>
+        </View>
+      </View>
+      {bankAccount.qr_code_image && (
+        <View style={{ alignItems: 'center', marginTop: 10 }}>
+          <Image
+            style={{ width: 100, height: 100, borderWidth: 1, borderColor: colors.border }}
+            src={`/storage/${bankAccount.qr_code_image}`}
+          />
+          <Text style={{ fontSize: 8, marginTop: 5 }}>Scan to Pay</Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
+const SignatureSection = ({ bankAccount }) => (
+  <View style={styles.signatureSection}>
+    <View style={styles.signatureBox}>
+      {bankAccount?.signature_image && (
+        <Image style={styles.signatureImage} src={`/storage/${bankAccount.signature_image}`} />
+      )}
+      <Text style={styles.signatureLine}>Authorized Signature</Text>
+    </View>
+    <View style={styles.signatureBox}>
+      {bankAccount?.company_stamp_image && (
+        <Image style={styles.signatureImage} src={`/storage/${bankAccount?.company_stamp_image}`} />
+      )}
+      <Text style={styles.signatureLine}>Company Stamp</Text>
+    </View>
+  </View>
+);
+
+
+const wrapBy5Words = (text) => {
+  if (!text) return 'NA';
+
+  const words = text.split(' ');
+  const lines = [];
+
+  for (let i = 0; i < words.length; i += 5) {
+    lines.push(words.slice(i, i + 5).join(' '));
+  }
+
+  return lines.join('\n');
+};

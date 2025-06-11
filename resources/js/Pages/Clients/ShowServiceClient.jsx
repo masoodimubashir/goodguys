@@ -26,8 +26,9 @@ import ProjectDocumentTab from '@/Components/ProjectDocumentTab';
 import Swal from 'sweetalert2';
 import PurchaseItemsTab from '@/Components/PurchaseItemsTab';
 import ClientAccountModal from '@/Components/ClientAccountModal';
+import ClientVendorPayments from '@/Components/ClientVendorPayments';
 
-export default function ShowServiceClient({ client, vendors = [], client_vendors = [], purchase_items }) {
+export default function ShowServiceClient({ client, vendors = [], client_vendors = [], purchase_items, payments = [] }) {
     // State management
     const { delete: destroy } = useForm();
     const flash = usePage().props.flash;
@@ -46,7 +47,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         narration: '',
         show: false
     });
-    const [showAnalytics, setShowAnalytics] = useState(false);
+    const [showAnalytics, setShowAnalytics] = useState(true);
     const [animatingCards, setAnimatingCards] = useState(new Set());
 
     const [isCreating, setIsCreating] = useState(false);
@@ -109,10 +110,9 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
             results = results.filter(item =>
-                item.description.toLowerCase().includes(term) ||
-                item.unit_type.toLowerCase().includes(term) ||
-                item.narration?.toLowerCase().includes(term) ||
-                item.id.toString().includes(term)
+                item.description?.toLowerCase().includes(term) ||
+                item.unit_type?.toLowerCase().includes(term) ||
+                item.narration?.toLowerCase().includes(term)
             );
         }
 
@@ -133,9 +133,6 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         // Calculate separate sums for in, out, and total values (excluding is_created === 1)
         const validItems = filteredItems.filter(item => item.is_credited !== 1);
 
-        console.log(validItems);
-        
-
         const sumIn = validItems
             .filter(item => item.unit_type === 'in')
             .reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
@@ -146,14 +143,13 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
         const sumTotal = validItems.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0) - sumIn - sumOut;
 
-
-        console.log("sumIn:", sumIn);
-        console.log("sumOut:", sumOut);
-        console.log("sumTotal:", sumTotal);
-        
-
         // Final calculation: sum of in - sum of out - sum of total
-        const totalValue = sumIn - sumOut - sumTotal;
+        const balance = sumIn - sumOut - sumTotal;
+
+        const spends = validItems.filter(item =>
+            item.unit_type !== 'in' || !item.unit_type || item.unit_type === 'null'
+        ).reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+
 
         // validItems already defined above for consistency
 
@@ -178,7 +174,8 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         const topCategoryCount = topCategory ? categories[topCategory] : 0;
 
         return {
-            totalValue,
+            balance,
+            spends,
             averagePrice,
             totalItems: validItems.length,
             totalQuantity,
@@ -396,7 +393,13 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         const options = {
             preserveScroll: true,
             onSuccess: () => {
-
+                purchaseListForm.reset();
+                setShowPurchaseListModal(false);
+                setCurrentPurchaseList(null);
+                ShowMessage('success', `Purchase list ${isEditing ? 'updated' : 'created'} successfully`);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
 
             },
             onError: (errors) => {
@@ -411,13 +414,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             purchaseListForm.post(route('purchase-list.store'), formData, options);
         }
 
-        purchaseListForm.reset();
-        setShowPurchaseListModal(false);
-        setCurrentPurchaseList(null);
-        ShowMessage('success', `Purchase list ${isEditing ? 'updated' : 'created'} successfully`);
-        setTimeout(() => {
-            window.location.reload();
-        }, 1000);
+
 
     };
 
@@ -438,6 +435,14 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             preserveScroll: true,
             onSuccess: () => {
                 // Refresh data by reloading the page
+                clientAccountForm.reset();
+                setShowClientAccountModal(false);
+                setCurrentClientAccount(null);
+                router.reload();
+                ShowMessage('success', `Client account ${isEditing ? 'updated' : 'created'} successfully`);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
 
 
             },
@@ -456,14 +461,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             clientAccountForm.post(route('client-account.store'), formData, options);
         }
 
-        clientAccountForm.reset();
-        setShowClientAccountModal(false);
-        setCurrentClientAccount(null);
-        router.reload();
-        ShowMessage('success', `Client account ${isEditing ? 'updated' : 'created'} successfully`);
-        setTimeout(() => {
-            window.location.reload();
-        }, 1000);
+
 
 
 
@@ -505,7 +503,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
     // Handle challan creation
     const handleCreateChallan = (e) => {
-        
+
         e.preventDefault();
 
         const selectedItems = purchaseItems
@@ -515,7 +513,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                 description: product.description,
                 unit_type: product.unit_type ?? 'NA',
                 price: product.price,
-                narration: product.narration || '',
+                narration: product.narration ?? 'NA',
                 is_price_visible: challanForm.data.is_price_visible,
                 qty: product.qty,
                 total: product.total,
@@ -567,110 +565,63 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         <AuthenticatedLayout>
             <Head title={`Client - ${client.client_name}`} />
 
-            <div className="d-flex justify-content-between align-items-center mt-2 mb-2">
-                <BreadCrumbHeader breadcrumbs={[
-                    { href: '/clients', label: 'Clients', active: false },
-                    { href: `/clients/${client.id}`, label: client.client_name, active: true }
-                ]} />
+            <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-3 gap-2">
+                <BreadCrumbHeader
+                    breadcrumbs={[
+                        { href: '/clients', label: 'Clients', active: false },
+                        { href: `/clients/${client.id}`, label: client.client_name, active: true }
+                    ]}
+                />
 
-                <div className="d-flex gap-2">
-                    <Button variant="primary" size="sm" onClick={() => window.location.reload()}>
+                <div className="d-flex flex-wrap gap-2 justify-content-end">
+                    <Button variant="outline-secondary" size="sm" onClick={() => window.location.reload()}>
                         <RefreshCw size={14} />
                     </Button>
-
-                    <Button className="d-flex align-items-center gap-2" size="sm" onClick={() => handleAnalytics()}>
-                        {showAnalytics ? <Eye size={13} /> : <EyeOff size={14} />} Analytics
+                    <Button variant="outline-primary" size="sm" onClick={handleAnalytics}>
+                        {showAnalytics ? <Eye size={13} className="me-1" /> : <EyeOff size={14} className="me-1" />} Analytics
                     </Button>
 
-                    <div className="dropdown">
-                        <button className="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            Create
-                        </button>
-                        <ul className="dropdown-menu dropdown-menu-end">
 
-                            <li>
-                                <Link href={route('challan.show', client.id)} className="dropdown-item">
-                                    <i className="ti ti-building-bank me-2"></i> Challans
-                                </Link>
-                            </li>
-                            <li>
-                                <button className="dropdown-item" onClick={() => openPurchaseListModal()}>
-                                    <i className="ti ti-shopping-cart me-2"></i> Purchase List
-                                </button>
-                            </li>
-                            <li>
-                                <button onClick={() => openClientAccountModal()} className="dropdown-item">
-                                    <i className="ti ti-building-bank me-2"></i> Add Payment
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
+
                 </div>
             </div>
 
             {showAnalytics && (
-                <div>
-                    {/* Client Summary */}
-                    <Row>
-                        <ClientInfoCard client={client} />
-
-                        <Col md={6}>
-                            <Card className="border-0 shadow-sm h-100">
-                                <Card.Body className="p-3">
-                                    <h6 className="mb-3 d-flex align-items-center gap-2">
-                                        <BarChart3 size={18} className="text-primary" />
-                                        Quick Stats
-                                    </h6>
-                                    <div className="d-flex justify-content-between">
-                                        <div className="text-center">
-                                            <h6 className="mb-1 fw-bold">{analytics.totalItems}</h6>
-                                            <small className="text-muted">Total Items</small>
-                                        </div>
-                                        <div className="text-center">
-                                            <h6 className="mb-1 fw-bold">{analytics.totalQuantity}</h6>
-                                            <small className="text-muted">Total Quantity</small>
-                                        </div>
-
-                                        <div className="text-center">
-                                            <h6 className="mb-1 fw-bold">{formatCurrency(analytics.totalValue)}</h6>
-                                            <small className="text-muted">Total Value</small>
-                                        </div>
+                <Row className="mb-3">
+                    <ClientInfoCard client={client} />
+                    <Col md={6}>
+                        <Card className="border-0 shadow-sm h-100">
+                            <Card.Body className="p-3">
+                                <h6 className="mb-3 d-flex align-items-center gap-2">
+                                    <BarChart3 size={18} className="text-primary" /> Quick Stats
+                                </h6>
+                                <div className="d-flex justify-content-between">
+                                    <div className="text-center">
+                                        <h6 className="mb-1 fw-bold">{analytics.spends}</h6>
+                                        <small className="text-muted">Total Spend</small>
                                     </div>
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                    </Row>
-
-                    {/* Analytics Cards */}
-
-
-                </div>
+                                    <div className="text-center">
+                                        <h6 className="mb-1 fw-bold">{formatCurrency(analytics.balance)}</h6>
+                                        <small className="text-muted">Balance</small>
+                                    </div>
+                                </div>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
             )}
 
-            {/* Tab Navigation */}
-            <Tabs
-                activeKey={activeTab}
-                onSelect={(k) => setActiveTab(k)}
-            >
-
-                <Tab eventKey="vendor-lists" title={
-                    <span className="d-flex align-items-center gap-1">
-                        <ShoppingBag size={16} /> Vendor List
-                    </span>
-                }>
+            <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
+                <Tab eventKey="vendor-lists" title={<span className="d-flex align-items-center gap-1"><ShoppingBag size={16} /> Vendor List</span>}>
                     <PurchaseListTab
                         client={client}
                         handleEditAccount={(purchase_list) => openPurchaseListModal(purchase_list)}
                         handleDeleteItem={handleDelete}
                         clientVendors={client_vendors}
+                        openPurchaseListModal={openPurchaseListModal}
                     />
                 </Tab>
-
-                <Tab eventKey="purchase-items" title={
-                    <span className="d-flex align-items-center gap-1">
-                        <Package size={16} /> Ledger
-                    </span>
-                }>
+                <Tab eventKey="purchase-items" title={<span className="d-flex align-items-center gap-1"><Package size={16} /> Ledger</span>}>
                     <PurchaseItemsTab
                         filteredItems={filteredItems}
                         purchaseItems={purchaseItems}
@@ -701,23 +652,17 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                         CustomTooltip={CustomTooltip}
                         isCreating={isCreating}
                         purchase_items={purchase_items}
-                    />
-                </Tab>
-
-
-
-                <Tab eventKey="project-document-lists" title={
-                    <span className="d-flex align-items-center gap-1">
-                        <FileText size={16} /> Document
-                    </span>
-                }>
-                    <ProjectDocumentTab
                         client={client}
                     />
                 </Tab>
+                <Tab eventKey="project-document-lists" title={<span className="d-flex align-items-center gap-1"><FileText size={16} /> Document</span>}>
+                    <ProjectDocumentTab client={client} />
+                </Tab>
+                <Tab eventKey="client-vendor-payments" title={<span className="d-flex align-items-center gap-1"><IndianRupee size={16} /> Payments</span>}>
+                    <ClientVendorPayments payments={payments} openClientAccountModal={openClientAccountModal} />
+                </Tab>
             </Tabs>
 
-            {/* Purchase List Modal */}
             <PurchaseListModal
                 show={showPurchaseListModal}
                 onHide={() => setShowPurchaseListModal(false)}
@@ -728,7 +673,6 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                 vendors={vendors}
             />
 
-            {/* Client Account Modal */}
             <ClientAccountModal
                 show={showClientAccountModal}
                 onHide={() => setShowClientAccountModal(false)}
@@ -738,7 +682,6 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                 handleSubmit={handleClientAccountSubmit}
             />
 
-            {/* Challan Creation Modal */}
             <Modal
                 show={challanState.showChallanForm}
                 onHide={() => setChallanState(prev => ({ ...prev, showChallanForm: false }))}
@@ -798,116 +741,43 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                             </Col>
                         </Row>
 
-                        <div className="mt-4">
-                            <h6 className="mb-3">Selected Items ({Object.values(challanState.selectedProducts).filter(Boolean).length})</h6>
-                            <div className="table-responsive">
-                                <Table bordered hover size="sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Item</th>
-                                            <th>Unit Type</th>
-                                            <th>Quantity</th>
-                                            <th>Price</th>
-                                            <th>Total</th>
+                        <h6 className="mb-3">Selected Items ({Object.values(challanState.selectedProducts).filter(Boolean).length})</h6>
+                        <div className="table-responsive">
+                            <Table bordered hover size="sm">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Unit Type</th>
+                                        <th>Quantity</th>
+                                        <th>Price</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {purchaseItems.filter(item => challanState.selectedProducts[item.id]).map(item => (
+                                        <tr key={item.id}>
+                                            <td>{item.description ?? 'NA'}</td>
+                                            <td>{item.unit_type ?? 'NA'}</td>
+                                            <td>{item.qty > 1 ? item.qty : 'NA'}</td>
+                                            <td>{formatCurrency(item.price)}</td>
+                                            <td>{item.qty > 0 ? formatCurrency(item.price * item.qty) : item.price}</td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        {purchaseItems
-                                            .filter(item => challanState.selectedProducts[item.id])
-                                            .map(item => (
-                                                <tr key={item.id}>
-                                                    <td>{item.description ?? 'NA'}</td>
-                                                    <td>{item.unit_type ?? 'NA'}</td>
-                                                    <td>
-                                                        {
-                                                            item.qty > 1 ? item.qty : 'NA'
-                                                        }
-                                                    </td>
-                                                    <td>{formatCurrency(item.price)}</td>
-                                                    <td>
-                                                        {
-                                                            item.qty > 0 ?
-                                                                formatCurrency(item.price * item.qty) : item.price
-                                                        }
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                    </tbody>
-                                </Table>
-                            </div>
+                                    ))}
+                                </tbody>
+                            </Table>
                         </div>
 
                         <div className="d-flex justify-content-end gap-2 mt-4">
-                            <Button
-                                variant="secondary"
-                                onClick={() => setChallanState(prev => ({ ...prev, showChallanForm: false }))}
-                            >
+                            <Button variant="secondary" onClick={() => setChallanState(prev => ({ ...prev, showChallanForm: false }))}>
                                 Cancel
                             </Button>
-                            <Button
-                                variant="primary"
-                                type="submit"
-                                disabled={challanForm.processing}
-                            >
+                            <Button variant="primary" type="submit" disabled={challanForm.processing}>
                                 {challanForm.processing ? 'Creating...' : 'Create Challan'}
                             </Button>
                         </div>
                     </Form>
                 </Modal.Body>
             </Modal>
-
-            <style jsx>{`
-                .gradient-total-value {
-                    background: linear-gradient(135deg, #f5f9ff 0%, #e3eeff 100%);
-                    border-left: 4px solid #3b7ddd;
-                }
-                .gradient-items {
-                    background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
-                    border-left: 4px solid #1cbb8c;
-                }
-                .gradient-category {
-                    background: linear-gradient(135deg, #fff8f5 0%, #fff2e6 100%);
-                    border-left: 4px solid #fcb92c;
-                }
-                .gradient-actions {
-                    background: linear-gradient(135deg, #f9f7ff 0%, #f0ebff 100%);
-                    border-left: 4px solid #727cf5;
-                }
-                .card-hover {
-                    transition: all 0.3s ease;
-                    cursor: pointer;
-                }
-                .card-hover:hover {
-                    transform: translateY(-5px);
-                    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-                }
-                .animate__pulse {
-                    animation-duration: 1s;
-                }
-                .react-datepicker-wrapper {
-                    width: 100%;
-                }
-                .tooltip-custom {
-                    visibility: hidden;
-                    width: 120px;
-                    background-color: #555;
-                    color: #fff;
-                    text-align: center;
-                    border-radius: 6px;
-                    padding: 5px;
-                    position: absolute;
-                    z-index: 1;
-                    bottom: 125%;
-                    left: 50%;
-                    margin-left: -60px;
-                    opacity: 0;
-                    transition: opacity 0.3s;
-                }
-                .position-relative:hover .tooltip-custom {
-                    visibility: visible;
-                    opacity: 1;
-                }
-            `}</style>
         </AuthenticatedLayout>
     );
 }

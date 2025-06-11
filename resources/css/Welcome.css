@@ -1,18 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
-  line-height: 1.6;
-}
 
 /* Main wrapper */
 .main-wrapper {
@@ -45,30 +32,6 @@ body {
   z-index: 2;
 }
 
-/* Custom Bootstrap button styles */
-.btn-primary {
-  background: linear-gradient(135deg, #0d6efd 0%, #6f42c1 100%);
-  border: none;
-  transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-  background: linear-gradient(135deg, #0b5ed7 0%, #5a2d91 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(13, 110, 253, 0.3);
-}
-
-.btn-secondary {
-  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-  border: none;
-  transition: all 0.3s ease;
-}
-
-.btn-secondary:hover {
-  background: linear-gradient(135deg, #5c636a 0%, #3d4146 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
-}
 
 /* Dashboard Section */
 .dashboard-section {

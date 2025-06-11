@@ -62,7 +62,7 @@ export const PurchaseListModal = ({
 
                         <div className="col-md-6">
                             <Form.Group className="mb-3">
-                                <Form.Label>List Name</Form.Label>
+                                <Form.Label>Reference Name</Form.Label>
                                 <Form.Control
                                     type="text"
                                     value={form.data.list_name}

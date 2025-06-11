@@ -62,14 +62,13 @@ class AdminChallanController extends Controller
                     'qty' => $item['qty'],
                     'description' => $item['description'],
                     'is_price_visible' => $item['is_price_visible'],
-                    'narration' => $item['narration'],
+                    'narration' => $item['narration'] ?? 'NA',
                     'total' => $item['total'],
                     'created_by' => auth()->user()->id,
                     'created_at' => now(),
                     'is_credited' => $item['is_credited'],
                 ];
             }
-
 
             // Bulk insert for better performance
             Challan::insert($challanItems);
@@ -93,6 +92,7 @@ class AdminChallanController extends Controller
 
         $client = Client::with([
             'challanRefrences.challans',
+            'serviceCharge',
         ])->find($id);
 
         return Inertia::render("Challan/ViewChallans", [
@@ -193,5 +193,9 @@ class AdminChallanController extends Controller
     }
 
 
-    public function createChallanPdf($id) {}
+    public function createChallanPdf($id) {
+
+        dd($id);
+
+    }
 }

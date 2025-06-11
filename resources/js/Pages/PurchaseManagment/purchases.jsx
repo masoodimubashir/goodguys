@@ -25,7 +25,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
     const [editingReturnId, setEditingReturnId] = useState(null);
     const [editedReturns, setEditedReturns] = useState({});
     const [newReturns, setNewReturns] = useState({});
-    const [showAnalytics, setShowAnalytics] = useState(false);
+    const [showAnalytics, setShowAnalytics] = useState(true);
     const [animatingCards, setAnimatingCards] = useState(new Set());
 
     const totalPurchases = purchases.reduce((sum, p) => sum + parseFloat(p.bill_total || 0), 0);

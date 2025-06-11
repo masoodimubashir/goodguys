@@ -222,7 +222,7 @@ export default function CreateProforma({ client, modules, inventories }) {
             </Link>
 
             <Card className="p-4 shadow-sm rounded-4 border-0">
-                <h4 className="text-center text-primary mb-5 fw-bold">Create Proforma</h4>
+                <h4 className="text-center text-primary mb-5 fw-bold">Create Estimate</h4>
 
                 <Form onSubmit={handleSubmit}>
                     <Row className="mb-4 g-3">

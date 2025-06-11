@@ -1,10 +1,7 @@
-// import '../css/app.css';
-import '../css/custom-style.css';
-// import './bootstrap';
-
-
-
 import '../css/app.css';
+import '../css/custom-style.css';
+import './bootstrap';
+
 
 
 import { createInertiaApp } from '@inertiajs/react';
@@ -20,7 +17,7 @@ createInertiaApp({
             `./Pages/${name}.jsx`,
             import.meta.glob('./Pages/**/*.jsx'),
         ),
-    setup({ el, App, props }) {
+    setup({ el, App, props }) { 
         const root = createRoot(el);
 
         root.render(<App {...props} />);

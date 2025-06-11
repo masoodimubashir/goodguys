@@ -18,7 +18,7 @@ class BankAccount extends Model
         'swift_code',
         'upi_number',
         'upi_address',
-        'signiture_image',
+        'signature_image',
         'company_stamp_image',
         'tax_number',
         'created_by',

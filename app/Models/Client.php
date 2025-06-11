@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Client extends Model
 {
 
+    public $timestamps = false;
+
+
     protected $fillable = [
         'client_name',
         'client_type',
@@ -18,7 +21,11 @@ class Client extends Model
         'created_by',
         'updated_by',
         'site_name',
+        'created_at',
+        'updated_at'
     ];
+
+
 
 
     /**

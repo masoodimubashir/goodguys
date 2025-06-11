@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('purchase_date');
             $table->string('bill');
             $table->decimal('bill_total');
-            $table->text('bill_description');
+            $table->text('bill_description')->nullable();
             $table->tinyInteger('created_by')->nullable();
             $table->tinyInteger('updated_by')->nullable();
             $table->timestamps();

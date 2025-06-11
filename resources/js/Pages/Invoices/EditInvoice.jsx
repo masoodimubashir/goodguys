@@ -246,7 +246,7 @@ export default function EditInvoice({ invoice, modules, inventories }) {
             </Link>
 
             <Card className="p-4 shadow-sm rounded-4 border-0">
-                <h2 className="text-center text-primary mb-5 fw-bold">Edit Invoice</h2>
+                <h2 className="text-center text-primary mb-5 fw-bold">Edit Quotation</h2>
 
                 <Form onSubmit={handleSubmit}>
                     <Row className="g-4 mb-4">

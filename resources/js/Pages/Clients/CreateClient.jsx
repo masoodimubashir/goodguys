@@ -20,6 +20,7 @@ export default function CreateClient() {
         client_address: '',
         service_charge: '',
         site_name: '',
+        created_at: new Date().toISOString().split('T')[0], // Default to today's date
     });
 
     const handleInputChange = (e) => {
@@ -62,7 +63,6 @@ export default function CreateClient() {
                     <BreadCrumbHeader
                         breadcrumbs={breadcrumbs}
                     />
-
 
                 </div>
 
@@ -221,21 +221,32 @@ function FormFields({ data, errors, onChange }) {
             <div className="col-md-3">
                 <InputLabel
                     htmlFor="site_name"
-                    value={isServiceType ? "Entry Name" : "Product Type"}
+                    value={isServiceType ? "Enter Service Name" : "Enter Project Title"}
                 />
                 <TextInput
                     className="form-control"
                     id="site_name"
                     name="site_name"
-                    placeholder={isServiceType ? "Enter Entry Name" : "Enter Product Type"}
+                    placeholder={isServiceType ? "Enter Service Name" : "Enter Project Title"}
                     value={data.site_name}
                     onChange={onChange}
                 />
                 <InputError message={errors.site_name} />
             </div>
 
-
-
+            {/* Created At Date Field */}
+            <div className="col-md-3">
+                <InputLabel htmlFor="created_at" value="Created Date" />
+                <TextInput
+                    type="date"
+                    className="form-control"
+                    id="created_at"
+                    name="created_at"
+                    value={data.created_at}
+                    onChange={onChange}
+                />
+                <InputError message={errors.created_at} />
+            </div>
 
             {isServiceType && (
                 <div className="col-md-2">

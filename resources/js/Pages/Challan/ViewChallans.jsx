@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import React, { useState } from 'react';
 import { Button, Card, Table, Badge, Form, Modal, Row, Col, ProgressBar } from 'react-bootstrap';
-import { Trash2, FileText, Edit, Plus, User, Mail, Phone, MapPin, Calendar, CreditCard } from 'lucide-react';
+import { Trash2, FileText, Edit,Calendar, CreditCard } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import ChallanPdf from '../PDF/ChallanPdf';
 import ChallanToInvoice from '../PDF/ChallanToInvoice';
@@ -22,38 +22,74 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
 
     // Calculate client statistics
     const clientStats = {
+
         totalChallans: client.challan_refrences.length,
         totalInvoices: client.invoices?.length || 0,
 
-        totalAmount: client.challan_refrences.reduce((sum, ref) => {
-
+        balance: client.challan_refrences.reduce((sum, ref) => {
             const items = ref.challans || [];
+            // Filter out credited items
+            const filteredItems = items.filter(item => item.is_credited === 0);
 
-            const subtotal = items.reduce((subSum, item) => {
+            let inTotal = 0, outTotal = 0;
+
+            filteredItems.forEach(item => {
                 const qty = parseFloat(item.qty) || 0;
                 const price = parseFloat(item.price) || 0;
                 const unitType = item.unit_type;
 
                 const value = qty > 1 ? price * qty : price;
-                const signedValue = unitType === 'out' ? -value : value;
 
-                return subSum + signedValue;
-            }, 0);
+                if (unitType === 'in') {
+                    inTotal += value;
+                } else if (unitType !== 'in') {
+                    outTotal += value;
+                }
+            });
 
-            // Add service charge
-            const serviceCharge = (ref.service_charge || 0);
-            const totalWithServiceCharge = subtotal + (subtotal * serviceCharge / 100);
+            // Calculate service charge on outTotal only
+            const serviceCharge = parseFloat(ref.service_charge) || 0;
+            const serviceChargeAmount = outTotal * serviceCharge / 100;
+            const outWithServiceCharge = outTotal + serviceChargeAmount;
 
-            return sum + totalWithServiceCharge;
+            // Final balance: inTotal - outWithServiceCharge
+            const balance = inTotal - outWithServiceCharge;
+
+            return sum + balance;
         }, 0),
 
-        paidAmount: client.invoices?.reduce((sum, inv) => sum + (inv.paid_amount || 0), 0) || 0,
+        spends: client.challan_refrences.reduce((sum, ref) => {
+            const items = ref.challans || [];
+            // Filter out credited items
+            const filteredItems = items.filter(item => item.is_credited === 0);
 
-        pendingAmount: client.invoices?.reduce((sum, inv) => {
-            const paid = inv.paid_amount || 0;
-            const total = inv.total || 0;
-            return sum + (total - paid);
-        }, 0) || 0
+            let inTotal = 0, outTotal;
+
+            filteredItems.forEach(item => {
+                const qty = parseFloat(item.qty) || 0;
+                const price = parseFloat(item.price) || 0;
+                const unitType = item.unit_type;
+
+                const value = qty > 1 ? price * qty : price;
+
+                if (unitType === 'in') {
+                    inTotal += value;
+                }
+
+            });
+
+            // Calculate service charge on outTotal only
+            const serviceCharge = parseFloat(ref.service_charge) || 0;
+            const serviceChargeAmount = outTotal * serviceCharge / 100;
+            const outWithServiceCharge = outTotal + serviceChargeAmount;
+
+            // Final balance: inTotal - outWithServiceCharge
+            const balance = inTotal - outWithServiceCharge;
+
+            return sum + balance;
+        }, 0),
+
+
     };
 
 
@@ -106,10 +142,12 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
             invoice_number: invoiceData.invoice_number,
             invoice_date: invoiceData.invoice_date,
             due_date: invoiceData.due_date,
+            service_charge: client?.service_charge?.service_charge,
             items: selectedRefs.flatMap(ref =>
                 ref.challans.map(item => ({
+                    id: item.id,
                     description: item.description,
-                    quantity: item.qty,
+                    qty: item.qty,
                     price: item.price,
                     challan_reference: ref.challan_number,
                     is_price_visible: item.is_price_visible,
@@ -119,6 +157,7 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                     updated_by: client.updated_by,
                     total: item.price * item.qty,
                     narration: item.narration,
+                    is_credited: item.is_credited,
                 }))
             ),
             subtotal: calculateSelectedTotals().subtotal,
@@ -126,6 +165,9 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
             total: calculateSelectedTotals().total
         };
     };
+
+    const data = prepareInvoiceData();
+    
 
     // Create invoice
     const createInvoice = () => {
@@ -213,7 +255,7 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                                 <div className="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 className="text-muted mb-2">Total Billed</h6>
-                                        <h3 className="mb-0">₹{clientStats.totalAmount.toLocaleString('en-IN')}</h3>
+                                        <h3 className="mb-0">₹{clientStats.balance.toLocaleString('en-IN')}</h3>
                                     </div>
                                     <div className="bg-info bg-opacity-10 p-3 rounded">
                                         <Calendar size={20} className="text-white" />
@@ -239,7 +281,7 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                                         document={
                                             <ChallanToInvoice
                                                 company_profile={company_profile}
-                                                challans={client.challan_refrences.filter(ref => selectedChallans.includes(ref.id))}
+                                                data={data}
                                                 client={client}
                                                 bankAccount={bankAccount}
                                             />
@@ -275,30 +317,50 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                                 <th>Challan No.</th>
                                 <th>Date</th>
                                 <th className="text-end">Items</th>
-                                <th className="text-end">Subtotal</th>
+                                <th className="text-end">Billed Amount  </th>
                                 <th className="text-end">Service Charge</th>
-                                <th className="text-end">Total</th>
                                 <th className="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
+
                             {client.challan_refrences.map((ref) => {
                                 const items = ref.challans || [];
+                                // Filter out credited items
+                                const filteredItems = items.filter(item => item.is_credited === 0);
 
-                                const subtotal = items.reduce((sum, item) => {
+                                let inTotal = 0, outTotal = 0;
+
+                                filteredItems.forEach(item => {
                                     const qty = parseFloat(item.qty) || 0;
                                     const price = parseFloat(item.price) || 0;
                                     const unitType = item.unit_type;
 
-                                    const value = qty > 0 ? price * qty : price;
-                                    const signedValue = unitType === 'out' ? -value : value;
+                                    const value = qty > 1 ? price * qty : price;
 
-                                    return sum + signedValue;
+                                    if (unitType === 'in') {
+                                        inTotal += value;
+                                    } else if (unitType !== 'in') {
+                                        outTotal += value;
+                                    }
+                                });
+
+                                // Calculate service charge on outTotal only (not on subtotal)
+                                const serviceRate = Number(ref.service_charge) || 0;
+                                const serviceCharge = outTotal * serviceRate / 100;
+                                const outWithServiceCharge = outTotal + serviceCharge;
+                                const balance = inTotal - outWithServiceCharge;
+
+                                // Calculate visible subtotal (only items with is_price_visible)
+                                const visibleSubtotal = filteredItems.reduce((sum, item) => {
+                                    if (item.is_price_visible) {
+                                        const qty = parseFloat(item.qty) || 0;
+                                        const price = parseFloat(item.price) || 0;
+                                        return sum + (qty > 1 ? price * qty : price);
+                                    }
+                                    return sum;
                                 }, 0);
 
-                                const serviceRate = Number(ref.service_charge) || 0;
-                                const serviceCharge = subtotal * serviceRate / 100;
-                                const total = subtotal + serviceCharge;
                                 const isInvoiced = ref.invoice_id !== null;
 
 
@@ -321,13 +383,13 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                                         <td>{new Date(ref.created_at).toLocaleDateString()}</td>
 
                                         <td className="text-end">{items.length}</td>
-                                        <td className="text-end">₹{subtotal.toLocaleString('en-IN')}</td>
+                                        <td className="text-end">₹{outWithServiceCharge.toLocaleString('en-IN')}</td>
                                         <td className="text-end">
                                             <Badge bg="warning" text="dark">
                                                 ₹{serviceCharge.toLocaleString('en-IN')} ({ref.service_charge}%)
                                             </Badge>
                                         </td>
-                                        <td className="text-end fw-bold">₹{total.toLocaleString('en-IN')}</td>
+
                                         <td className="text-center">
                                             <div className="d-flex justify-content-center gap-2">
 

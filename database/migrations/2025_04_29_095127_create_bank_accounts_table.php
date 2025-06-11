@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('account_number');
             $table->string('upi_number');
             $table->string('upi_address');
-            $table->string('signiture_image');
+            $table->string('signature_image');
             $table->string('company_stamp_image');
             $table->string('tax_number');
             $table->tinyInteger('created_by')->nullable();

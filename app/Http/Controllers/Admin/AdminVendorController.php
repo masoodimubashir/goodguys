@@ -15,7 +15,7 @@ class AdminVendorController extends Controller
      */
     public function index()
     {
-        return Inertia::render("Vendor/vendor", [
+        return Inertia::render("ClientVendors/clientVendor", [
             'vendors' => Vendor::orderBy('vendor_name')->paginate(10),
         ]);
     }
@@ -25,7 +25,7 @@ class AdminVendorController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Vendor/CreateVendor');
+        return Inertia::render('ClientVendors/CreateClientVendor');
     }
 
     /**
@@ -110,7 +110,7 @@ class AdminVendorController extends Controller
     {
         $vendor = Vendor::findOrFail($id);
 
-        return Inertia::render('Vendor/EditVendor', [
+        return Inertia::render('ClientVendors/EditClientVendor', [
             'vendor' => $vendor,
         ]);
     }

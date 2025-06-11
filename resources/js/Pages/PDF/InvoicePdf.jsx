@@ -306,7 +306,6 @@ const Header = ({ company_profile, client }) => (
           <Text style={styles.value}>{client?.client_address}</Text>
           <Text style={styles.value}>Phone: {client?.client_phone}</Text>
           <Text style={styles.value}>Email: {client?.client_email}</Text>
-          <Text style={[styles.value, { marginTop: 5 }]}>Client Type: {client?.client_type}</Text>
         </View>
       </View>
     </View>
@@ -373,8 +372,8 @@ const BankDetails = ({ bankAccount }) => {
 const SignatureSection = ({ bankAccount }) => (
   <View style={styles.signatureSection}>
     <View style={styles.signatureBox}>
-      {bankAccount?.signiture_image && (
-        <Image style={styles.signatureImage} src={`/storage/${bankAccount.signiture_image}`} />
+      {bankAccount?.signature_image && (
+        <Image style={styles.signatureImage} src={`/storage/${bankAccount.signature_image}`} />
       )}
       <Text style={styles.signatureLine}>Authorized Signature</Text>
     </View>
@@ -386,6 +385,8 @@ const SignatureSection = ({ bankAccount }) => (
     </View>
   </View>
 );
+
+
 
 
 export const InvoicePdf = ({ client, CompanyProfile, BankProfile }) => {
@@ -401,100 +402,96 @@ export const InvoicePdf = ({ client, CompanyProfile, BankProfile }) => {
     });
   });
 
-  const allItems = Object.entries(groupedModules).flatMap(([moduleName, items]) => [
-    { isModuleHeader: true, moduleName },
-    ...items,
-  ]);
-
-  const ITEMS_PER_PAGE = 20;
-  const pages = [];
-  for (let i = 0; i < allItems.length; i += ITEMS_PER_PAGE) {
-    pages.push(allItems.slice(i, i + ITEMS_PER_PAGE));
-  }
-
-  let globalIndex = 0;
   let grandTotal = 0;
+  let globalIndex = 0;
+
+  // Calculate grand total
+  Object.values(groupedModules).forEach(moduleItems => {
+    moduleItems.forEach(item => {
+      const qty = parseFloat(item.count || 0);
+      const price = parseFloat(item.price || 0);
+      const total = qty * price;
+      grandTotal += item.is_price_visible ? total : 0;
+    });
+  });
 
   return (
     <Document>
-      {pages.map((itemsOnPage, pageIndex) => (
-        <Page key={pageIndex} size="A4" style={styles.page} wrap>
-          <Text style={styles.watermark}>PROFORMA</Text>
-          <Header company_profile={CompanyProfile} client={client} />
+      <Page size="A4" style={styles.page} wrap>
+        <Text style={styles.watermark}>Invoice</Text>
+        <Header company_profile={CompanyProfile} client={client} />
 
+        {Object.entries(groupedModules).map(([moduleName, items]) => (
+          <View key={moduleName} style={styles.moduleSection}>
+            {/* Module Name Header */}
+            <Text style={styles.moduleHeader}>{moduleName}</Text>
+            
+            {/* Table for Module Items */}
+            <View style={styles.table}>
+              {/* Table Header */}
+              <View style={styles.tableHeader}>
+                <Text style={styles.col1}>S.No</Text>
+                <Text style={styles.col2}>Item</Text>
+                <Text style={styles.col3}>Description</Text>
+                <Text style={styles.col4}>Qty</Text>
+                <Text style={styles.col5}>Price</Text>
+                <Text style={styles.col6}>Total</Text>
+              </View>
+              
+              {/* Table Rows for Items */}
+              {items.map((item, itemIndex) => {
+                const qty = parseFloat(item.count || 0);
+                const price = parseFloat(item.price || 0);
+                const isVisible = item.is_price_visible;
+                const total = qty * price;
+                let dimensions = [];
+                try {
+                  dimensions = JSON.parse(item.additional_description || '[]');
+                } catch { }
 
-
-          <View style={styles.table}>
-            <View style={styles.tableHeader}>
-              <Text style={styles.col1}>S.No</Text>
-              <Text style={styles.col2}>Item</Text>
-              <Text style={styles.col3}>Description</Text>
-              <Text style={styles.col4}>Qty</Text>
-              <Text style={styles.col5}>Price</Text>
-              <Text style={styles.col6}>Total</Text>
-            </View>
-            {itemsOnPage.map((item, idx) => {
-              if (item.isModuleHeader) {
+                globalIndex++;
                 return (
-                  <View key={`module-${item.moduleName}-${idx}`} style={styles.tableRow}>
-                    <Text style={styles.moduleHeader}>
-                      {item.moduleName}
+                  <View key={item.id || globalIndex} style={styles.tableRow}>
+                    <Text style={styles.dataCol1}>{itemIndex + 1}</Text>
+                    <Text style={styles.dataCol2}>{item.item_name}</Text>
+                    <Text style={styles.dataCol3}>
+                      {item.description}
+                      {dimensions.length > 0 && (
+                        <Text>
+                          {'\n'}
+                          {dimensions.map((d, i) => (
+                            <Text key={i}>
+                              {d.type}: {d.value}{d.si}
+                              {i < dimensions.length - 1 ? ', ' : ''}
+                            </Text>
+                          ))}
+                        </Text>
+                      )}
                     </Text>
+                    <Text style={styles.dataCol4}>{qty}</Text>
+                    <Text style={styles.dataCol5}>{isVisible ? price.toFixed(2) : '—'}</Text>
+                    <Text style={styles.dataCol6}>{isVisible ? total.toFixed(2) : '—'}</Text>
                   </View>
                 );
-              }
-
-              const qty = parseFloat(item.count || 0);
-              const price = parseFloat(item.price || 0);
-              const isVisible = item.is_price_visible;
-              const total = qty * price;
-              grandTotal += total;
-              let dimensions = [];
-              try {
-                dimensions = JSON.parse(item.additional_description || '[]');
-              } catch { }
-
-              globalIndex++;
-              return (
-                <View key={item.id || globalIndex} style={styles.tableRow}>
-                  <Text style={styles.dataCol1}>{globalIndex}</Text>
-                  <Text style={styles.dataCol2}>{item.item_name}</Text>
-                  <Text style={styles.dataCol3}>
-                    {item.description}
-                    {dimensions.length > 0 && (
-                      <Text>
-                        {'\n'}
-                        {dimensions.map((d, i) => (
-                          <Text key={i}>
-                            {d.type}: {d.value}{d.si}
-                          </Text>
-                        ))}
-                      </Text>
-                    )}
-                  </Text>
-                  <Text style={styles.dataCol4}>{qty}</Text>
-                  <Text style={styles.dataCol5}>{isVisible ? price.toFixed(2) : '—'}</Text>
-                  <Text style={styles.dataCol6}>{isVisible ? total.toFixed(2) : '—'}</Text>
-                </View>
-              );
-            })}
-          </View>
-
-          {pageIndex === pages.length - 1 && (
-            <View style={styles.totalsSection}>
-              <View style={styles.totalsHeader}>
-                <Text style={styles.totalsLabelCol}>SUMMARY</Text>
-                <Text style={styles.totalsValueCol}>AMOUNT</Text>
-              </View>
-              <View style={styles.totalsRow}>
-                <Text style={styles.totalsDataLabelCol}>Grand Total:</Text>
-                <Text style={styles.totalsDataValueCol}>{grandTotal.toFixed(2)}</Text>
-              </View>
+              })}
             </View>
-          )}
-        </Page>
-      ))}
+          </View>
+        ))}
 
+        {/* Grand Total Section */}
+        <View style={styles.totalsSection}>
+          <View style={styles.totalsHeader}>
+            <Text style={styles.totalsLabelCol}>SUMMARY</Text>
+            <Text style={styles.totalsValueCol}>AMOUNT</Text>
+          </View>
+          <View style={styles.totalsRow}>
+            <Text style={styles.totalsDataLabelCol}>Grand Total:</Text>
+            <Text style={styles.totalsDataValueCol}>{grandTotal.toFixed(2)}</Text>
+          </View>
+        </View>
+      </Page>
+
+      {/* Bank Details and Signature Page */}
       <Page size="A4" style={styles.page}>
         <BankDetails bankAccount={BankProfile} />
         <SignatureSection bankAccount={BankProfile} />

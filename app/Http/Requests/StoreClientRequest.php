@@ -30,6 +30,7 @@ class StoreClientRequest extends FormRequest
             'client_phone'    => ['required', 'string', 'digits:10'],
             'service_charge'  => ['nullable', 'integer', 'min:0', 'max:100'],
             'advance_amount'  => ['nullable', 'integer', 'min:0'],
+            'created_at'      => ['required', 'date'],
         ];
     }
 }

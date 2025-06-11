@@ -2,9 +2,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Link } from '@inertiajs/react';
 import { CreditCard, Edit, Eye, Trash } from 'lucide-react';
 import React from 'react';
-import { Table } from 'react-bootstrap';
+import { Button, Table } from 'react-bootstrap';
 
-const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
+const PurchaseListTab = ({ client, clientVendors, tableRef, openPurchaseListModal }) => {
 
 
 
@@ -17,6 +17,17 @@ const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
     return (
 
         <>
+
+            <div className="d-flex justify-content-end align-items-center mb-2">
+              
+                <div className="d-flex gap-2">
+                    <Button variant="outline-success" size="sm" onClick={() => openPurchaseListModal()}>
+                        <i className="ti ti-shopping-cart me-1"></i> Add List
+                    </Button>
+                </div>
+            </div>
+
+
 
             <Table bordered size='md' ref={tableRef} className="table table-striped text-start align-middle">
                 <thead>

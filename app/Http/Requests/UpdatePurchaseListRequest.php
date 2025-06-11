@@ -28,7 +28,7 @@ class UpdatePurchaseListRequest extends FormRequest
             'purchase_date' => 'required|date',
             'bill' => 'nullable',
             'bill_total' => 'required|integer|min:0',
-            'bill_description' => 'required|string|max:1000',
+             'bill_description' => 'nullable|string|max:1000',
         ];
     }
 }

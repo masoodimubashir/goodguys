@@ -7,9 +7,8 @@ import { Table } from 'react-bootstrap';
 import { Download, Edit, FileText, RefreshCw, Trash2 } from 'lucide-react';
 import { InvoicePdf } from '@/Pages/PDF/InvoicePdf';
 
-export default function PdfTable({ client,  CompanyProfile, BankProfile }) {
+export default function PdfTable({ client, CompanyProfile, BankProfile }) {
 
-    
 
     const [convertingId, setConvertingId] = useState(null);
 
@@ -72,7 +71,7 @@ export default function PdfTable({ client,  CompanyProfile, BankProfile }) {
 
     const handleConvertToInvoice = (id) => {
         Swal.fire({
-            title: 'Convert to Invoice?',
+            title: 'Convert to Quotation?',
             text: 'This will create a new invoice from the proforma',
             icon: 'question',
             showCancelButton: true,
@@ -84,11 +83,11 @@ export default function PdfTable({ client,  CompanyProfile, BankProfile }) {
                 setConvertingId(id);
                 router.post(route('create-invoice-from-pdf', { id }), {
                     onSuccess: () => {
-                        Swal.fire('Success!', 'Invoice created from proforma successfully.', 'success');
+                        Swal.fire('Success!', 'Quotation Created.', 'success');
                         setConvertingId(null);
                     },
                     onError: () => {
-                        Swal.fire('Error!', 'Failed to create invoice from proforma.', 'error');
+                        Swal.fire('Error!', 'Failed to create Quotation.', 'error');
                         setConvertingId(null);
                     }
                 });
@@ -106,14 +105,14 @@ export default function PdfTable({ client,  CompanyProfile, BankProfile }) {
                             href={route('invoice.create', { client_id: client.id })}
                             className="btn btn-sm btn-primary d-flex align-items-center gap-2"
                         >
-                           Create  Invoice
+                            Create Quotition
                         </Link>
-                        <Link
+                      <Link
                             href={route('proforma.create', { client_id: client.id })}
                             className="btn btn-sm btn-primary d-flex align-items-center gap-2"
                         >
-                            Create Proforma
-                        </Link>
+                            Create Estimate
+                        </Link>
                     </div>
                 </div>
 
@@ -187,24 +186,32 @@ export default function PdfTable({ client,  CompanyProfile, BankProfile }) {
                                                 </button>
                                             )}
 
-                                            <Link
-                                                href={entry.type === 'Invoice'
-                                                    ? route('invoice.edit', { id: entry.id })
-                                                    : route('proforma.edit', { id: entry.id })
-                                                }
-                                                className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
-                                            >
-                                                <Edit size={16} />
-                                                <span className="d-none d-md-inline">Edit</span>
-                                            </Link>
 
-                                            <button
-                                                onClick={() => handleDeleteItem(entry.id, entry.type)}
-                                                className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
-                                            >
-                                                <Trash2 size={16} />
-                                                <span className="d-none d-md-inline">Delete</span>
-                                            </button>
+
+                                            {
+                                                entry.type === 'Proforma' && (
+
+                                                    <>
+                                                        <Link
+                                                            href={entry.type === 'Invoice'
+                                                                ? route('invoice.edit', { id: entry.id })
+                                                                : route('proforma.edit', { id: entry.id })
+                                                            }
+                                                            className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+                                                        >
+                                                            <Edit size={16} />
+                                                        </Link>
+
+                                                        <button
+                                                            onClick={() => handleDeleteItem(entry.id, entry.type)}
+                                                            className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </>
+
+                                                )
+                                            }
 
                                             <PDFDownloadLink
                                                 document={
@@ -224,7 +231,7 @@ export default function PdfTable({ client,  CompanyProfile, BankProfile }) {
                                                         ) : (
                                                             <>
                                                                 <Download size={16} />
-                                                                <span className="d-none d-md-inline">PDF</span>
+                                                                
                                                             </>
                                                         )}
                                                     </>

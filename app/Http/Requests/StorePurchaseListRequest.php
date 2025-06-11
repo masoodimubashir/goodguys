@@ -28,7 +28,7 @@ class StorePurchaseListRequest extends FormRequest
             'purchase_date' => 'required|date',
             'bill' => 'required|file|mimes:jpeg,png,pdf|max:2048',
             'bill_total' => 'required|integer|min:0',
-            'bill_description' => 'required|string|max:1000',
+            'bill_description' => 'nullable|string|max:1000',
         ];
     }
 }

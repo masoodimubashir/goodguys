@@ -242,7 +242,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
 
             <Card className="p-4 shadow-sm rounded-4 border-0">
 
-                <h4 className="text-center text-primary fw-bold mb-3">Create Invoice</h4>
+                <h4 className="text-center text-primary fw-bold mb-3">Create Quotation</h4>
 
                 <Form onSubmit={handleSubmit}>
                     

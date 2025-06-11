@@ -11,10 +11,12 @@ use App\Models\CompanyProfile;
 use App\Models\Inventory;
 use App\Models\Module;
 use App\Models\PurchasedItem;
+use App\Models\PurchaseListPayment;
 use App\Models\ServiceCharge;
 use App\Models\Vendor;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class AdminClientsController extends Controller
@@ -42,6 +44,7 @@ class AdminClientsController extends Controller
 
             $client = Client::create(array_merge($validatedData, [
                 'created_by' => auth()->id(),
+                'created_at' => $validatedData['created_at'],
             ]));
 
             if (isset($validatedData['service_charge'])) {
@@ -55,6 +58,7 @@ class AdminClientsController extends Controller
             DB::commit();
             return redirect()->route('clients.index')->with('message', 'Client Created Successfully');
         } catch (Exception $e) {
+            Log::error($e);
             DB::rollBack();
             return redirect()->route('clients.index')
                 ->with('error', 'Failed to create client. Please try again.');
@@ -76,6 +80,7 @@ class AdminClientsController extends Controller
             'serviceCharge',
             'purchaseItems',
             'projectDocuments',
+
         ]);
 
 
@@ -87,6 +92,11 @@ class AdminClientsController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
+        $payments = PurchaseListPayment::where('client_id', $client->id)
+            ->with('vendor')
+            ->orderBy('transaction_date', 'desc')
+            ->get();
+
         if ($client->client_type === 'Service Client') {
 
             return Inertia::render('Clients/ShowServiceClient', [
@@ -95,6 +105,7 @@ class AdminClientsController extends Controller
                 'vendors' => Vendor::orderBy('vendor_name')->get(),
                 'purchase_items' => $purchase_items,
                 'BankProfile' => BankAccount::first(),
+                'payments' => $payments,
             ]);
         } else {
 
@@ -106,6 +117,8 @@ class AdminClientsController extends Controller
                 'vendors' => Vendor::orderBy('vendor_name')->get(),
                 'purchase_items' => $purchase_items,
                 'BankProfile' => BankAccount::first(),
+                'client_vendors' => $clientVendors,
+                'payments' => $payments,
 
             ]);
         }
@@ -123,15 +136,13 @@ class AdminClientsController extends Controller
     public function update(UpdateClientRequest $request, Client $client)
     {
         try {
-
-
             // dd($request->all());
             $data = $request->validated();
 
             $data['updated_by'] = auth()->id();
+            $data['updated_at'] = now();
 
             if ($data['client_type'] === 'Service Client') {
-
                 $serviceChargeValue = $data['service_charge'] ?? null;
                 unset($data['service_charge']);
 
@@ -148,14 +159,18 @@ class AdminClientsController extends Controller
             }
 
             // Update client details
-            $client->update($data);
+            $client->update(array_merge($data, [
+                'created_by' => auth()->id(),
+                'created_at' => $data['created_at'],
+                'updated_at' => now(),
+
+            ]));
 
             return redirect()->route('clients.index')->with('message', 'Client Updated');
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Failed to update client');
         }
     }
-
 
 
     public function destroy(Client $client)

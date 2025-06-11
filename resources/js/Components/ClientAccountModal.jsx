@@ -13,7 +13,7 @@ const ClientAccountModal = ({ show, onHide, form, errors, isEditing, handleSubmi
                 <Modal.Header closeButton>
                     <Modal.Title>
                         <h5 className="text-primary">
-                            {isEditing ? 'Edit' : 'Create'}  Account
+                            {isEditing ? 'Edit' : 'Create'}  Payment
                         </h5>
                     </Modal.Title>
                 </Modal.Header>

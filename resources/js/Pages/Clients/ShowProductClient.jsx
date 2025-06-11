@@ -10,7 +10,7 @@ import 'datatables.net-responsive';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import { ClientInfoCard } from '@/Components/ClientInfoCard';
 import { BankAccountCard } from '@/Components/BankAccountCard';
-import { FileText, Activity, Building, EyeOff, Eye, Receipt, TrendingUp, Percent, Package, BarChart3 } from 'lucide-react';
+import { FileText, Activity, Building, EyeOff, Eye, Receipt, TrendingUp, Percent, Package, BarChart3, IndianRupee } from 'lucide-react';
 import ProjectDocumentTab from '@/Components/ProjectDocumentTab';
 import PurchaseItemsTab from '@/Components/PurchaseItemsTab';
 import { PurchaseListModal } from '@/Components/PurchaseListModal';
@@ -19,8 +19,11 @@ import Swal from 'sweetalert2';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Button, Card, Col, Form, InputGroup, Modal, Row, Table } from 'react-bootstrap';
+import PurchaseListTab from '@/Components/PurchaseListTab';
+import ClientVendorPayments from '@/Components/ClientVendorPayments';
 
-export default function ShowClient({ client, purchase_items, vendors = [], company_profile = null, BankProfile = null }) {
+export default function ShowClient({ client, purchase_items, vendors = [], company_profile = null, BankProfile = null, client_vendors = [], payments = [] }) {
+
     const flash = usePage().props.flash;
 
     // State management for purchase items
@@ -41,7 +44,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
     const [dateRange, setDateRange] = useState([null, null]);
     const [startDate, endDate] = dateRange;
     const [isCreating, setIsCreating] = useState(false);
-    const [showAnalytics, setShowAnalytics] = useState(false);
+    const [showAnalytics, setShowAnalytics] = useState(true);
 
 
     // Modal states
@@ -305,10 +308,12 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                 purchaseListForm.reset();
                 setShowPurchaseListModal(false);
                 setCurrentPurchaseList(null);
-                ShowMessage('success', `Purchase list ${isEditing ? 'updated' : 'created'} successfully`);
+
                 setTimeout(() => {
                     window.location.reload();
                 }, 1000);
+                ShowMessage('success', `Purchase list ${isEditing ? 'updated' : 'created'} successfully`);
+
             },
             onError: () => {
                 ShowMessage('error', 'Failed to save purchase list');
@@ -320,6 +325,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
         } else {
             purchaseListForm.post(route('purchase-list.store'), options);
         }
+
 
 
     };
@@ -334,10 +340,11 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                 clientAccountForm.reset();
                 setShowClientAccountModal(false);
                 setCurrentClientAccount(null);
-                ShowMessage('success', `Client account ${isEditing ? 'updated' : 'created'} successfully`);
                 setTimeout(() => {
                     window.location.reload();
                 }, 1000);
+                ShowMessage('success', `Client account ${isEditing ? 'updated' : 'created'} successfully`);
+
             },
             onError: () => {
                 ShowMessage('error', 'Failed to save client account');
@@ -349,7 +356,6 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
         } else {
             clientAccountForm.post(route('client-account.store'), options);
         }
-
 
     };
 
@@ -405,6 +411,10 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                 is_price_visible: challanForm.data.is_price_visible,
                 qty: product.qty,
                 total: product.total,
+                is_credited: product.is_credited,
+                unit_type: product.unit_type ?? 'NA',
+                narration: product.narration || '',
+
             }));
 
         const payload = {
@@ -454,31 +464,40 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
     };
 
     const calculateAnalytics = () => {
-        const totalValue = filteredItems.reduce((sum, item) => {
-            const qty = parseFloat(item.qty) || 0;
-            const price = parseFloat(item.price) || 0;
-            const unitType = item.unit_type;
+        // Calculate separate sums for in, out, and total values (excluding is_created === 1)
+        const validItems = filteredItems.filter(item => item.is_credited !== 1);
 
-            // Determine the base value
-            const value = qty > 1 ? qty : qty * price;
+        const sumIn = validItems
+            .filter(item => item.unit_type === 'in')
+            .reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
 
-            // Apply sign based on unit type
-            const signedValue = unitType === 'out' ? -value : value;
+        const sumOut = validItems
+            .filter(item => item.unit_type === 'out')
+            .reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
 
-            return sum + signedValue;
-        }, 0);
+        const sumTotal = validItems.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0) - sumIn - sumOut;
 
-        const averagePrice = filteredItems.length > 0
-            ? filteredItems.reduce((sum, item) => sum + parseFloat(item.price || 0), 0) / filteredItems.length
+        // Final calculation: sum of in - sum of out - sum of total
+        const balance = sumIn - sumOut - sumTotal;
+
+        // Total Spend Of the client
+        const spends = validItems.filter(item =>
+            !item.unit_type || item.unit_type === 'null'
+        ).reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+
+        // validItems already defined above for consistency
+
+        const averagePrice = validItems.length > 0
+            ? validItems.reduce((sum, item) => sum + parseFloat(item.price || 0), 0) / validItems.length
             : 0;
 
-        const totalQuantity = filteredItems.reduce((sum, item) => {
+        const totalQuantity = validItems.reduce((sum, item) => {
             const qty = parseFloat(item.qty) || 0;
             return sum + qty;
         }, 0);
 
         const categories = {};
-        filteredItems.forEach(item => {
+        validItems.forEach(item => {
             const category = item.unit_type || 'Uncategorized';
             categories[category] = (categories[category] || 0) + 1;
         });
@@ -489,14 +508,15 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
         const topCategoryCount = topCategory ? categories[topCategory] : 0;
 
         return {
-            totalValue,
+            balance,
+            spends,
             averagePrice,
-            totalItems: filteredItems.length,
+            totalItems: validItems.length,
             totalQuantity,
             topCategory,
             topCategoryCount,
-            topCategoryPercentage: filteredItems.length > 0
-                ? Math.round((topCategoryCount / filteredItems.length) * 100)
+            topCategoryPercentage: validItems.length > 0
+                ? Math.round((topCategoryCount / validItems.length) * 100)
                 : 0
         };
     };
@@ -515,38 +535,11 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                 ]} />
 
                 <div className="dropdown">
-                    <Button className="btn btn-primary dropdown-toggle  me-2" size='sm' data-bs-toggle="dropdown">
-                        Create
-                    </Button>
+                  
                     <Button variant="outline-primary" size="sm" onClick={() => handleAnalytics()}>
                         {showAnalytics ? <Eye size={13} /> : <EyeOff size={14} />} Analytics
                     </Button>
-                    <ul className="dropdown-menu dropdown-menu-end">
-                        <li>
-                            <Link href={route('challan.show', client.id)} className="dropdown-item">
-                                <i className="ti ti-building-bank me-2"></i> Challans
-                            </Link>
-                        </li>
-                        <li>
-                            <button className="dropdown-item" onClick={() => openPurchaseListModal()}>
-                                <i className="ti ti-shopping-cart me-2"></i> Purchase List
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => openClientAccountModal()} className="dropdown-item">
-                                <i className="ti ti-building-bank me-2"></i> Add Payment
-                            </button>
-                        </li>
-                        <li>
-                            <Link
-                                href={route('bank-account.create', { client_id: client.id })}
-                                className="dropdown-item d-flex align-items-center gap-2"
-                            >
-                                <Building size={16} />
-                                Bank Account
-                            </Link>
-                        </li>
-                    </ul>
+                    
                 </div>
             </div>
 
@@ -559,49 +552,6 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                             {/* Client Information */}
                             <Row >
                                 <ClientInfoCard client={client} />
-                                {client.bank_account && <BankAccountCard BankProfile={client.bank_account} />}
-                            </Row>
-
-                            {/* Analytics Cards */}
-                            <Row className="g-3">
-                                <Col md={3}>
-                                    <Card className={`border-0 shadow-sm h-100 card-hover gradient-bg ${animatingCards.has('total-value') ? 'pulse-animation' : ''}`}>
-                                        <Card.Body className="p-3">
-                                            <div className="d-flex align-items-center justify-content-between">
-                                                <div>
-                                                    <h6 className="mb-1">Total Inventory Value</h6>
-                                                    <h6 className="mb-0 fw-bold ">{formatCurrency(analytics.totalValue)}</h6>
-                                                    <small className="">
-                                                        <TrendingUp size={12} className="me-1" />
-                                                        Avg: {formatCurrency(analytics.averagePrice)} per unit
-                                                    </small>
-                                                </div>
-                                                <div className="bg-white bg-opacity-20 p-3 rounded-circle">
-                                                    <Receipt size={28} className="" />
-                                                </div>
-                                            </div>
-                                        </Card.Body>
-                                    </Card>
-                                </Col>
-                                <Col md={3}>
-                                    <Card className={`border-0 shadow-sm h-100 card-hover gradient-success ${animatingCards.has('total-items') ? 'pulse-animation' : ''}`}>
-                                        <Card.Body className="p-3">
-                                            <div className="d-flex align-items-center justify-content-between">
-                                                <div>
-                                                    <h6 className="mb-1">Total Items</h6>
-                                                    <h6 className="mb-0 fw-bold">{analytics.totalItems}</h6>
-                                                    <small>
-                                                        <Percent size={12} className="me-1" />
-                                                        {analytics.totalQuantity} Total Quantity
-                                                    </small>
-                                                </div>
-                                                <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
-                                                    <Package size={28} className="" />
-                                                </div>
-                                            </div>
-                                        </Card.Body>
-                                    </Card>
-                                </Col>
                                 <Col md={6}>
                                     <Card className="border-0 shadow-sm h-100">
                                         <Card.Body className="p-3">
@@ -610,21 +560,15 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                                                 Quick Stats
                                             </h6>
                                             <div className="d-flex justify-content-between">
+
+
                                                 <div className="text-center">
-                                                    <h6 className="mb-1 fw-bold">{analytics.totalItems}</h6>
-                                                    <small className="text-muted">Total Items</small>
+                                                    <h6 className="mb-1 fw-bold">{analytics.spends}</h6>
+                                                    <small className="text-muted">Total Spends</small>
                                                 </div>
                                                 <div className="text-center">
-                                                    <h6 className="mb-1 fw-bold">{analytics.totalQuantity}</h6>
-                                                    <small className="text-muted">Total Quantity</small>
-                                                </div>
-                                                <div className="text-center">
-                                                    <h6 className="mb-1 fw-bold">{formatCurrency(analytics.averagePrice)}</h6>
-                                                    <small className="text-muted">Avg. Price</small>
-                                                </div>
-                                                <div className="text-center">
-                                                    <h6 className="mb-1 fw-bold">{formatCurrency(analytics.totalValue)}</h6>
-                                                    <small className="text-muted">Total Value</small>
+                                                    <h6 className="mb-1 fw-bold">{formatCurrency(analytics.balance)}</h6>
+                                                    <small className="text-muted">Balance</small>
                                                 </div>
                                             </div>
                                         </Card.Body>
@@ -639,10 +583,18 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
 
                 {/* Tabs Section */}
                 <ul className="nav nav-tabs" role="tablist">
+
                     <li className="nav-item" role="presentation">
-                        <button className="nav-link d-flex align-items-center gap-1 active" data-bs-toggle="tab" data-bs-target="#purchase-items-tab" type="button" role="tab">
+                        <button className="nav-link d-flex align-items-center gap-1 active" data-bs-toggle="tab" data-bs-target="#vendor-tab" type="button" role="tab">
                             <Activity size={16} />
-                            Purchase Items
+                            Vendor List
+                        </button>
+                    </li>
+
+                    <li className="nav-item" role="presentation">
+                        <button className="nav-link d-flex align-items-center gap-1" data-bs-toggle="tab" data-bs-target="#purchase-items-tab" type="button" role="tab">
+                            <Activity size={16} />
+                            Ledger
                         </button>
                     </li>
 
@@ -658,10 +610,27 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                             Documents
                         </button>
                     </li>
+                    <li className="nav-item" role="presentation">
+                        <button className="nav-link d-flex align-items-center gap-1" data-bs-toggle="tab" data-bs-target="#client-vendor-payment-tab" type="button" role="tab">
+                            <IndianRupee size={16} />
+                            Payments
+                        </button>
+                    </li>
+
+                   
                 </ul>
 
                 <div className="tab-content">
-                    <div className="tab-pane fade show active" id="purchase-items-tab" role="tabpanel">
+
+                    <div className="tab-pane fade show active" id="vendor-tab" role="tabpanel">
+                        <PurchaseListTab
+                            client={client}
+                            clientVendors={client_vendors}
+                            openPurchaseListModal={openPurchaseListModal}
+                        />
+                    </div>
+
+                    <div className="tab-pane fade show" id="purchase-items-tab" role="tabpanel">
                         <PurchaseItemsTab
                             filteredItems={filteredItems}
                             purchaseItems={purchaseItems}
@@ -692,10 +661,9 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                             CustomTooltip={CustomTooltip}
                             isCreating={isCreating}
                             purchase_items={purchase_items}
+                            client={client}
                         />
                     </div>
-
-
 
                     <div className="tab-pane fade" id="pdf-tab" role="tabpanel">
                         <PdfTable client={client} CompanyProfile={company_profile} BankProfile={BankProfile} />
@@ -704,6 +672,13 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                     <div className="tab-pane fade" id="project-document-tab" role="tabpanel">
                         <ProjectDocumentTab client={client} />
                     </div>
+
+                    <div className="tab-pane fade" id="client-vendor-payment-tab" role="tabpanel">
+                        <ClientVendorPayments payments={payments} openClientAccountModal={openClientAccountModal} />
+
+                    </div>
+
+
                 </div>
             </div>
 
@@ -805,10 +780,10 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                                             .map(item => (
                                                 <tr key={item.id}>
                                                     <td>{item.description}</td>
-                                                    <td>{item.unit_type}</td>
+                                                    <td>{item.unit_type ?? 'NA'}</td>
                                                     <td>
                                                         {
-                                                            item.qty > 0 ? item.qty : 'NA'
+                                                            item.qty > 1 ? item.qty : 'NA'
                                                         }
                                                     </td>
                                                     <td>{formatCurrency(item.price)}</td>

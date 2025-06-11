@@ -9,7 +9,26 @@ import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 
 export default function EditClient({ client }) {
 
+  console.log(client);
+  
+
   const isServiceClient = !!client.service_charge;
+
+  // Format the date for initial display
+  const formatDateForInput = (dateString) => {
+
+    console.log(dateString);
+
+    if (!dateString) return '';
+
+    
+
+    // Handle both string and Date object inputs
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+  };
 
   const { data, setData, put, processing, errors } = useForm({
     client_type: client.client_type,
@@ -20,6 +39,7 @@ export default function EditClient({ client }) {
     client_address: client.client_address || '',
     service_charge: isServiceClient ? client?.service_charge?.service_charge : '',
     advance_amount: client?.advance_amount || 0,
+    created_at: formatDateForInput(client.created_at),
   });
 
   const handleSubmit = (e) => {
@@ -71,21 +91,21 @@ export default function EditClient({ client }) {
                   <InputError message={errors.client_name} />
                 </div>
 
-                    <div className="mb-3">
-                      <InputLabel
-                        htmlFor="site_name"
-                        value={isServiceClient ? "Site Name" : "Product Type"}
-                      />
-                      <TextInput
-                        className="form-control"
-                        id="site_name"
-                        name="site_name"
-                        placeholder={isServiceClient ? "Enter Site Name" : "Enter Product Type"}
-                        value={data.site_name}
-                        onChange={e => setData('site_name', e.target.value)}
-                      />
-                      <InputError message={errors.site_name} />
-                    </div>
+                <div className="mb-3">
+                  <InputLabel
+                    htmlFor="site_name"
+                    value={isServiceClient ? "Enter Service Name" : "Enter Project Title"}
+                  />
+                  <TextInput
+                    className="form-control"
+                    id="site_name"
+                    name="site_name"
+                    placeholder={isServiceClient ? "Enter Service Name" : "Enter Project Title"}
+                    value={data.site_name}
+                    onChange={e => setData('site_name', e.target.value)}
+                  />
+                  <InputError message={errors.site_name} />
+                </div>
 
 
                 <div className="mb-3">
@@ -135,10 +155,21 @@ export default function EditClient({ client }) {
                     placeholder={"Enter Amount"}
                     value={data.advance_amount}
                     onChange={e => setData('advance_amount', e.target.value)}
-                    
+
                   />
                   <InputError message={errors.advance_amount} />
                 </div>
+
+                <InputLabel htmlFor="created_at" value="Created Date" />
+                <input
+                  type="date"
+                  className="form-control"
+                  id="created_at"
+                  name="created_at"
+                  value={data.created_at}
+                  onChange={(e) => setData('created_at', e.target.value)}
+                />
+                <InputError message={errors.created_at} />
 
                 {data.client_type === 'Service Client' && (
                   <div className="mb-3">

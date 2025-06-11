@@ -1,4 +1,4 @@
-// import '../../css/Welcome.css';
+import '../../css/Welcome.css';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link, usePage } from '@inertiajs/react';
@@ -14,17 +14,7 @@ const Welcome = () => {
     transition: { duration: 0.8 }
   };
 
-  const fadeInLeft = {
-    initial: { opacity: 0, x: -60 },
-    animate: { opacity: 1, x: 0 },
-    transition: { duration: 0.8 }
-  };
 
-  const fadeInRight = {
-    initial: { opacity: 0, x: 60 },
-    animate: { opacity: 1, x: 0 },
-    transition: { duration: 0.8 }
-  };
 
   const staggerContainer = {
     animate: {
@@ -38,10 +28,12 @@ const Welcome = () => {
    int1,
    int2,
    int3,
-
   ];
 
-  const auth = usePage().props;
+  const auth = usePage().props.auth;
+
+  console.log(auth);
+  
 
   return (
     <div className="main-wrapper">
@@ -69,11 +61,13 @@ const Welcome = () => {
                 Transform Your Space with Exceptional Interior Design
               </motion.p>
               <div
-                className="d-flex flex-column flex-sm-row gap-3 justify-content-center z-50"  style={{ zIndex: 9999 }}
+                className="d-flex flex-column flex-sm-row gap-3 justify-content-center" 
                 variants={fadeInUp}
               >
                 {auth.user ? (
                   <Link
+                    className="btn btn-primary btn-lg px-5 py-3 fs-5 fw-semibold shadow-lg" style={{ zIndex: 9999 }}
+
                     href={route('login')}
                   >
                     Dashboard
@@ -124,11 +118,7 @@ const Welcome = () => {
                     alt={`Dashboard ${index + 1}`}
                     className="img-fluid dashboard-image"
                   />
-                  <div className="dashboard-overlay position-absolute w-100 h-100 top-0 start-0 d-flex align-items-end">
-                    <div className="p-4 text-white">
-                      <h3 className="h4 fw-semibold">Design Suite {index + 1}</h3>
-                    </div>
-                  </div>
+                
                 </motion.div>
               </div>
             ))}

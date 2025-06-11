@@ -38,7 +38,7 @@ class UpdateClientRequest extends FormRequest
             'client_phone' => ['required', 'string', 'digits:10'],
             'service_charge' => ['nullable', 'numeric', 'min:0'],
             'advance_amount' => ['nullable', 'numeric', 'min:0'],
+            'created_at' => ['required', 'date'],
         ];
     }
-    
 }

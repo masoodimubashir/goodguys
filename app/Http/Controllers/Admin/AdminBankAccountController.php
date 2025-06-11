@@ -40,41 +40,29 @@ class AdminBankAccountController extends Controller
      */
     public function store(StoreBankAccountRequest $request)
     {
-        DB::beginTransaction();
-
         try {
+            $validated = $request->validated();
 
+            // Image fields to handle
+            $imageFields = ['signature_image', 'company_stamp_image', 'qr_code_image'];
 
-            $validatedData = $request->validated();
-
-            // Handle file uploads
-            if ($request->hasFile('qr_code_image')) {
-                $validatedData['qr_code_image'] = $request->file('qr_code_image')->store('BankAccount/qr_codes', 'public');
+            foreach ($imageFields as $field) {
+                if ($request->hasFile($field)) {
+                    // Store file and update path
+                    $validated[$field] = $request->file($field)->store('bank-accounts', 'public');
+                }
             }
 
-            if ($request->hasFile('signiture_image')) {
-                $validatedData['signiture_image'] = $request->file('signiture_image')->store('BankAccount/signitures', 'public');
-            }
+            $validated['created_by'] = auth()->id(); // Track creator
 
-            if ($request->hasFile('company_stamp_image')) {
-                $validatedData['company_stamp_image'] = $request->file('company_stamp_image')->store('BankAccount/stamps', 'public');
-            }
+            BankAccount::create($validated);
 
-            // Create the bank account record
-            BankAccount::create(array_merge($validatedData, [
-                'created_by' => auth()->id(),
-            ]));
-
-            DB::commit();
-
-            return redirect()->route('clients.show', [$validatedData['client_id']])
-                ->with('message', 'Account Created Successfully');
+            return redirect()
+                ->back()
+                ->with('message', 'Bank Account created successfully.');
         } catch (Exception $e) {
-
-
-            DB::rollBack();
-
-            return redirect()->back()->with('error', 'Failed to create Account.');
+            Log::error('BankAccount Store Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Something went wrong while creating the record.');
         }
     }
 

@@ -29,7 +29,7 @@ class StoreBankAccountRequest extends FormRequest
             'account_number' => 'required|string|max:32',
             'upi_number' => 'nullable|sometimes|string|max:32',
             'upi_address' => 'required|string|max:250',
-            'signiture_image' =>  'required|file|mimes:jpeg|max:2048',
+            'signature_image' =>  'required|file|mimes:jpeg|max:2048',
             'company_stamp_image' => 'required|file|mimes:jpeg|max:2048',
             'tax_number' => 'required|string|max:32',
         ];
