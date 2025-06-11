@@ -65,8 +65,8 @@ export default function PurchasedProduct({ vendor, clientAccounts, purchaseLists
     };
 
     const breadcrumbs = [
-        { href: '/vendor', label: 'Vendor', active: false },
-        { href: `/vendor/${vendor.id}`, label: vendor.vendor_name, active: true }
+        { href: '/client-vendor', label: 'Vendor', active: false },
+        { href: `/client-vendor/${vendor.id}`, label: vendor.vendor_name, active: true }
     ];
 
     return (

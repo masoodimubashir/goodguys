@@ -33,7 +33,7 @@ const CreateClientVendor = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        post(route('vendor.store'), {
+        post(route('client-vendor.store'), {
             preserveScroll: true,
             onSuccess: () => {
                 ShowMessage('success', 'Vendor created successfully');
@@ -48,7 +48,7 @@ const CreateClientVendor = () => {
 
 
     const breadcrumbs = [
-        { href: '/vendor', label: 'Vendors', active: true }
+        { href: '/client-vendor', label: 'Vendors', active: true }
     ];
 
     return (

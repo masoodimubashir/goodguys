@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminChallanController;
 use App\Http\Controllers\Admin\AdminClientAccountController;
 use App\Http\Controllers\Admin\AdminClientProductController;
 use App\Http\Controllers\Admin\AdminClientsController;
+use App\Http\Controllers\Admin\AdminClientVednorsController;
 use App\Http\Controllers\Admin\AdminCostIncurredController;
 use App\Http\Controllers\Admin\AdminFieldController;
 use App\Http\Controllers\Admin\AdminInventoryController;
@@ -96,7 +97,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
     // Route For Vendor Model
-    Route::resource('/vendor', AdminVendorController::class);
+    Route::resource('/client-vendor', AdminClientVednorsController::class);
 
     // Route For Purchase Managment
     Route::resource('/purchase-managment', AdminPurchaseManagmentController::class);

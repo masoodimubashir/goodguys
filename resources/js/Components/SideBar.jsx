@@ -126,8 +126,8 @@ export const SideBar = () => {
 
                         <li>
                             <NavLink 
-                                active={url === '/vendor'} 
-                                href='/vendor'
+                                active={url === '/client-vendor'} 
+                                href='/client-vendor'
                                 onClick={() => isMobile && closeSidebar()}
                             >
                                 <i className="iconoir-box"></i>

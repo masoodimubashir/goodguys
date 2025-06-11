@@ -72,11 +72,11 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                destroy(route('vendor.destroy', id), {
+                destroy(route('client-vendor.destroy', id), {
                     preserveScroll: true,
                     onSuccess: () => {
                         // Refresh the current page after deletion
-                        get(route('vendor.index', { page: paginatedData.current_page }), {
+                        get(route('client-vendor.index', { page: paginatedData.current_page }), {
                             preserveState: true,
                             onSuccess: (data) => {
                                 setPaginatedData(data.props.vendors);
@@ -92,7 +92,7 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
     };
 
     const breadcrumbs = [
-        { href: '/vendor', label: 'Vendors', active: true }
+        { href: '/client-vendor', label: 'Vendors', active: true }
     ];
 
     return (
@@ -102,7 +102,7 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
             <div className="row g-4 mt-4">
                 <div className="d-flex justify-content-between align-items-center">
                     <BreadCrumbHeader breadcrumbs={breadcrumbs} />
-                    <Link href={route('vendor.create')} className="btn btn-sm btn-primary">
+                    <Link href={route('client-vendor.create')} className="btn btn-sm btn-primary">
                         <i className="ti ti-plus me-1"></i> Add Vendor
                     </Link>
                 </div>
@@ -137,7 +137,7 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
                                 filteredData.map((vendor) => (
                                     <tr key={vendor.id}>
                                         <td>
-                                            <Link className="text-primary" href={route('vendor.show', vendor.id)}>
+                                            <Link className="text-primary" href={route('client-vendor.show', vendor.id)}>
                                                 {vendor.vendor_name}
                                             </Link>
                                         </td>
@@ -148,7 +148,7 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
                                         <td>{new Date(vendor.created_at).toLocaleString()}</td>
                                         <td>
                                             <div className="d-flex align-items-center justify-items-center">
-                                                <Link className="dropdown-item" href={route('vendor.edit', vendor.id)} title="Edit">
+                                                <Link className="dropdown-item" href={route('client-vendor.edit', vendor.id)} title="Edit">
                                                     <Edit2 size={16}></Edit2>
                                                 </Link>
                                                 <button className="dropdown-item text-danger" onClick={() => handleDelete(vendor.id)} title="Delete">

@@ -27,7 +27,7 @@
 
 
  <!-- datatable js-->
- {{-- <script src="{{asset('assets/vendor/datatable/jquery.dataTables.min.js')}}"></script> --}}
+ <script src="{{asset('assets/vendor/datatable/jquery.dataTables.min.js')}}"></script>
 
  <!-- script js -->
  {{-- <script src="{{asset('assets/js/advance_table.js')}}"></script> --}}

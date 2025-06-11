@@ -6,9 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreVendorRequest;
 use App\Http\Requests\UpdateVendorRequest;
 use App\Models\Vendor;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class AdminVendorController extends Controller
+class AdminClientVednorsController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -44,12 +45,10 @@ class AdminVendorController extends Controller
             ->with('message', 'Vendor created successfully');
     }
 
-
-
     /**
      * Display the specified resource.
      */
-    public function show($id)
+    public function show(string $id)
     {
         // Load vendor with relationships
         $vendor = Vendor::with([
@@ -118,11 +117,11 @@ class AdminVendorController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    // app/Http/Controllers/Admin/AdminVendorController.php
-
-    public function update(UpdateVendorRequest $request, Vendor $vendor)
+    public function update(UpdateVendorRequest $request, string $id)
     {
         $validated = $request->validated();
+
+        $vendor = Vendor::findOrFail($id);
 
         $vendor->update(array_merge($validated, [
             'updated_by' => auth()->user()->id,
@@ -134,7 +133,7 @@ class AdminVendorController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(string $id)
     {
         $vendor = Vendor::findOrFail($id);
 

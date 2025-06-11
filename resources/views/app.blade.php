@@ -10,15 +10,15 @@
 
     @routes
 
-    {{-- @viteReactRefresh --}}
+    @viteReactRefresh   
 
 
-    {{-- <script type="module" src="{{ asset('build/assets/app-P2nxT-ty.js') }}"></script> --}}
+    <script type="module" src="{{ asset('build/assets/app-B9-zqi-U.js') }}"></script>
 
-    {{-- <link rel="stylesheet" href="{{ asset('build/assets/app-Kn4DrDVk.css') }}"> --}}
-    {{-- <link rel="stylesheet" href="{{ asset('build/assets/app-D1EBmUti.css') }}"> --}}
+    {{-- <link rel="stylesheet" href="{{ asset('build/assets/app-P2nxT-ty.js') }}"> --}}
+    <link rel="stylesheet" href="{{ asset('build/assets/app-D1EBmUti.css') }}">
 
-    @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"]) 
+    {{-- @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])  --}}
 
     @inertiaHead
 

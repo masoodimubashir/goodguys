@@ -17,7 +17,7 @@ const EditClientVendor = ({ vendor }) => {
     // Handle form submission
     const handleSubmit = (e) => {
         e.preventDefault();
-        put(route('vendor.update', vendor.id), {
+        put(route('client-vendor.update', vendor.id), {
             preserveScroll: true,
             onSuccess: () => {
                 // Optional: You can add success notification here
@@ -33,7 +33,7 @@ const EditClientVendor = ({ vendor }) => {
 
             <div className="d-flex justify-content-between align-items-center">
                 <BreadCrumbHeader breadcrumbs={[
-                    { href: '/vendor', label: 'Vendor', active: true },
+                    { href: '/client-vendor', label: 'Vendor', active: true },
                 ]} />
             </div>
 
