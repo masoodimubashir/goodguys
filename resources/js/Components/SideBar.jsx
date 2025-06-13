@@ -130,7 +130,7 @@ export const SideBar = () => {
                                 href='/client-vendor'
                                 onClick={() => isMobile && closeSidebar()}
                             >
-                                <i className="iconoir-box"></i>
+                                <i className="iconoir-user"></i>
                                 Parties
                             </NavLink>
                         </li>

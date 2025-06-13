@@ -25,6 +25,9 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
         'Actions'
     ];
 
+    console.log(paginatedData);
+    
+
     useEffect(() => {
         if (flash.message) ShowMessage('success', flash.message);
         if (flash.error) ShowMessage('error', flash.error);
@@ -39,11 +42,11 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
             setFilteredData(paginatedData.data);
         } else {
             const filtered = paginatedData.data.filter(vendor =>
-                vendor.vendor_name.toLowerCase().includes(term) ||
-                (vendor.contact_number && vendor.contact_number.toLowerCase().includes(term)) ||
-                (vendor.email && vendor.email.toLowerCase().includes(term)) ||
-                (vendor.address && vendor.address.toLowerCase().includes(term)) ||
-                (vendor.description && vendor.description.toLowerCase().includes(term))
+                vendor?.vendor_name.toLowerCase().includes(term) ||
+                (vendor?.contact_number && vendor.contact_number.toLowerCase().includes(term)) ||
+                (vendor?.email && vendor?.email.toLowerCase().includes(term)) ||
+                (vendor?.address && vendor?.address.toLowerCase().includes(term)) ||
+                (vendor?.description && vendor?.description.toLowerCase().includes(term))
             );
             setFilteredData(filtered);
         }

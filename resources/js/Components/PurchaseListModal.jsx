@@ -27,7 +27,7 @@ export const PurchaseListModal = ({
 
                 <Modal.Title>
                     <h5 className="text-primary">
-                        {isEditing ? 'Edit' : 'Create'} Purchase List
+                        {isEditing ? 'Edit' : 'Create'} Party List
                     </h5>
                 </Modal.Title>
             </Modal.Header>

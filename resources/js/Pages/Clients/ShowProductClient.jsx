@@ -10,7 +10,7 @@ import 'datatables.net-responsive';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import { ClientInfoCard } from '@/Components/ClientInfoCard';
 import { BankAccountCard } from '@/Components/BankAccountCard';
-import { FileText, Activity, BarChart3, IndianRupee, Eye, EyeOff } from 'lucide-react';
+import { FileText, Activity, BarChart3, IndianRupee, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import ProjectDocumentTab from '@/Components/ProjectDocumentTab';
 import PurchaseItemsTab from '@/Components/PurchaseItemsTab';
 import { PurchaseListModal } from '@/Components/PurchaseListModal';
@@ -104,12 +104,12 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
     useEffect(() => {
         let results = purchaseItems;
 
+        
+
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
             results = results.filter(item =>
-                item.description?.toLowerCase()?.includes(term) ||
-                item.unit_type?.toLowerCase()?.includes(term) ||
-                item.narration?.toLowerCase()?.includes(term)
+                item.unit_type?.toLowerCase()?.includes(term) ,
             );
         }
 
@@ -532,12 +532,14 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                     { href: `/clients/${client.id}`, label: client.client_name, active: true }
                 ]} />
 
-                <div className="dropdown">
-                  
+                <div className="d-flex flex-wrap gap-2 justify-content-end">
+                    <Button variant="outline-secondary" size="sm" onClick={() => window.location.reload()}>
+                        <RefreshCw size={14} />
+                    </Button>
                     <Button variant="outline-primary" size="sm" onClick={() => handleAnalytics()}>
                         {showAnalytics ? <Eye size={13} /> : <EyeOff size={14} />} Analytics
                     </Button>
-                    
+
                 </div>
             </div>
 
@@ -578,6 +580,19 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                 }
 
 
+                <div className="d-flex flex-wrap justify-content-end align-items-center mt-2 mb-3 gap-2">
+                    <Button variant="outline-success" size="sm" onClick={() => openPurchaseListModal()}>
+                        <i className="ti ti-shopping-cart me-1"></i> Party Purchase
+                    </Button>
+
+                    <Link href={route('challan.show', client?.id)} className="btn btn-outline-dark btn-sm">
+                        <i className="ti ti-file-invoice me-1"></i> View Challans
+                    </Link>
+
+                    <Button variant="outline-info" size="sm" onClick={() => openClientAccountModal()}>
+                        <i className="ti ti-building-bank me-1"></i>Payment
+                    </Button>
+                </div>
 
                 {/* Tabs Section */}
                 <ul className="nav nav-tabs" role="tablist">
@@ -585,7 +600,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                     <li className="nav-item" role="presentation">
                         <button className="nav-link d-flex align-items-center gap-1 active" data-bs-toggle="tab" data-bs-target="#vendor-tab" type="button" role="tab">
                             <Activity size={16} />
-                            Vendor List
+                            Party List
                         </button>
                     </li>
 
@@ -615,7 +630,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                         </button>
                     </li>
 
-                   
+
                 </ul>
 
                 <div className="tab-content">
@@ -624,7 +639,6 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                         <PurchaseListTab
                             client={client}
                             clientVendors={client_vendors}
-                            openPurchaseListModal={openPurchaseListModal}
                         />
                     </div>
 
@@ -672,7 +686,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                     </div>
 
                     <div className="tab-pane fade" id="client-vendor-payment-tab" role="tabpanel">
-                        <ClientVendorPayments payments={payments} openClientAccountModal={openClientAccountModal} />
+                        <ClientVendorPayments payments={payments} />
 
                     </div>
 

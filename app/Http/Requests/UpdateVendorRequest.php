@@ -29,10 +29,9 @@ class UpdateVendorRequest extends FormRequest
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('vendors', 'email')->ignore($this->route('vendor')) // or $this->vendor if using route-model binding
             ],
             'address' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
+            'description' => 'nullable|string|max:1000',
         ];
     }
 }

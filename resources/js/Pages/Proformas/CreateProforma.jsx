@@ -120,6 +120,9 @@ export default function CreateProforma({ client, modules, inventories }) {
 
     // Handle item selection from inventory/module
     const handleItemSelect = (productIndex, itemIndex, sourceId) => {
+
+        
+
         const newProducts = [...data.products];
         const parsedId = parseInt(sourceId);
         const item = newProducts[productIndex].items[itemIndex];
@@ -143,6 +146,7 @@ export default function CreateProforma({ client, modules, inventories }) {
             }
         } else if (item.source === "module") {
             const selected = modules.find((m) => m.id === parsedId);
+
             if (selected) {
                 const price = selected.selling_price || 0;
                 newProducts[productIndex].items[itemIndex] = {
@@ -156,8 +160,8 @@ export default function CreateProforma({ client, modules, inventories }) {
                         const parts = dim.split(",");
                         return {
                             type: parts[0] || "",
-                            value: parts[2] || "",
-                            si: parts[1] || ""
+                            value:parts[1]  || "",
+                            si: parts[2] || ""
                         };
                     }),
                 };
@@ -169,6 +173,7 @@ export default function CreateProforma({ client, modules, inventories }) {
 
     // Handle dimension changes
     const handleDimensionChange = (productIndex, itemIndex, dimIndex, field, value) => {
+        
         const newProducts = [...data.products];
         newProducts[productIndex].items[itemIndex].item_dimensions[dimIndex][field] = value;
         setData("products", newProducts);

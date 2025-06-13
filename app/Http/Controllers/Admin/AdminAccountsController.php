@@ -7,7 +7,9 @@ use App\Http\Requests\StoreAccountRequest;
 use App\Http\Requests\UpdateAccountRequest;
 use App\Models\Account;
 use App\Models\Inventory;
+use App\Models\PurchasedItem;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -42,15 +44,21 @@ class AdminAccountsController extends Controller
     {
         try {
 
+           DB::beginTransaction();
+
             $validatedData = $request->validated();
+
 
             Account::create(array_merge($validatedData, [
                 'created_by' => auth()->id(),
             ]));
 
+            DB::commit();
+
             return redirect()->back()->with('message', 'Account Recorded');
         } catch (Exception $e) {
             Log::error($e->getMessage());
+            DB::rollBack();
             return redirect()->back()->with('error', 'Failed to record Account');
         }
     }
@@ -74,29 +82,29 @@ class AdminAccountsController extends Controller
         try {
 
             $account = Account::find($id);
-        
+
             if (!$account) {
                 throw new Exception('Account record not found', 404);
             }
-        
+
             $profit = ($request->selling_price - $request->buying_price) * $request->count;
-            
+
             $descriptionData = $request->description;
             $descriptionArray = [];
-            
+
             if (is_string($descriptionData) && !is_array(json_decode($descriptionData, true))) {
 
                 $parts = explode(',', $descriptionData);
-                
+
                 for ($i = 0; $i < count($parts); $i += 3) {
-                    if (isset($parts[$i]) && isset($parts[$i+1]) && isset($parts[$i+2])) {
-                        $descriptionArray[] = $parts[$i] . "," . $parts[$i+1] . "," . $parts[$i+2];
+                    if (isset($parts[$i]) && isset($parts[$i + 1]) && isset($parts[$i + 2])) {
+                        $descriptionArray[] = $parts[$i] . "," . $parts[$i + 1] . "," . $parts[$i + 2];
                     }
                 }
             } else {
                 $descriptionArray = is_string($descriptionData) ? json_decode($descriptionData, true) : $descriptionData;
             }
-        
+
             $account->update([
                 'inventory_id' => $request->inventory_id,
                 'item_name' => $request->item_name,
@@ -107,7 +115,7 @@ class AdminAccountsController extends Controller
                 'updated_by' => auth()->id(),
                 'description' => $descriptionArray,
             ]);
-        
+
             return redirect()->back()->with('message', 'Account Updated');
         } catch (NotFoundHttpException $e) {
             return redirect()->back()->with('error', $e->getMessage());

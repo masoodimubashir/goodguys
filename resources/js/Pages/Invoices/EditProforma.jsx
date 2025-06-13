@@ -201,8 +201,8 @@ export default function EditProforma({ proforma, modules, inventories }) {
                         const parts = dim.split(",");
                         return {
                             type: parts[0] || "",
-                            value: parts[2] || "",
-                            si: parts[1] || ""
+                            value: parts[1] || "",
+                            si: parts[2] || ""
                         };
                     }),
                 };

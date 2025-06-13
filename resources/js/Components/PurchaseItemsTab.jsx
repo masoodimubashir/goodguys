@@ -78,9 +78,7 @@ const PurchaseItemsTab = ({
                         >
                             <ShoppingCart size={16} /> Create Challan
                         </Button>
-                        <Link href={route('challan.show', client?.id)} className="btn btn-outline-dark btn-sm">
-                            <i className="ti ti-file-invoice me-1"></i> View Challans
-                        </Link>
+                        
                     </div>
                 </div>
 

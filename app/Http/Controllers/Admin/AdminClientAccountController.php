@@ -49,17 +49,17 @@ class AdminClientAccountController extends Controller
                     'created_at' => $validatedData['created_at']
                 ]);
                 
-                // PurchasedItem::create([
-                //     'client_id' => $validatedData["client_id"],
-                //     'unit_type' => $validatedData['payment_flow'],
-                //     'description' => $validatedData["payment_type"],
-                //     'qty' => 1,
-                //     'price' => $validatedData["amount"],
-                //     'narration' => $validatedData["narration"],
-                //     'total' => $validatedData["amount"],
-                //     'created_by' => auth()->id(),
-                //     'created_at' => $validatedData['created_at']
-                // ]);
+                PurchasedItem::create([
+                    'client_id' => $validatedData["client_id"],
+                    'unit_type' => $validatedData['payment_flow'],
+                    'description' => $validatedData["payment_type"],
+                    'qty' => 1,
+                    'price' => $validatedData["amount"],
+                    'narration' => $validatedData["narration"],
+                    'total' => $validatedData["amount"],
+                    'created_by' => auth()->id(),
+                    'created_at' => $validatedData['created_at']
+                ]);
 
             });
 

@@ -26,7 +26,7 @@ class StoreInventoryRequest extends FormRequest
             'selling_price'     => ['bail', 'required', 'numeric', 'min:1'],
             'buying_price'      => ['bail', 'required', 'numeric', 'min:1'],
             'item_type'         => ['bail', 'required', 'string', 'min:3', 'max:100'],
-            'item_sub_type'     => ['required', 'string', 'max:100'],
+            'item_sub_type'     => ['nullable', 'string', 'max:100'],
             'description'       => ['required', 'string', 'max:1000'],
             'count'             => ['bail', 'required', 'integer', 'min:1'],
             'item_dimensions'                 => ['bail', 'required', 'array', 'min:1', 'max:3'],

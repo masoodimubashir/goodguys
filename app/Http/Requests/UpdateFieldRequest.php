@@ -27,7 +27,6 @@ class UpdateFieldRequest extends FormRequest
                  'required',
                  'string',
                  'max:255',
-                 Rule::unique('fields', 'field_name')->ignore($this->route('field')),
              ],
              'si_unit' => ['required','string','max:255',],
              'dimension_value' => ['required','string','max:255',],

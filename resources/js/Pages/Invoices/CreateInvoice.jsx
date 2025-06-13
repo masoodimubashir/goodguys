@@ -130,6 +130,8 @@ export default function CreateInvoice({ client, modules, inventories }) {
 
     // Handle item selection from inventory/module
     const handleItemSelect = (productIndex, itemIndex, sourceId) => {
+
+
         const newProducts = [...data.products];
         const parsedId = parseInt(sourceId);
         const item = newProducts[productIndex].items[itemIndex];
@@ -182,6 +184,7 @@ export default function CreateInvoice({ client, modules, inventories }) {
 
     // Handle dimension changes
     const handleDimensionChange = (productIndex, itemIndex, dimIndex, field, value) => {
+
         const newProducts = [...data.products];
         newProducts[productIndex].items[itemIndex].item_dimensions[dimIndex][field] = value;
         setData("products", newProducts);

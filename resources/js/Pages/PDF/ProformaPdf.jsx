@@ -449,7 +449,7 @@ export const ProformaPdf = ({ client, CompanyProfile, BankProfile, data }) => {
         {Object.entries(groupedModules).map(([moduleName, items]) => (
           <View key={moduleName} style={styles.moduleSection}>
             {/* Module Name Header */}
-            <Text style={styles.moduleHeader}>UNIT TYPE{moduleName}</Text>
+            <Text style={styles.moduleHeader}>Unit Type: {moduleName}</Text>
 
             {/* Table for Module Items */}
             <View style={styles.table}>

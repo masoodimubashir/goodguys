@@ -112,9 +112,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
             results = results.filter(item =>
-                item.description?.toLowerCase()?.includes(term) ||
-                item.unit_type?.toLowerCase()?.includes(term) ||
-                item.narration?.toLowerCase()?.includes(term)
+                item.unit_type?.toLowerCase()?.includes(term),
             );
         }
 
@@ -608,6 +606,21 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                 </Row>
             )}
 
+            <div className="d-flex flex-wrap justify-content-end align-items-center mt-2 mb-3 gap-2">
+                <Button variant="outline-success" size="sm" onClick={() => openPurchaseListModal()}>
+                    <i className="ti ti-shopping-cart me-1"></i> Party Purchase
+                </Button>
+
+                <Link href={route('challan.show', client?.id)} className="btn btn-outline-dark btn-sm">
+                    <i className="ti ti-file-invoice me-1"></i> View Challans
+                </Link>
+
+                <Button variant="outline-info" size="sm" onClick={() => openClientAccountModal()}>
+                    <i className="ti ti-building-bank me-1"></i>Payment
+                </Button>
+            </div>
+
+
             <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
                 <Tab eventKey="vendor-lists" title={<span className="d-flex align-items-center gap-1"><ShoppingBag size={16} /> Party List</span>}>
                     <PurchaseListTab
@@ -615,7 +628,6 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                         handleEditAccount={(purchase_list) => openPurchaseListModal(purchase_list)}
                         handleDeleteItem={handleDelete}
                         clientVendors={client_vendors}
-                        openPurchaseListModal={openPurchaseListModal}
                     />
                 </Tab>
                 <Tab eventKey="purchase-items" title={<span className="d-flex align-items-center gap-1"><Package size={16} /> Ledger</span>}>
@@ -656,7 +668,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                     <ProjectDocumentTab client={client} />
                 </Tab>
                 <Tab eventKey="client-vendor-payments" title={<span className="d-flex align-items-center gap-1"><IndianRupee size={16} /> Payments</span>}>
-                    <ClientVendorPayments payments={payments} openClientAccountModal={openClientAccountModal} />
+                    <ClientVendorPayments payments={payments}  />
                 </Tab>
             </Tabs>
 

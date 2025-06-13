@@ -227,7 +227,7 @@ function FormFields({ data, errors, onChange }) {
                     className="form-control"
                     id="site_name"
                     name="site_name"
-                    placeholder={isServiceType ? "Enter Service Name" : "Enter Project Title"}
+                    placeholder={isServiceType ? "Enter Site Name" : "Enter Project Title"}
                     value={data.site_name}
                     onChange={onChange}
                 />

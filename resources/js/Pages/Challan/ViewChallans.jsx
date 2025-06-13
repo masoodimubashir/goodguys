@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import React, { useState } from 'react';
 import { Button, Card, Table, Badge, Form, Modal, Row, Col, ProgressBar } from 'react-bootstrap';
-import { Trash2, FileText, Edit,Calendar, CreditCard } from 'lucide-react';
+import { Trash2, FileText, Edit, Calendar, CreditCard } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import ChallanPdf from '../PDF/ChallanPdf';
 import ChallanToInvoice from '../PDF/ChallanToInvoice';
@@ -24,39 +24,38 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
     const clientStats = {
 
         totalChallans: client.challan_refrences.length,
-        totalInvoices: client.invoices?.length || 0,
+        // totalInvoices: client.invoices?.length || 0,
 
-        balance: client.challan_refrences.reduce((sum, ref) => {
-            const items = ref.challans || [];
-            // Filter out credited items
-            const filteredItems = items.filter(item => item.is_credited === 0);
+        // balance: client.challan_refrences.reduce((sum, ref) => {
+        //    const items = ref.challans || [];
+        //     // Filter out credited items
+        //     const filteredItems = items.filter(item => item.is_credited === 0);
 
-            let inTotal = 0, outTotal = 0;
+        //     let inTotal = 0, outTotal;
 
-            filteredItems.forEach(item => {
-                const qty = parseFloat(item.qty) || 0;
-                const price = parseFloat(item.price) || 0;
-                const unitType = item.unit_type;
+        //     filteredItems.forEach(item => {
+        //         const qty = parseFloat(item.qty) || 0;
+        //         const price = parseFloat(item.price) || 0;
+        //         const unitType = item.unit_type;
 
-                const value = qty > 1 ? price * qty : price;
+        //         const value = qty > 1 ? price * qty : price;
 
-                if (unitType === 'in') {
-                    inTotal += value;
-                } else if (unitType !== 'in') {
-                    outTotal += value;
-                }
-            });
+        //         if (unitType === 'in') {
+        //             inTotal += value;
+        //         }
 
-            // Calculate service charge on outTotal only
-            const serviceCharge = parseFloat(ref.service_charge) || 0;
-            const serviceChargeAmount = outTotal * serviceCharge / 100;
-            const outWithServiceCharge = outTotal + serviceChargeAmount;
+        //     });
 
-            // Final balance: inTotal - outWithServiceCharge
-            const balance = inTotal - outWithServiceCharge;
+        //     // Calculate service charge on outTotal only
+        //     const serviceCharge = parseFloat(ref.service_charge) || 0;
+        //     const serviceChargeAmount = outTotal * serviceCharge / 100;
+        //     const outWithServiceCharge = outTotal + serviceChargeAmount;
 
-            return sum + balance;
-        }, 0),
+        //     // Final balance: inTotal - outWithServiceCharge
+        //     const balance = inTotal - outWithServiceCharge;
+
+        //     return sum + balance;
+        // }, 0),
 
         spends: client.challan_refrences.reduce((sum, ref) => {
             const items = ref.challans || [];
@@ -168,7 +167,7 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
     };
 
     const data = prepareInvoiceData();
-    
+
 
     // Create invoice
     const createInvoice = () => {
@@ -212,15 +211,10 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                     breadcrumbs={breadcrumbs}
                 />
                 {/* Client Information Card */}
-                <Card className="mb-4">
-                    <Card.Body>
-                        <ClientInfoCard client={client} />
-                    </Card.Body>
-                </Card>
-
-                {/* Client Analytics */}
                 <Row className="mb-4">
-                    <Col md={4}>
+
+                    <ClientInfoCard client={client} />
+                    <Col md={6}>
                         <Card className="border-0 shadow-sm">
                             <Card.Body>
                                 <div className="d-flex justify-content-between align-items-center">
@@ -235,7 +229,12 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                             </Card.Body>
                         </Card>
                     </Col>
-                    <Col md={4}>
+                </Row>
+
+                {/* Client Analytics */}
+                <Row className="mb-4">
+
+                    {/* <Col md={4}>
                         <Card className="border-0 shadow-sm">
                             <Card.Body>
                                 <div className="d-flex justify-content-between align-items-center">
@@ -264,7 +263,7 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                                 </div>
                             </Card.Body>
                         </Card>
-                    </Col>
+                    </Col> */}
 
                 </Row>
 

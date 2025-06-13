@@ -136,8 +136,8 @@ class AdminClientsController extends Controller
     public function update(UpdateClientRequest $request, Client $client)
     {
         try {
-            // dd($request->all());
             $data = $request->validated();
+
 
             $data['updated_by'] = auth()->id();
             $data['updated_at'] = now();

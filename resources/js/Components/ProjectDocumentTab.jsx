@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Edit, Eye, Plus, Save, X, Trash } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import { Table } from 'react-bootstrap';
+import { ShowMessage } from './ShowMessage';
+import Swal from 'sweetalert2';
 
 const ProjectDocumentTab = ({ client }) => {
 
@@ -48,7 +50,6 @@ const ProjectDocumentTab = ({ client }) => {
                 setTempImage(reader.result);
             };
             reader.readAsDataURL(file);
-            // Fixed: Use editForm function instead of undefined setData
             editForm('document_proof', file);
         }
     };
@@ -68,7 +69,7 @@ const ProjectDocumentTab = ({ client }) => {
                 e.target.reset();
             },
             onError: (errors) => {
-                console.error('Error adding document:', errors);
+                ShowMessage('error', 'Failed to add document.');
             }
         });
     };
@@ -79,7 +80,6 @@ const ProjectDocumentTab = ({ client }) => {
         const doc = client.project_documents.find(d => d.id === id);
         if (doc) {
             setTempImage(`/storage/${doc.document_proof}`);
-            // Fixed: Use editForm function and set both id and initial data
             editForm('id', id);
             editForm('document_proof', null); // Reset file input
         }
@@ -96,24 +96,23 @@ const ProjectDocumentTab = ({ client }) => {
 
     // Save edited document
     const saveDocument = (e) => {
-        e.preventDefault();
 
-        console.log('Edit Form Data:', editFormData); // Fixed: Use editFormData state
+        e.preventDefault();
 
         // Fixed: Check editFormData.id instead of editForm.data.id
         if (!editFormData.id) {
-            console.error('Cannot save document - missing ID');
+            ShowMessage('error','Cannot save document - missing ID');
             return;
         }
 
         const formData = new FormData();
+
         formData.append('_method', 'PUT');
-        // Fixed: Use editFormData instead of editForm.data
+
         if (editFormData.document_proof) {
             formData.append('document_proof', editFormData.document_proof);
         }
 
-        // Fixed: Use editFormData.id instead of editForm.data.id
         router.post(`/project-document/${editFormData.id}`, formData, {
             preserveScroll: true,
             onSuccess: () => {
@@ -124,27 +123,37 @@ const ProjectDocumentTab = ({ client }) => {
                 editForm('document_proof', null);
             },
             onError: (errors) => {
-                console.error('Error updating document:', errors);
+                ShowMessage('error', 'Failed to save document.');
             }
         });
     };
 
     // Delete a document
     const deleteDocument = (id) => {
-        if (confirm('Are you sure you want to delete this document?')) {
-            router.delete(`/project-document/${id}`, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    if (editingId === id) {
-                        setEditingId(null);
-                        setTempImage(null);
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(`/project-document/${id}`, {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        if (editingId === id) {
+                            setEditingId(null);
+                            setTempImage(null);
+                        }
+                    },
+                    onError: (errors) => {
+                        ShowMessage('error', 'Failed to delete document.');
                     }
-                },
-                onError: (errors) => {
-                    console.error('Error deleting document:', errors);
-                }
-            });
-        }
+                });
+            }
+        })
     };
 
     return (

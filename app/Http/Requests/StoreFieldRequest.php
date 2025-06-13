@@ -22,7 +22,7 @@ class StoreFieldRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'field_name' => ['required', 'string', 'max:255', 'unique:fields,field_name'],
+            'field_name' => ['required', 'string', 'max:255'],
             'si_unit'    => ['required', 'string', 'max:255'],
             'dimension_value'  => ['required', 'string', 'max:255'],
         ];

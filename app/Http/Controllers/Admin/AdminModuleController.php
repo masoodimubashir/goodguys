@@ -91,9 +91,12 @@ class AdminModuleController extends Controller
      */
     public function edit(Module $module)
     {
+
+        $fields = Field::latest()->get();
+
         return Inertia::render('Modules/EditModule', [
             'module' => $module,
-            'fields' => Field::latest()->get(),
+            'fields' => $fields
         ]);
     }
 
@@ -107,6 +110,7 @@ class AdminModuleController extends Controller
             DB::beginTransaction();
 
             $formattedFields = [];
+
 
             foreach ($request->input('fields', []) as $fieldData) {
 

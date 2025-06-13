@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreVendorRequest;
 use App\Http\Requests\UpdateVendorRequest;
 use App\Models\Vendor;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class AdminClientVednorsController extends Controller
@@ -52,9 +51,9 @@ class AdminClientVednorsController extends Controller
     {
         // Load vendor with relationships
         $vendor = Vendor::with([
-            'purchaseLists.client', // Load client with each purchase list
-            'purchaseLists.returnLists', // Load return lists for each purchase list
-            'purchaseListPayments' // Load payments made by this vendor
+            'purchaseLists.client',
+            'purchaseLists.returnLists',
+            'purchaseListPayments'
         ])->findOrFail($id);
 
         // Get paginated purchase lists separately to avoid N+1 issues

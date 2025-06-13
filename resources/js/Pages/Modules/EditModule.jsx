@@ -18,12 +18,14 @@ export default function EditModule({ module, fields = [] }) {
 
         return module.fields.map(field => {
             // Handle string format (e.g., "length,20,m")
+            
             if (typeof field === 'string') {
                 const [field_name, si_unit, dimension_value] = field.split(',');
+
                 return {
                     field_name: field_name || '',
-                    dimension_value: dimension_value || '',
-                    si_unit: si_unit || ''
+                    dimension_value: si_unit || '',
+                    si_unit: dimension_value || ''
                 };
             }
 
@@ -37,6 +39,9 @@ export default function EditModule({ module, fields = [] }) {
     };
 
     const initialFields = parseModuleFields();
+
+    console.log(initialFields);
+    
 
     const { data, setData, put, processing, errors } = useForm({
         module_name: module.module_name || '',

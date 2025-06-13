@@ -255,7 +255,7 @@ const ItemsTable = ({ items, hasPrices }) => (
 
           </Text>
           <Text style={styles.colUnit}>{item.unit_type}</Text>
-          <Text style={styles.colQty}>{item.qty}</Text>
+          <Text style={styles.colQty}>{item.qty > 1 ? item.qty : 'NA'}</Text>
           {hasPrices && <><Text style={styles.colPrice}>{item.price}</Text><Text style={styles.colTotal}>{item.total}</Text></>}
           <Text style={styles.colRemarks}>{wrapBy5Words(item.narration)}</Text>
         </View>
@@ -268,12 +268,15 @@ const ChallanPdf = ({ company_profile, challan, client, bankAccount }) => {
   const currentDate = new Date().toLocaleDateString();
   const formattedDate = challan?.created_at ? new Date(challan.created_at).toLocaleDateString() : currentDate;
 
+  console.log(challan);
+  
+
   const serviceCharge = parseFloat(challan?.service_charge) || 0;
-  const rawItems = challan?.challans?.filter(i => i.is_credited === 0) || [];
+  const rawItems = challan?.challans || [];
   const hasPrices = rawItems.some(i => i.is_price_visible);
 
   let subtotal = 0, inTotal = 0, outTotal = 0;
-  const processedItems = rawItems.map((item, index) => {
+  const processedItems = rawItems.filter(i => i.is_credited === 0).map((item, index) => {
     const qty = parseFloat(item.qty) || 0;
     const price = parseFloat(item.price) || 0;
     const total = qty > 1 ? qty * price : price;
@@ -288,7 +291,7 @@ const ChallanPdf = ({ company_profile, challan, client, bankAccount }) => {
   const remainingBalance = inTotal - outWithServiceCharge;
 
   const ITEMS_PER_PAGE = 20;
-  const pages = Math.ceil(processedItems.length / ITEMS_PER_PAGE);
+  const pages = Math.ceil(rawItems.length / ITEMS_PER_PAGE);
 
   return (
     <Document>
@@ -298,7 +301,7 @@ const ChallanPdf = ({ company_profile, challan, client, bankAccount }) => {
       </Page>
 
       {Array.from({ length: pages }).map((_, pageIndex) => {
-        const pageItems = processedItems.slice(pageIndex * ITEMS_PER_PAGE, (pageIndex + 1) * ITEMS_PER_PAGE);
+        const pageItems = rawItems.slice(pageIndex * ITEMS_PER_PAGE, (pageIndex + 1) * ITEMS_PER_PAGE);
         return (
           <Page key={pageIndex} size="A4" style={styles.page2}>
             <ItemsTable items={pageItems} hasPrices={hasPrices} />

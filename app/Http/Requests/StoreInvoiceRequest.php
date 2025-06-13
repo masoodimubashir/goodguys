@@ -39,7 +39,7 @@ class StoreInvoiceRequest extends FormRequest
             'products.*.items.*.quantity' => ['required', 'integer', 'min:1'],
             'products.*.items.*.item_dimensions' => ['nullable', 'array', 'min:1'],
             'products.*.items.*.item_dimensions.*.type' => ['nullable', 'string'],
-            'products.*.items.*.item_dimensions.*.value' => ['nullable', 'numeric'],
+            'products.*.items.*.item_dimensions.*.value' => ['nullable', 'integer'],
             'products.*.items.*.item_dimensions.*.si' => ['nullable', 'string'],
 
         ];

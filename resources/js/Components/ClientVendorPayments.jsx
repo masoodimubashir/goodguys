@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Table, Button, Pagination } from 'react-bootstrap';
 import { FileText, IndianRupee, Calendar, ArrowRightLeft } from 'lucide-react';
 
-const ClientVendorPayments = ({ payments, openClientAccountModal }) => {
+const ClientVendorPayments = ({ payments }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
@@ -76,15 +76,6 @@ const ClientVendorPayments = ({ payments, openClientAccountModal }) => {
 
         <>
 
-
-            <div className="d-flex justify-content-end align-items-center mb-2">
-
-                <div className="d-flex gap-2">
-                    <Button variant="outline-info" size="sm" onClick={() => openClientAccountModal()}>
-                        <i className="ti ti-building-bank me-1"></i>Payment
-                    </Button>
-                </div>
-            </div>
 
             <Table hover responsive size="sm" className="mb-0">
                 <thead className="table-light">
