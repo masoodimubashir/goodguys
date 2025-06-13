@@ -363,7 +363,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
                                     <Row className="mb-3">
                                         <Col md={8}>
                                             <Form.Group>
-                                                <Form.Label>Module Name</Form.Label>
+                                                <Form.Label>Unit Name</Form.Label>
                                                 <Form.Control
                                                     size="sm"
                                                     value={product.module_name}

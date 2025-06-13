@@ -2,10 +2,13 @@ import React from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 
 const ClientAccountModal = ({ show, onHide, form, errors, isEditing, handleSubmit }) => {
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         form.setData(name, value);
+
     };
+
 
     return (
         <Modal show={show} onHide={onHide} centered>
@@ -32,6 +35,18 @@ const ClientAccountModal = ({ show, onHide, form, errors, isEditing, handleSubmi
                         <Form.Control.Feedback type="invalid">
                             {errors.payment_type}
                         </Form.Control.Feedback>
+                    </Form.Group>
+
+                    <Form.Group className="mb-3">
+                        <Form.Label>Date</Form.Label>
+                        <Form.Control
+                            type="date"
+                            name='created_at'
+                            value={form.data.created_at}
+                            onChange={handleChange}
+                            isInvalid={!!errors.created_at}
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.created_at}</Form.Control.Feedback>
                     </Form.Group>
 
                     <Form.Group className="mb-3">

@@ -65,7 +65,6 @@ const PurchaseItemsTab = ({
                     <div className="d-flex gap-2">
                         <Button
                             variant="primary"
-                            className="d-flex align-items-center gap-2"
                             size="sm"
                             onClick={() => setNewItem(prev => ({ ...prev, show: true }))}
                         >
@@ -73,14 +72,13 @@ const PurchaseItemsTab = ({
                         </Button>
                         <Button
                             variant="success"
-                            className="d-flex align-items-center gap-2"
                             size="sm"
                             onClick={openChallanForm}
                             disabled={!Object.values(challanState.selectedProducts).some(selected => selected)}
                         >
                             <ShoppingCart size={16} /> Create Challan
                         </Button>
-                        <Link href={route('challan.show', client?.id)} className="btn btn-outline-dark btn-sm d-flex align-items-center">
+                        <Link href={route('challan.show', client?.id)} className="btn btn-outline-dark btn-sm">
                             <i className="ti ti-file-invoice me-1"></i> View Challans
                         </Link>
                     </div>
@@ -206,6 +204,13 @@ const PurchaseItemsTab = ({
                                         placeholder="Item description"
                                         value={newItem.description}
                                         onChange={e => handleNewItemChange('description', e.target.value)}
+                                    />
+                                    <br />
+                                    <Form.Control
+                                        size='sm'
+                                        type='date'
+                                        value={newItem.created_at}
+                                        onChange={e => handleNewItemChange('created_at', e.target.value)}
                                     />
                                 </td>
                                 <td>
@@ -388,7 +393,7 @@ const PurchaseItemsTab = ({
                                             </span>
                                         </td>
                                         <td>
-                                            {isEditing &&
+                                            {isEditing ? (
                                                 <Form.Control
                                                     as="textarea"
                                                     rows={3}
@@ -404,6 +409,13 @@ const PurchaseItemsTab = ({
                                                         fontSize: '14px'
                                                     }}
                                                 />
+
+                                            ) : (
+                                                <span>
+                                                    {item.narration }
+                                                </span>
+                                            )
+
                                             }
                                         </td>
                                         {/* <td>

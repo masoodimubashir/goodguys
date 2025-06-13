@@ -131,7 +131,7 @@ export const SideBar = () => {
                                 onClick={() => isMobile && closeSidebar()}
                             >
                                 <i className="iconoir-box"></i>
-                                Vendors
+                                Parties
                             </NavLink>
                         </li>
                     </ul>

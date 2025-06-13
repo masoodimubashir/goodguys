@@ -12,7 +12,6 @@ const COLORS = {
   textLight: '#636e72',
 };
 
-// Color Scheme
 const colors = {
   primary: '#2c3e50', // Navy Blue
   secondary: '#27ae60', // Green
@@ -32,10 +31,30 @@ const FONT_SIZES = {
   title: 28,
 };
 
-// Styles
 const styles = StyleSheet.create({
-  page: {
-    padding: 40,
+   page1: {
+    paddingTop: '35%',
+    paddingRight: 40,
+    paddingBottom: 40,
+    paddingLeft: 40,
+    fontFamily: 'Helvetica',
+    backgroundColor: '#ffffff',
+    position: 'relative',
+  },
+  page2: {
+    paddingTop: 40,
+    paddingRight: 40,
+    paddingBottom: 40,
+    paddingLeft: 40,
+    fontFamily: 'Helvetica',
+    backgroundColor: '#ffffff',
+    position: 'relative',
+  },
+  lastpage: {
+    paddingTop: '30%',
+    paddingRight: 40,
+    paddingBottom: 40,
+    paddingLeft: 40,
     fontFamily: 'Helvetica',
     backgroundColor: '#ffffff',
     position: 'relative',
@@ -45,43 +64,25 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
     borderBottomWidth: 2,
     borderBottomColor: COLORS.primary,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
   },
-  logoSection: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    flex: 1,
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    marginRight: 15,
-  },
-  companyInfo: {
-    flex: 1,
-  },
+  logo: { width: 70, height: 70, marginBottom: 10 },
   companyName: {
     fontSize: FONT_SIZES.xxlarge,
     fontWeight: 'bold',
     color: COLORS.primary,
-    marginBottom: 5,
+    marginBottom: 3,
+    textAlign: 'center',
   },
   companyDetails: {
     fontSize: FONT_SIZES.medium,
     color: COLORS.textLight,
-    lineHeight: 1.4,
+    lineHeight: 1.5,
+    textAlign: 'center',
   },
-  challanTitle: {
-    fontSize: FONT_SIZES.title,
-    fontWeight: 'bold',
-    color: COLORS.secondary,
-    textAlign: 'right',
-  },
-  sectionContainer: {
-    marginBottom: 20,
-  },
+  sectionContainer: { marginBottom: 20 },
   sectionTitle: {
     fontSize: FONT_SIZES.xlarge,
     fontWeight: 'bold',
@@ -91,35 +92,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
-  twoColumnLayout: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  column: {
-    width: '48%',
-  },
   infoContainer: {
     padding: 15,
     backgroundColor: COLORS.lightBg,
     borderRadius: 4,
+    alignItems: 'center',
   },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  label: {
-    fontSize: FONT_SIZES.medium,
-    color: COLORS.textLight,
-    fontWeight: 'bold',
-  },
-  value: {
-    fontSize: FONT_SIZES.medium,
-    color: COLORS.textDark,
-  },
-  table: {
-    width: '100%',
-  },
+  value: { fontSize: FONT_SIZES.medium, color: COLORS.textDark },
+  table: { width: '100%' },
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: COLORS.primary,
@@ -137,10 +117,10 @@ const styles = StyleSheet.create({
   colSerial: { width: '8%', fontSize: FONT_SIZES.small },
   colDesc: { width: '18%', fontSize: FONT_SIZES.small },
   colUnit: { width: '15%', fontSize: FONT_SIZES.small },
-  colQty: { width: '12%', fontSize: FONT_SIZES.small, textAlign: 'left' },
-  colPrice: { width: '10%', fontSize: FONT_SIZES.small, textAlign: 'left' },
-  colTotal: { width: '10%', fontSize: FONT_SIZES.small, textAlign: 'left' },
-  colRemarks: { width: '34%', fontSize: FONT_SIZES.small, textAlign: 'left' },
+  colQty: { width: '12%', fontSize: FONT_SIZES.small },
+  colPrice: { width: '10%', fontSize: FONT_SIZES.small },
+  colTotal: { width: '10%', fontSize: FONT_SIZES.small },
+  colRemarks: { width: '34%', fontSize: FONT_SIZES.small },
   totalsRow: {
     flexDirection: 'row',
     backgroundColor: COLORS.lightBg,
@@ -149,47 +129,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
-  totalsLabel: {
-    width: '70%',
-    fontSize: FONT_SIZES.medium,
-    textAlign: 'right',
-    paddingRight: 10,
-  },
-  totalsValue: {
-    width: '30%',
-    fontSize: FONT_SIZES.medium,
-    textAlign: 'right',
-    fontWeight: 'bold',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 40,
-    right: 40,
-    fontSize: FONT_SIZES.small,
-    color: COLORS.textLight,
-    textAlign: 'center',
-    borderTopWidth: 1,
-    borderColor: COLORS.border,
-    paddingTop: 10,
-  },
-  watermark: {
-    position: 'absolute',
-    opacity: 0.05,
-    fontSize: 60,
-    color: COLORS.primary,
-    transform: 'rotate(-45deg)',
-    left: 150,
-    top: 400,
-    zIndex: -1,
-  },
-  pageTitle: {
-    fontSize: FONT_SIZES.xxlarge,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 30,
-    color: COLORS.primary,
-  },
+  totalsLabel: { width: '70%', fontSize: FONT_SIZES.medium, textAlign: 'right', paddingRight: 10 },
+  totalsValue: { width: '30%', fontSize: FONT_SIZES.medium, textAlign: 'right', fontWeight: 'bold' },
   bankDetailsSection: {
     marginTop: 30,
     padding: 15,
@@ -241,45 +182,40 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     paddingTop: 5
   },
-  dateText: {
-    color: '#888',
-  }
+  footer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 40,
+    right: 40,
+    fontSize: FONT_SIZES.small,
+    color: COLORS.textLight,
+    textAlign: 'center',
+    borderTopWidth: 1,
+    borderColor: COLORS.border,
+    paddingTop: 10,
+  },
 });
-
 // Components
 const Header = ({ company }) => (
   <View style={styles.header}>
-    <View style={styles.logoSection}>
-      {company?.logo && <Image style={styles.logo} src={`/storage/${company.logo}`} />}
-      <View style={styles.companyInfo}>
-        <Text style={styles.companyName}>{company?.company_name || 'Company Name'}</Text>
-        <Text style={styles.companyDetails}>
-          {company?.company_address || 'Address'}{'\n'}
-          Phone: {company?.company_contact_no || 'N/A'}{'\n'}
-          Email: {company?.company_email || 'N/A'}
-        </Text>
-      </View>
-    </View>
-    <Text style={styles.challanTitle}>Invoice</Text>
+    {company?.logo && <Image style={styles.logo} src={`/storage/${company.logo}`} />}
+    <Text style={styles.companyName}>{company?.company_name || 'Company Name'}</Text>
+    <Text style={styles.companyDetails}>
+      {company?.company_address || 'Address'}\nPhone: {company?.company_contact_no || 'N/A'}\nEmail: {company?.company_email || 'N/A'}
+    </Text>
   </View>
 );
 
 const ClientInfo = ({ client, challan, serviceCharge, hasPrices }) => (
-  <View style={[styles.infoContainer, styles.sectionContainer]}>
-    <View style={styles.twoColumnLayout}>
-      <View style={styles.column}>
-        <Text style={styles.sectionTitle}>Deliver To:</Text>
-        <Text style={[styles.value, { fontSize: FONT_SIZES.large, marginBottom: 3, fontWeight: 'bold' }]}>{client?.client_name}</Text>
-        <Text style={styles.value}>{client?.client_address}</Text>
-        <Text style={styles.value}>Phone: {client?.client_phone}</Text>
-        <Text style={styles.value}>Email: {client?.client_email}</Text>
-        <Text style={[styles.value, { marginTop: 5 }]}>Site Name: {client?.site_name}</Text>
-      </View>
-      <View style={styles.column}>
-        <View style={styles.infoRow}><Text style={styles.label}>Challan Date:</Text><Text style={styles.value}>{challan?.date}</Text></View>
-        {hasPrices && <View style={styles.infoRow}><Text style={styles.label}>Service Charge:</Text><Text style={styles.value}>{serviceCharge}%</Text></View>}
-      </View>
-    </View>
+  <View style={styles.infoContainer}>
+    <Text style={styles.sectionTitle}>Deliver To:</Text>
+    <Text style={[styles.value, { fontSize: FONT_SIZES.large, fontWeight: 'bold' }]}>{client?.client_name}</Text>
+    <Text style={styles.value}>{client?.client_address}</Text>
+    <Text style={styles.value}>Phone: {client?.client_phone}</Text>
+    <Text style={styles.value}>Email: {client?.client_email}</Text>
+    <Text style={styles.value}>Site Name: {client?.site_name}</Text>
+    <Text style={styles.value}>Dated: {challan?.date}</Text>
+    {hasPrices && <Text style={styles.value}>Service Charge: {serviceCharge}%</Text>}
   </View>
 );
 
@@ -290,7 +226,7 @@ const ItemsTable = ({ items, hasPrices }) => (
         <Text style={[styles.colSerial, { color: 'white' }]}>S.No</Text>
         <Text style={[styles.colDesc, { color: 'white' }]}>DESCRIPTION</Text>
         <Text style={[styles.colUnit, { color: 'white' }]}>UNIT</Text>
-        <Text style={[styles.colQty, { color: 'white' }]}>QTY</Text>
+        <Text style={[styles.colQty, { color: 'white' }]}>QUANTITY</Text>
         {hasPrices && (
           <>
             <Text style={[styles.colPrice, { color: 'white' }]}>PRICE</Text>
@@ -390,59 +326,64 @@ const ChallanToInvoice = ({ company_profile, data, client, bankAccount }) => {
   const outWithServiceCharge = outTotal + serviceChargeAmount;
   const remainingBalance = inTotal - outWithServiceCharge;
   const hasPrices = items.some(i => i.is_price_visible);
+
+  const ITEMS_PER_PAGE = 20;
+  const pages = Math.ceil(items.length / ITEMS_PER_PAGE);
+
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.watermark}>Invoice</Text>
+
+      <Page size="A4" style={[styles.page1, { justifyContent: 'center' }]}>
         <Header company={company_profile} />
-
-        <ClientInfo client={client} challan={{ ...data, date: formattedDate, prepared_by: company_profile?.company_name }} serviceCharge={serviceCharge} hasPrices={hasPrices} />
-        <ItemsTable items={tableData} hasPrices={hasPrices} />
-
-        <View style={styles.sectionContainer}>
-          <View style={styles.table}>
-            <View style={styles.tableHeader}>
-              <Text style={[styles.totalsLabel, { color: 'white' }]}>BALANCE SUMMARY</Text>
-              <Text style={[styles.totalsValue, { color: 'white' }]}>AMOUNT (₹)</Text>
-            </View>
-            <View style={styles.totalsRow}><Text style={styles.totalsLabel}>Account Total:</Text>
-              <Text style={styles.totalsValue}>{inTotal.toFixed(2)}</Text>
-            </View>
-
-            <View style={[styles.totalsRow, { backgroundColor: COLORS.accent }]}>
-              <Text style={[styles.totalsLabel, { color: 'white' }]}>Total Spend:</Text>
-              <Text style={[styles.totalsValue, { color: 'white' }]}>{outTotal}</Text>
-            </View>
-
-            <View style={styles.totalsRow}>
-              <Text style={styles.totalsLabel}>Total Payment(Service Charge Included) :</Text>
-              <Text style={styles.totalsValue}>{outWithServiceCharge} ({serviceCharge}%)</Text>
-            </View>
-            <View style={[styles.totalsRow, { backgroundColor: COLORS.accent }]}>
-              <Text style={[styles.totalsLabel, { color: 'white' }]}>Remaining Balance:</Text>
-              <Text style={[styles.totalsValue, { color: 'white' }]}>{remainingBalance}</Text>
-            </View>
-
-
-
-
-          </View>
-        </View>
-
-        <View style={styles.footer}>
-          <Text>Challan generated on {currentDate} | {company_profile?.company_name || 'Company Name'}</Text>
-          <Text>Thank you for your business!</Text>
-        </View>
+        <ClientInfo client={client} challan={{ ...data, date: formattedDate }} serviceCharge={serviceCharge} hasPrices={hasPrices} />
       </Page>
 
-      <Page size="A4" style={styles.page}>
+
+      {Array.from({ length: pages }).map((_, pageIndex) => {
+        const pageItems = items.slice(pageIndex * ITEMS_PER_PAGE, (pageIndex + 1) * ITEMS_PER_PAGE);
+        return (
+          <Page key={pageIndex} size="A4" style={styles.page2}>
+            <ItemsTable items={tableData} hasPrices={hasPrices} />
+            {hasPrices && pageIndex === pages - 1 && (
+              <View style={styles.sectionContainer}>
+                <View style={styles.table}>
+                  <View style={styles.tableHeader}>
+                    <Text style={[styles.totalsLabel, { color: 'white' }]}>BALANCE SUMMARY</Text>
+                    <Text style={[styles.totalsValue, { color: 'white' }]}>AMOUNT (₹)</Text>
+                  </View>
+                  <View style={styles.totalsRow}>
+                    <Text style={styles.totalsLabel}>Account Total:</Text>
+                    <Text style={styles.totalsValue}>{inTotal.toFixed(2)}</Text>
+                  </View>
+                  <View style={[styles.totalsRow, { backgroundColor: COLORS.accent }]}>
+                    <Text style={[styles.totalsLabel, { color: 'white' }]}>Total Spend:</Text><Text style={[styles.totalsValue, { color: 'white' }]}>{outTotal}</Text>
+                  </View>
+                  <View style={styles.totalsRow}><Text style={styles.totalsLabel}>Total Payment (SC Included):</Text>
+                    <Text style={styles.totalsValue}>{outWithServiceCharge} ({serviceChargeAmount})</Text>
+                  </View>
+                  <View style={[styles.totalsRow, { backgroundColor: COLORS.accent }]}><Text style={[styles.totalsLabel, { color: 'white' }]}>Remaining Balance:</Text>
+                    <Text style={[styles.totalsValue, { color: 'white' }]}>{remainingBalance}</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+            <View style={styles.footer}>
+              <Text>Bill Generated on {currentDate} | {company_profile?.company_name || 'Company Name'}</Text>
+              <Text>Thank you for your business!</Text>
+            </View>
+          </Page>
+        );
+      })}
+
+
+
+      {/* Bank Details and Signature Page */}
+      <Page size="A4" style={styles.lastpage}>
         <BankDetails bankAccount={bankAccount} />
         <SignatureSection bankAccount={bankAccount} />
-        <View style={styles.footer}>
-          <Text>Challan generated on {currentDate} | {company_profile?.company_name || 'Company Name'}</Text>
-          <Text>Thank you for your business!</Text>
-        </View>
       </Page>
+
+
     </Document>
   );
 };
@@ -477,12 +418,18 @@ const BankDetails = ({ bankAccount }) => {
           </View>
         </View>
         <View style={styles.bankDetailsColumn}>
-
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>Branch Code:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.branch_code}</Text>
+          </View>
           <View style={styles.bankInfoItem}>
             <Text style={styles.bankInfoLabel}>UPI ID:</Text>
             <Text style={styles.bankInfoValue}>{bankAccount.upi_address}</Text>
           </View>
-
+          <View style={styles.bankInfoItem}>
+            <Text style={styles.bankInfoLabel}>SWIFT Code:</Text>
+            <Text style={styles.bankInfoValue}>{bankAccount.swift_code}</Text>
+          </View>
           <View style={styles.bankInfoItem}>
             <Text style={styles.bankInfoLabel}>Tax Number:</Text>
             <Text style={styles.bankInfoValue}>{bankAccount.tax_number}</Text>
@@ -520,15 +467,13 @@ const SignatureSection = ({ bankAccount }) => (
 );
 
 
+
 const wrapBy5Words = (text) => {
   if (!text) return 'NA';
-
   const words = text.split(' ');
   const lines = [];
-
   for (let i = 0; i < words.length; i += 5) {
     lines.push(words.slice(i, i + 5).join(' '));
   }
-
   return lines.join('\n');
 };

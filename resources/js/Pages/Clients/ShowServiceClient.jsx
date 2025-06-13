@@ -45,7 +45,8 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         qty: 1,
         price: '',
         narration: '',
-        show: false
+        show: false,
+        created_at: new Date().toISOString().split('T')[0],
     });
     const [showAnalytics, setShowAnalytics] = useState(true);
     const [animatingCards, setAnimatingCards] = useState(new Set());
@@ -91,7 +92,8 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         payment_type: '',
         payment_flow: '',
         amount: '',
-        narration: ''
+        narration: '',
+        created_at: new Date().toISOString().split('T')[0],
     });
 
     // Format currency
@@ -110,9 +112,9 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
             results = results.filter(item =>
-                item.description?.toLowerCase().includes(term) ||
-                item.unit_type?.toLowerCase().includes(term) ||
-                item.narration?.toLowerCase().includes(term)
+                item.description?.toLowerCase()?.includes(term) ||
+                item.unit_type?.toLowerCase()?.includes(term) ||
+                item.narration?.toLowerCase()?.includes(term)
             );
         }
 
@@ -292,7 +294,8 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             description: newItem.description,
             qty: Number(newItem.qty),
             price: Number(newItem.price),
-            narration: newItem.narration
+            narration: newItem.narration,
+            created_at: newItem.created_at
         };
 
         router.post('/purchased-item', itemData, {
@@ -411,7 +414,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             formData.append('_method', 'PUT');
             router.post(route('purchase-list.update', currentId), formData, options);
         } else {
-            purchaseListForm.post(route('purchase-list.store'), formData, options);
+            router.post(route('purchase-list.store'), formData, options);
         }
 
 
@@ -434,7 +437,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         const options = {
             preserveScroll: true,
             onSuccess: () => {
-                // Refresh data by reloading the page
+
                 clientAccountForm.reset();
                 setShowClientAccountModal(false);
                 setCurrentClientAccount(null);
@@ -444,7 +447,6 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                     window.location.reload();
                 }, 1000);
 
-
             },
             onError: (errors) => {
                 ShowMessage('error', 'Failed to save client account');
@@ -452,18 +454,12 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
         };
 
-
-
         if (isEditing && currentId) {
             formData.append('_method', 'PUT');
             router.post(route('client-account.update', currentId), formData, options);
         } else {
-            clientAccountForm.post(route('client-account.store'), formData, options);
+            router.post(route('client-account.store'), formData, options);
         }
-
-
-
-
 
     };
 
@@ -518,6 +514,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                 qty: product.qty,
                 total: product.total,
                 is_credited: product.is_credited,
+                created_at: product.created_at
             }));
 
         const payload = {
@@ -612,7 +609,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             )}
 
             <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
-                <Tab eventKey="vendor-lists" title={<span className="d-flex align-items-center gap-1"><ShoppingBag size={16} /> Vendor List</span>}>
+                <Tab eventKey="vendor-lists" title={<span className="d-flex align-items-center gap-1"><ShoppingBag size={16} /> Party List</span>}>
                     <PurchaseListTab
                         client={client}
                         handleEditAccount={(purchase_list) => openPurchaseListModal(purchase_list)}

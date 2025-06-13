@@ -72,7 +72,7 @@ const CreateClientVendor = () => {
                                         {/* Vendor Name */}
                                         <div className="col-md-4 mb-3">
                                             <label htmlFor="vendor_name" className="form-label required">
-                                                Vendor Name <span className="text-danger">*</span>
+                                                Party Name <span className="text-danger">*</span>
                                             </label>
                                             <input
                                                 type="text"

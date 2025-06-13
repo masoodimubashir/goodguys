@@ -9,6 +9,8 @@ class Challan extends Model
 {
 
 
+    public $timestamps = false;
+
     protected $fillable = [
         'challan_refrence_id',
         'is_price_visible',
@@ -20,7 +22,8 @@ class Challan extends Model
         'updated_by',
         'total',
         'narration',
-        'is_credited'
+        'is_credited',
+        'created_at',
     ];
               
     public function challanRefrence(): BelongsTo

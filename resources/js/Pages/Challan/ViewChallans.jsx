@@ -158,6 +158,7 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                     total: item.price * item.qty,
                     narration: item.narration,
                     is_credited: item.is_credited,
+                    created_at: item.created_at
                 }))
             ),
             subtotal: calculateSelectedTotals().subtotal,
@@ -393,9 +394,9 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                                         <td className="text-center">
                                             <div className="d-flex justify-content-center gap-2">
 
-                                                <Link href={route('challan.edit', ref.id)}>
+                                                {/* <Link href={route('challan.edit', ref.id)}>
                                                     <Edit size={20} />
-                                                </Link>
+                                                </Link> */}
 
                                                 <Trash2 size={20} className="text-danger" title="Delete"
                                                     onClick={() => {

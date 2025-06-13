@@ -16,7 +16,7 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
     const { delete: destroy, get } = useForm();
 
     const tableHead = [
-        'Vendor Name',
+        'Party Name',
         'Contact',
         'Email',
         'Address',
@@ -92,7 +92,7 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
     };
 
     const breadcrumbs = [
-        { href: '/client-vendor', label: 'Vendors', active: true }
+        { href: '/client-vendor', label: 'Parties', active: true }
     ];
 
     return (
@@ -103,7 +103,7 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
                 <div className="d-flex justify-content-between align-items-center">
                     <BreadCrumbHeader breadcrumbs={breadcrumbs} />
                     <Link href={route('client-vendor.create')} className="btn btn-sm btn-primary">
-                        <i className="ti ti-plus me-1"></i> Add Vendor
+                        <i className="ti ti-plus me-1"></i> Add Party
                     </Link>
                 </div>
 

@@ -7,12 +7,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ClientAccount extends Model
 {
+
+    public $timestamps = false;
+
     protected $fillable = [
         'payment_type',
         'payment_flow',
         'amount',
         'narration',
-        'client_id'
+        'client_id',
+        'created_at',
+        'updated_at'
+
     ];
 
 

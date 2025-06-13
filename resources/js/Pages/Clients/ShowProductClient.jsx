@@ -10,13 +10,12 @@ import 'datatables.net-responsive';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import { ClientInfoCard } from '@/Components/ClientInfoCard';
 import { BankAccountCard } from '@/Components/BankAccountCard';
-import { FileText, Activity, Building, EyeOff, Eye, Receipt, TrendingUp, Percent, Package, BarChart3, IndianRupee } from 'lucide-react';
+import { FileText, Activity, BarChart3, IndianRupee, Eye, EyeOff } from 'lucide-react';
 import ProjectDocumentTab from '@/Components/ProjectDocumentTab';
 import PurchaseItemsTab from '@/Components/PurchaseItemsTab';
 import { PurchaseListModal } from '@/Components/PurchaseListModal';
 import ClientAccountModal from '@/Components/ClientAccountModal';
 import Swal from 'sweetalert2';
-import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Button, Card, Col, Form, InputGroup, Modal, Row, Table } from 'react-bootstrap';
 import PurchaseListTab from '@/Components/PurchaseListTab';
@@ -108,10 +107,9 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
             results = results.filter(item =>
-                item.description?.toLowerCase().includes(term) ||
-                item.unit_type?.toLowerCase().includes(term) ||
-                item.narration?.toLowerCase().includes(term) ||
-                item.id.toString().includes(term)
+                item.description?.toLowerCase()?.includes(term) ||
+                item.unit_type?.toLowerCase()?.includes(term) ||
+                item.narration?.toLowerCase()?.includes(term)
             );
         }
 
@@ -321,9 +319,9 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
         };
 
         if (isEditing) {
-            purchaseListForm.put(route('purchase-list.update', currentPurchaseList.id), options);
+            router.put(route('purchase-list.update', currentPurchaseList.id), options);
         } else {
-            purchaseListForm.post(route('purchase-list.store'), options);
+            router.post(route('purchase-list.store'), options);
         }
 
 
@@ -352,9 +350,9 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
         };
 
         if (isEditing) {
-            clientAccountForm.put(route('client-account.update', currentClientAccount.id), options);
+            router.put(route('client-account.update', currentClientAccount.id), options);
         } else {
-            clientAccountForm.post(route('client-account.store'), options);
+            router.post(route('client-account.store'), options);
         }
 
     };

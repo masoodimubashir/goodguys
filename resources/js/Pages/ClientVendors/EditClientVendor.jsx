@@ -163,7 +163,7 @@ const EditClientVendor = ({ vendor }) => {
                                 {/* Form Actions */}
                                 <div className="d-flex justify-content-between align-items-center">
                                     <Link
-                                        href={route('vendor.index')}
+                                        href={route('client-vendor.index')}
                                         className="btn btn-outline-secondary btn-sm"
                                     >
                                         Cancel

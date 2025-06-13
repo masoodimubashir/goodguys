@@ -12,40 +12,66 @@ const colors = {
   textLight: '#636e72' // Gray Text
 };
 
+const FONT_SIZES = {
+  small: 8,
+  medium: 9,
+  large: 10,
+  xlarge: 12,
+  xxlarge: 20,
+  title: 28,
+};
+
 const styles = StyleSheet.create({
-  page: {
-    padding: 40,
+  page1: {
+    paddingTop: '35%',
+    paddingRight: 40,
+    paddingBottom: 40,
+    paddingLeft: 40,
     fontFamily: 'Helvetica',
     backgroundColor: '#ffffff',
-    position: 'relative'
+    position: 'relative',
   },
+  lastpage: {
+    paddingTop: '30%',
+    paddingRight: 40,
+    paddingBottom: 40,
+    paddingLeft: 40,
+    fontFamily: 'Helvetica',
+    backgroundColor: '#ffffff',
+    position: 'relative',
+  },
+  page2: {
+    paddingTop: 40,
+    paddingRight: 40,
+    paddingBottom: 40,
+    paddingLeft: 40,
+    fontFamily: 'Helvetica',
+    backgroundColor: '#ffffff',
+    position: 'relative',
+  },
+
   header: {
     marginBottom: 25,
     paddingBottom: 15,
     borderBottomWidth: 2,
     borderBottomColor: colors.primary,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start'
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
   },
-  logoSection: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    flex: 1
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    marginRight: 15
-  },
-  companyInfo: {
-    flex: 1
-  },
+  logo: { width: 70, height: 70, marginBottom: 10 },
   companyName: {
-    fontSize: 20,
+    fontSize: FONT_SIZES.xxlarge,
     fontWeight: 'bold',
     color: colors.primary,
-    marginBottom: 5
+    marginBottom: 3,
+    textAlign: 'center',
+  },
+  companyDetails: {
+    fontSize: FONT_SIZES.medium,
+    color: colors.textLight,
+    lineHeight: 1.5,
+    textAlign: 'center',
   },
   companyDetails: {
     fontSize: 9,
@@ -113,18 +139,18 @@ const styles = StyleSheet.create({
   },
   col1: { width: '8%', fontSize: 8, paddingRight: 3, color: 'white' },
   col2: { width: '20%', fontSize: 8, paddingRight: 3, color: 'white' },
+  col4: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'left', color: 'white' },
+  col5: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'left', color: 'white' },
+  col6: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'left', color: 'white' },
   col3: { width: '20%', fontSize: 8, paddingRight: 3, color: 'white' }, // Increased description width
-  col4: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'right', color: 'white' },
-  col5: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right', color: 'white' },
-  col6: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right', color: 'white' },
-  col7: { width: '18%', fontSize: 8, color: 'white' },
+
 
   dataCol1: { width: '8%', fontSize: 8, paddingRight: 3 },
   dataCol2: { width: '20%', fontSize: 8, paddingRight: 3 },
-  dataCol3: { width: '20%', fontSize: 8, paddingRight: 3 }, // Match header
-  dataCol4: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
-  dataCol5: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
-  dataCol6: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'right' },
+  dataCol4: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'left' },
+  dataCol5: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'left' },
+  dataCol6: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'left' },
+  dataCol3: { width: '20%', fontSize: 8, paddingRight: 3, textAlign: 'left' }, // Match header
 
   totalsSection: {
     width: '100%',
@@ -269,7 +295,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 4,
     paddingVertical: 3
-  }
+  },
+  clientInfo: {
+    marginBottom: 25,
+    paddingBottom: 15,
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+  },
+  moduleHeader: {
+    fontSize: 12,
+    marginBottom: 10,
+
+  },
 });
 
 
@@ -278,39 +316,35 @@ const styles = StyleSheet.create({
 
 
 
+const Header = ({ company }) => (
+  <View style={styles.header}>
+    {company?.logo && <Image style={styles.logo} src={`/storage/${company.logo}`} />}
+    <Text style={styles.companyName}>
+      Company Name: {company?.company_name || 'Company Name'}</Text>
+    <Text style={styles.companyDetails}>
+      Comapny Address: {company?.company_address || 'Address'}
+    </Text>
+    <Text style={styles.companyDetails}>
+      Contact No: {company?.company_contact_no || 'Address'}
+    </Text>
+    <Text style={styles.companyDetails}>
+      Email: {company?.company_email || 'Address'}
+    </Text>
+  </View>
+);
 
-const Header = ({ company_profile, client }) => (
-  <>
-    <View style={styles.header}>
-      <View style={styles.logoSection}>
-        {company_profile?.logo && (
-          <Image style={styles.logo} src={`/storage/${company_profile.logo}`} />
-        )}
-        <View style={styles.companyInfo}>
-          <Text style={styles.companyName}>
-            {company_profile?.company_name || 'Company Name'}
-          </Text>
-          <Text style={styles.companyDetails}>
-            {company_profile?.company_address || 'Company Address'}{'\n'}
-            Phone: {company_profile?.company_contact_no || 'N/A'}{'\n'}
-            Email: {company_profile?.company_email || 'N/A'}
-          </Text>
-        </View>
-      </View>
-      <View style={styles.invoiceInfo}>
-        <View style={styles.column}>
-          <Text style={styles.sectionTitle}>Bill To:</Text>
-          <Text style={[styles.value, { fontSize: 11, fontWeight: 'bold' }]}>
-            {client?.client_name}
-          </Text>
-          <Text style={styles.value}>{client?.client_address}</Text>
-          <Text style={styles.value}>Phone: {client?.client_phone}</Text>
-          <Text style={styles.value}>Email: {client?.client_email}</Text>
-        </View>
-      </View>
-    </View>
-
-  </>
+const ClientInfo = ({ client, data }) => (
+  <View style={styles.clientInfo}>
+    <Text style={styles.companyName}>Estimate</Text>
+    <Text style={[styles.companyDetails]}>
+      Client Name: {client?.client_name}
+    </Text>
+    <Text style={styles.companyDetails}>Client Address: {client?.client_address}</Text>
+    <Text style={styles.companyDetails}>Phone: {client?.client_phone}</Text>
+    <Text style={styles.companyDetails}>Email: {client?.client_email}</Text>
+    <Text style={styles.companyDetails}>Type: {client?.site_name}</Text>
+    <Text style={styles.companyDetails}>Dated: {new Date(data?.created_at).toLocaleDateString()}</Text>
+  </View>
 );
 
 const BankDetails = ({ bankAccount }) => {
@@ -370,7 +404,6 @@ const BankDetails = ({ bankAccount }) => {
 };
 
 const SignatureSection = ({ bankAccount }) => (
-
   <View style={styles.signatureSection}>
     <View style={styles.signatureBox}>
       {bankAccount?.signature_image && (
@@ -388,17 +421,15 @@ const SignatureSection = ({ bankAccount }) => (
 );
 
 
-export const ProformaPdf = ({ client, CompanyProfile, BankProfile }) => {
+export const ProformaPdf = ({ client, CompanyProfile, BankProfile, data }) => {
   const groupedModules = {};
 
-  client?.proforma_refrences?.forEach(ref => {
-    ref.proformas?.forEach(item => {
-      const moduleName = item.proforma_module?.module_name || 'Uncategorized';
-      if (!groupedModules[moduleName]) {
-        groupedModules[moduleName] = [];
-      }
-      groupedModules[moduleName].push(item);
-    });
+  data.proformas?.forEach(item => {
+    const moduleName = item.proforma_module?.module_name || 'Uncategorized';
+    if (!groupedModules[moduleName]) {
+      groupedModules[moduleName] = [];
+    }
+    groupedModules[moduleName].push(item);
   });
 
   let grandTotal = 0;
@@ -406,27 +437,32 @@ export const ProformaPdf = ({ client, CompanyProfile, BankProfile }) => {
 
   return (
     <Document>
-      <Page size="A4" style={styles.page} wrap>
-        <Text style={styles.watermark}>Estimate</Text>
-        <Header company_profile={CompanyProfile} client={client} />
 
+      <Page size="A4" style={styles.page1}>
+        <Text style={styles.watermark}>Estimate</Text>
+        <Header company={CompanyProfile} />
+        <ClientInfo client={client} data={data} />
+      </Page>
+
+
+      <Page size="A4" style={styles.page2} wrap>
         {Object.entries(groupedModules).map(([moduleName, items]) => (
           <View key={moduleName} style={styles.moduleSection}>
             {/* Module Name Header */}
-            <Text style={styles.moduleHeader}>{moduleName}</Text>
-            
+            <Text style={styles.moduleHeader}>UNIT TYPE{moduleName}</Text>
+
             {/* Table for Module Items */}
             <View style={styles.table}>
               {/* Table Header */}
               <View style={styles.tableHeader}>
                 <Text style={styles.col1}>S.No</Text>
-                <Text style={styles.col2}>Item</Text>
-                <Text style={styles.col3}>Description</Text>
-                <Text style={styles.col4}>Qty</Text>
+                <Text style={styles.col2}>Module</Text>
+                <Text style={styles.col4}>Quantity</Text>
                 <Text style={styles.col5}>Price</Text>
                 <Text style={styles.col6}>Total</Text>
+                <Text style={styles.col3}>Dimensions</Text>
               </View>
-              
+
               {/* Table Rows for Items */}
               {items.map((item, itemIndex) => {
                 const qty = parseFloat(item.count || 0);
@@ -444,23 +480,27 @@ export const ProformaPdf = ({ client, CompanyProfile, BankProfile }) => {
                   <View key={item.id || globalIndex} style={styles.tableRow}>
                     <Text style={styles.dataCol1}>{itemIndex + 1}</Text>
                     <Text style={styles.dataCol2}>{item.item_name}</Text>
+                    <Text style={styles.dataCol4}>{qty}</Text>
+                    <Text style={styles.dataCol5}>{isVisible ? price.toFixed(2) : '—'}</Text>
+                    <Text style={styles.dataCol6}>{isVisible ? total.toFixed(2) : '—'}</Text>
                     <Text style={styles.dataCol3}>
-                      {item.description}
+                      {item.description ? <>{item.description}</> : 'NA'}
+
                       {dimensions.length > 0 && (
                         <Text>
-                          {'\n'}
                           {dimensions.map((d, i) => (
-                            <Text key={i}>
-                              {d.type}: {d.value}{d.si}
-                              {i < dimensions.length - 1 ? ', ' : ''}
-                            </Text>
+                            <>
+                              {'\n'}
+                              <Text key={i}>
+                                {d.type}: {d.value}{d.si}
+                                {i < dimensions.length - 1 ? ', ' : ''}
+                              </Text>
+                            </>
+
                           ))}
                         </Text>
                       )}
                     </Text>
-                    <Text style={styles.dataCol4}>{qty}</Text>
-                    <Text style={styles.dataCol5}>{isVisible ? price.toFixed(2) : '—'}</Text>
-                    <Text style={styles.dataCol6}>{isVisible ? total.toFixed(2) : '—'}</Text>
                   </View>
                 );
               })}
@@ -482,15 +522,10 @@ export const ProformaPdf = ({ client, CompanyProfile, BankProfile }) => {
       </Page>
 
       {/* Bank Details and Signature Page */}
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={styles.lastpage}>
         <BankDetails bankAccount={BankProfile} />
         <SignatureSection bankAccount={BankProfile} />
       </Page>
     </Document>
   );
 };
-
-
-
-
-

@@ -27,6 +27,7 @@ class StoreClientAccountRequest extends FormRequest
             'payment_flow' => 'required|in:in,out',
             'amount' => 'required|integer',
             'narration' => 'nullable|string',
+            'created_at' => 'required|date'
         ];
     }
 }

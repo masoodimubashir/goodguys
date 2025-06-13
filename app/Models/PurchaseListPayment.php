@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PurchaseListPayment extends Model
 {
 
+
     protected $fillable = [
         'vendor_id',
         'client_id',

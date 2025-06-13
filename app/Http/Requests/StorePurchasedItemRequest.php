@@ -28,6 +28,7 @@ class StorePurchasedItemRequest extends FormRequest
             'qty'         => 'required|integer|min:1',
             'price'       => 'required|numeric|min:0',
             'narration'   => 'nullable|string',
+            'created_at' => 'required|date',
         ];
     }
 }

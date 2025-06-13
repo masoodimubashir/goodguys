@@ -65,7 +65,7 @@ class AdminChallanController extends Controller
                     'narration' => $item['narration'] ?? 'NA',
                     'total' => $item['total'],
                     'created_by' => auth()->user()->id,
-                    'created_at' => now(),
+                    'created_at' => $item['created_at'],
                     'is_credited' => $item['is_credited'],
                 ];
             }

@@ -22,7 +22,7 @@ const PurchaseListTab = ({ client, clientVendors, tableRef, openPurchaseListModa
               
                 <div className="d-flex gap-2">
                     <Button variant="outline-success" size="sm" onClick={() => openPurchaseListModal()}>
-                        <i className="ti ti-shopping-cart me-1"></i> Add List
+                        <i className="ti ti-shopping-cart me-1"></i> Party Purchase
                     </Button>
                 </div>
             </div>
@@ -32,7 +32,7 @@ const PurchaseListTab = ({ client, clientVendors, tableRef, openPurchaseListModa
             <Table bordered size='md' ref={tableRef} className="table table-striped text-start align-middle">
                 <thead>
                     <tr>
-                        <th className="text-start align-middle">Vendor Name</th>
+                        <th className="text-start align-middle">Party Name</th>
                         <th className="text-start align-middle">Contact Number</th>
                         <th className="text-start align-middle">Email</th>
                         <th className="text-start align-middle">Description</th>

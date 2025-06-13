@@ -41,7 +41,7 @@ class AdminClientVednorsController extends Controller
             'created_by' => auth()->user()->id,
         ]));
 
-        return redirect()->route('vendor.index')
+        return redirect()->route('client-vendor.index')
             ->with('message', 'Vendor created successfully');
     }
 
@@ -127,7 +127,7 @@ class AdminClientVednorsController extends Controller
             'updated_by' => auth()->user()->id,
         ]));
 
-        return redirect()->route('vendor.index')->with('message', 'Vendor updated successfully');
+        return redirect()->route('client-vendor.index')->with('message', 'Vendor updated successfully');
     }
 
     /**
@@ -140,7 +140,7 @@ class AdminClientVednorsController extends Controller
 
         $vendor->delete();
 
-        return redirect()->route('vendor.index')
+        return redirect()->route('client-vendor.index')
             ->with('message', 'Vendor deleted successfully');
     }
 }

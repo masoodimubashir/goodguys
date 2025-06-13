@@ -81,7 +81,7 @@ const ClientVendorPayments = ({ payments, openClientAccountModal }) => {
 
                 <div className="d-flex gap-2">
                     <Button variant="outline-info" size="sm" onClick={() => openClientAccountModal()}>
-                        <i className="ti ti-building-bank me-1"></i> Make Payment
+                        <i className="ti ti-building-bank me-1"></i>Payment
                     </Button>
                 </div>
             </div>

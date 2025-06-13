@@ -38,11 +38,13 @@ class PurchasesItemController extends Controller
 
         $data = $request->validated();
 
+
         $data['total'] = $data['qty'] * $data['price'];
 
         PurchasedItem::create(array_merge($data, [
             'total' => $data['total'],
             'created_by' => auth()->id(),
+            'created_at' => $data['created_at']
         ]));
 
         return redirect()->back()->with('message', 'Item created successfully');

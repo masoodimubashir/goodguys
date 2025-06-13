@@ -5,13 +5,11 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import Button from '@/Components/Button';
+import { ShowMessage } from '@/Components/ShowMessage';
 
 const BankAccountForm = ({ bankAccount = null }) => {
     const isEdit = !!bankAccount;
 
-    console.log('isEdit:', isEdit);
-    console.log('bankAccount:', bankAccount);
-    
 
     const { data, setData, errors, processing } = useForm({
         bank_name: bankAccount?.bank_name || '',
@@ -24,8 +22,11 @@ const BankAccountForm = ({ bankAccount = null }) => {
         qr_code_image: null,
         signature_image: null,
         company_stamp_image: null,
-        _method: isEdit ? 'PUT' : 'POST', // Add method spoofing for Laravel
+        _method: isEdit ? 'PUT' : 'POST',
     });
+
+    console.log(errors);
+
 
     const handleFileChange = (field, e) => {
         setData(field, e.target.files[0]);
@@ -41,8 +42,6 @@ const BankAccountForm = ({ bankAccount = null }) => {
             }
         });
 
-        console.log('Submitting to:', isEdit ? route('bank-account.update', bankAccount.id) : route('bank-account.store'));
-        console.log('Form data:', Object.fromEntries(formData));
 
         if (isEdit) {
             // For updates, use POST with method spoofing
@@ -53,10 +52,10 @@ const BankAccountForm = ({ bankAccount = null }) => {
                     forceFormData: true,
                     preserveScroll: true,
                     onSuccess: () => {
-                        console.log('Update successful');
+                        ShowMessage('success', 'Bank account updated successfully');
                     },
                     onError: (errors) => {
-                        console.log('Update errors:', errors);
+                        ShowMessage('error', 'Failed to update bank account');
                     }
                 }
             );
@@ -69,10 +68,10 @@ const BankAccountForm = ({ bankAccount = null }) => {
                     forceFormData: true,
                     preserveScroll: true,
                     onSuccess: () => {
-                        console.log('Create successful');
+                        ShowMessage('success', 'Bank account created successfully');
                     },
                     onError: (errors) => {
-                        console.log('Create errors:', errors);
+                        ShowMessage('error', 'Failed to create bank account');
                     }
                 }
             );
@@ -105,13 +104,14 @@ const BankAccountForm = ({ bankAccount = null }) => {
                             <form onSubmit={handleSubmit} encType="multipart/form-data">
                                 <div className="row">
                                     {[
-                                        { id: 'bank_name', label: 'Bank Name' },
-                                        { id: 'holder_name', label: 'Account Holder Name' },
-                                        { id: 'account_number', label: 'Account Number' },
-                                        { id: 'ifsc_code', label: 'IFSC Code' },
-                                        { id: 'upi_number', label: 'UPI Number' },
-                                        { id: 'upi_address', label: 'UPI Address' },
-                                        { id: 'tax_number', label: 'Tax Number' },
+                                            { id: 'bank_name', label: 'Bank Name' },
+                                            { id: 'holder_name', label: 'Account Holder Name' },
+                                            { id: 'account_number', label: 'Account Number' },
+                                            { id: 'ifsc_code', label: 'IFSC Code' },
+                                            { id: 'upi_number', label: 'UPI Number' },
+                                            { id: 'upi_address', label: 'UPI Address' },
+                                            { id: 'tax_number', label: 'Tax Number' },
+
                                     ].map(({ id, label }) => (
                                         <div className="col-md-4" key={id}>
                                             <div className="mb-4">
@@ -129,9 +129,9 @@ const BankAccountForm = ({ bankAccount = null }) => {
                                     ))}
 
                                     {[
-                                        { id: 'qr_code_image', label: 'QR Code Image' },
-                                        { id: 'signature_image', label: 'Signature Image' },
-                                        { id: 'company_stamp_image', label: 'Company Stamp Image' },
+                                        { id: 'qr_code_image', label: 'QR Code Image (*JPEG)' },
+                                        { id: 'signature_image', label: 'Signature Image (*JPEG)' },
+                                        { id: 'company_stamp_image', label: 'Company Stamp Image (*JPEG)' },
                                     ].map(({ id, label }) => (
                                         <div className="col-md-4" key={id}>
                                             <div className="mb-4">
@@ -144,8 +144,6 @@ const BankAccountForm = ({ bankAccount = null }) => {
                                                     accept="image/*"
                                                 />
                                                 <InputError message={errors[id]} />
-                                                {/* Show existing file names for edit mode */}
-                                              
                                             </div>
                                         </div>
                                     ))}
@@ -157,8 +155,8 @@ const BankAccountForm = ({ bankAccount = null }) => {
                                                     ? 'Updating...'
                                                     : 'Creating...'
                                                 : isEdit
-                                                ? 'Update Bank Account'
-                                                : 'Create Bank Account'}
+                                                    ? 'Update Bank Account'
+                                                    : 'Create Bank Account'}
                                         </Button>
                                     </div>
                                 </div>

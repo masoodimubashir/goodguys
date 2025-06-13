@@ -240,7 +240,6 @@ export default function CreateProforma({ client, modules, inventories }) {
                         </Col>
                         <Col md={3}>
                             <Form.Group>
-                                <Form.Label className="small">Client Name</Form.Label>
                                 <Form.Control
                                     size="sm"
                                     disabled
@@ -253,7 +252,6 @@ export default function CreateProforma({ client, modules, inventories }) {
 
                         <Col md={3}>
                             <Form.Group>
-                                <Form.Label className="small">Address</Form.Label>
                                 <Form.Control
                                     size="sm"
                                     as="textarea"
@@ -267,13 +265,13 @@ export default function CreateProforma({ client, modules, inventories }) {
 
                         <Col md={3}>
                             <Form.Group>
-                                <Form.Label className="small">Service Charge (%)</Form.Label>
                                 <Form.Control
                                     size="sm"
                                     type="text"
                                     value={data.site_name}
                                     onChange={(e) => setData("site_name", parseFloat(e.target.value) || 0)}
                                     isInvalid={!!errors.site_name}
+                                    disabled    
                                 />
                             </Form.Group>
                         </Col>
@@ -299,7 +297,7 @@ export default function CreateProforma({ client, modules, inventories }) {
                                     <Row className="mb-3">
                                         <Col md={8}>
                                             <Form.Group>
-                                                <Form.Label>Product Name</Form.Label>
+                                                <Form.Label>Unit Name</Form.Label>
                                                 <Form.Control
                                                     size="sm"
                                                     value={product.module_name}
@@ -537,7 +535,7 @@ export default function CreateProforma({ client, modules, inventories }) {
 
                     <div className="text-end">
                         <Button type="submit" variant="success" size="sm" disabled={processing}>
-                            {processing ? 'Creating...' : 'Create Proforma'}
+                            {processing ? 'Creating...' : 'Create'}
                         </Button>
                     </div>
                 </Form>

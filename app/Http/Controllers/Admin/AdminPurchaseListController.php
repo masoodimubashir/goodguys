@@ -99,6 +99,7 @@ class AdminPurchaseListController extends Controller
                 'total' => $purchase_list->bill_total,
                 'created_by' => auth()->id(),
                 'is_credited' => true,
+                'created_at' =>  $validated['purchase_date']
             ]);
 
             return redirect()->back()->with('message', 'Purchase list created successfully');

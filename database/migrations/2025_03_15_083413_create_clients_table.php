@@ -21,7 +21,6 @@ return new class extends Migration
             $table->string('site_name', 100)->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
-            $table->date('project_date');
             $table->timestamps();
         });
     }

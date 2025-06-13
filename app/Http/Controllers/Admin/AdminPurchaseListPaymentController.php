@@ -34,6 +34,7 @@ class AdminPurchaseListPaymentController extends Controller
     {
         $data = $request->validated();
 
+
         PurchaseListPayment::create(array_merge($data, [
             'created_by' => auth()->user()->id
         ]));
@@ -46,6 +47,7 @@ class AdminPurchaseListPaymentController extends Controller
             'total' => $request->amount,
             'created_by' => auth()->id(),
             'is_credited' => false,
+            'created_at' => $data['transaction_date']
 
         ]);
 

@@ -23,7 +23,8 @@ export default function PdfTable({ client, CompanyProfile, BankProfile }) {
                     reference_number: reference.invoice_number,
                     created_at: reference.created_at,
                     products: reference.products,
-                    is_price_visible: reference.is_price_visible
+                    is_price_visible: reference.is_price_visible,
+                    invoices: reference.invoices
                 });
             });
         }
@@ -37,7 +38,8 @@ export default function PdfTable({ client, CompanyProfile, BankProfile }) {
                     created_at: reference.created_at,
                     products: reference.products,
                     is_price_visible: reference.is_price_visible,
-                    is_converted_to_invoice: reference.is_converted_to_invoice
+                    is_converted_to_invoice: reference.is_converted_to_invoice,
+                    proformas: reference.proformas
                 });
             });
         }
@@ -101,12 +103,12 @@ export default function PdfTable({ client, CompanyProfile, BankProfile }) {
 
                 <div className="d-flex justify-content-end align-items-center mb-3">
                     <div className='d-flex align-items-center gap-2 mt-2 mb-2'>
-                        <Link
+                        {/* <Link
                             href={route('invoice.create', { client_id: client.id })}
                             className="btn btn-sm btn-primary d-flex align-items-center gap-2"
                         >
                             Create Quotition
-                        </Link>
+                        </Link> */}
                       <Link
                             href={route('proforma.create', { client_id: client.id })}
                             className="btn btn-sm btn-primary d-flex align-items-center gap-2"
