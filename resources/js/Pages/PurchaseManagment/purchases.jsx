@@ -426,165 +426,11 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
 
                 )}
 
-                {/* Payments Table Section */}
-                <div className="mt-5">
-
-
-                    <Card className="border-0 shadow-sm">
-                        <Table hover responsive className="mb-0">
-                            <thead className="table-success">
-                                <tr>
-                                    <th>#</th>
-                                    <th>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <Calendar size={14} />
-                                            Date
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <IndianRupee size={14} />
-                                            Amount
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <FileText size={14} />
-                                            Narration
-                                        </div>
-                                    </th>
-                                    <th>Created At</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {purchaseListPayments.map((payment, index) => {
-                                    const isEditing = editingPaymentId === payment.id;
-
-                                    return (
-                                        <tr key={payment.id}>
-                                            <td>{index + 1}</td>
-                                            <td>
-                                                {isEditing ? (
-                                                    <Form.Control
-                                                        size="sm"
-                                                        type="date"
-                                                        value={editedPayments[payment.id]?.transaction_date || payment.transaction_date}
-                                                        onChange={(e) => handlePaymentChange(payment.id, 'transaction_date', e.target.value)}
-                                                    />
-                                                ) : (
-                                                    new Date(payment.transaction_date).toLocaleDateString()
-                                                )}
-                                            </td>
-                                            <td>
-                                                {isEditing ? (
-                                                    <Form.Control
-                                                        size="sm"
-                                                        type="number"
-                                                        value={editedPayments[payment.id]?.amount || payment.amount}
-                                                        onChange={(e) => handlePaymentChange(payment.id, 'amount', e.target.value)}
-                                                    />
-                                                ) : (
-                                                    <span className="fw-bold text-success">
-                                                        {formatCurrency(payment.amount)}
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td>
-                                                {isEditing ? (
-                                                    <Form.Control
-                                                        size="sm"
-                                                        as="textarea"
-                                                        rows={2}
-                                                        value={editedPayments[payment.id]?.narration || payment.narration}
-                                                        onChange={(e) => handlePaymentChange(payment.id, 'narration', e.target.value)}
-                                                    />
-                                                ) : (
-                                                    payment.narration || 'No description'
-                                                )}
-                                            </td>
-                                            <td>
-                                                {new Date(payment.created_at).toLocaleString()}
-                                            </td>
-
-                                        </tr>
-                                    );
-                                })}
-
-                                {/* New Payment Row */}
-                                {newPayment && (
-                                    <tr className="table-success">
-                                        <td>#</td>
-                                        <td>
-                                            <Form.Control
-                                                size="sm"
-                                                type="date"
-                                                value={newPayment.transaction_date || ''}
-                                                onChange={(e) => handleNewPaymentChange('transaction_date', e.target.value)}
-                                            />
-                                        </td>
-                                        <td>
-                                            <Form.Control
-                                                size="sm"
-                                                type="number"
-                                                value={newPayment.amount || ''}
-                                                onChange={(e) => handleNewPaymentChange('amount', e.target.value)}
-                                                placeholder="Amount"
-                                            />
-                                        </td>
-                                        <td>
-                                            <Form.Control
-                                                size="sm"
-                                                as="textarea"
-                                                rows={2}
-                                                value={newPayment.narration || ''}
-                                                onChange={(e) => handleNewPaymentChange('narration', e.target.value)}
-                                                placeholder="Payment description..."
-                                            />
-                                        </td>
-                                        <td></td>
-                                        <td>
-                                            <div className="d-flex gap-2">
-                                                <Button
-                                                    variant="success"
-                                                    size="sm"
-                                                    onClick={() => savePayment(newPayment)}
-                                                    disabled={!newPayment.amount || !newPayment.transaction_date}
-                                                >
-                                                    <Save size={14} />
-                                                </Button>
-                                                <Button
-                                                    variant="outline-secondary"
-                                                    size="sm"
-                                                    onClick={() => setNewPayment(null)}
-                                                >
-                                                    <XCircle size={14} />
-                                                </Button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {purchaseListPayments.length === 0 && !newPayment && (
-                                    <tr>
-                                        <td colSpan={6} className="text-center py-4">
-                                            <div className="text-muted">
-                                                <Banknote size={32} className="mb-2 opacity-50" />
-                                                <p className="mb-0">No payments recorded</p>
-                                                <small>Click "Add Payment" to record a new payment</small>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </Table>
-                    </Card>
-
-
-                </div>
 
                 {/* Enhanced Purchases Table */}
                 <div className={`border-0 ${animationClasses.slideInUp} mb-5`}>
-                    <Table hover bordered responsive size='sm' className="mb-0">
+                    <h5>Purchase Section</h5>
+                    <Table hover bordered responsive size='sm' className="mb-0 mt-2">
                         <thead className="table-light">
                             <tr>
                                 <th style={{ width: '40px' }}></th>
@@ -1018,6 +864,165 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                         </ul>
                     </div>
                 </div>
+
+                {/* Payments Table Section */}
+                <div className="mt-5">
+                    <h5>Purchase Section</h5>
+
+
+                    <Card className="border-0 shadow-sm mt-2">
+                        <Table hover responsive className="mb-0">
+                            <thead className="table-success">
+                                <tr>
+                                    <th>#</th>
+                                    <th>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <Calendar size={14} />
+                                            Date
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <IndianRupee size={14} />
+                                            Amount
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <FileText size={14} />
+                                            Narration
+                                        </div>
+                                    </th>
+                                    <th>Created At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {purchaseListPayments.map((payment, index) => {
+                                    const isEditing = editingPaymentId === payment.id;
+
+                                    return (
+                                        <tr key={payment.id}>
+                                            <td>{index + 1}</td>
+                                            <td>
+                                                {isEditing ? (
+                                                    <Form.Control
+                                                        size="sm"
+                                                        type="date"
+                                                        value={editedPayments[payment.id]?.transaction_date || payment.transaction_date}
+                                                        onChange={(e) => handlePaymentChange(payment.id, 'transaction_date', e.target.value)}
+                                                    />
+                                                ) : (
+                                                    new Date(payment.transaction_date).toLocaleDateString()
+                                                )}
+                                            </td>
+                                            <td>
+                                                {isEditing ? (
+                                                    <Form.Control
+                                                        size="sm"
+                                                        type="number"
+                                                        value={editedPayments[payment.id]?.amount || payment.amount}
+                                                        onChange={(e) => handlePaymentChange(payment.id, 'amount', e.target.value)}
+                                                    />
+                                                ) : (
+                                                    <span className="fw-bold text-success">
+                                                        {formatCurrency(payment.amount)}
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td>
+                                                {isEditing ? (
+                                                    <Form.Control
+                                                        size="sm"
+                                                        as="textarea"
+                                                        rows={2}
+                                                        value={editedPayments[payment.id]?.narration || payment.narration}
+                                                        onChange={(e) => handlePaymentChange(payment.id, 'narration', e.target.value)}
+                                                    />
+                                                ) : (
+                                                    payment.narration || 'No description'
+                                                )}
+                                            </td>
+                                            <td>
+                                                {new Date(payment.created_at).toLocaleString()}
+                                            </td>
+
+                                        </tr>
+                                    );
+                                })}
+
+                                {/* New Payment Row */}
+                                {newPayment && (
+                                    <tr className="table-success">
+                                        <td>#</td>
+                                        <td>
+                                            <Form.Control
+                                                size="sm"
+                                                type="date"
+                                                value={newPayment.transaction_date || ''}
+                                                onChange={(e) => handleNewPaymentChange('transaction_date', e.target.value)}
+                                            />
+                                        </td>
+                                        <td>
+                                            <Form.Control
+                                                size="sm"
+                                                type="number"
+                                                value={newPayment.amount || ''}
+                                                onChange={(e) => handleNewPaymentChange('amount', e.target.value)}
+                                                placeholder="Amount"
+                                            />
+                                        </td>
+                                        <td>
+                                            <Form.Control
+                                                size="sm"
+                                                as="textarea"
+                                                rows={2}
+                                                value={newPayment.narration || ''}
+                                                onChange={(e) => handleNewPaymentChange('narration', e.target.value)}
+                                                placeholder="Payment description..."
+                                            />
+                                        </td>
+                                        <td></td>
+                                        <td>
+                                            <div className="d-flex gap-2">
+                                                <Button
+                                                    variant="success"
+                                                    size="sm"
+                                                    onClick={() => savePayment(newPayment)}
+                                                    disabled={!newPayment.amount || !newPayment.transaction_date}
+                                                >
+                                                    <Save size={14} />
+                                                </Button>
+                                                <Button
+                                                    variant="outline-secondary"
+                                                    size="sm"
+                                                    onClick={() => setNewPayment(null)}
+                                                >
+                                                    <XCircle size={14} />
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+
+                                {purchaseListPayments.length === 0 && !newPayment && (
+                                    <tr>
+                                        <td colSpan={6} className="text-center py-4">
+                                            <div className="text-muted">
+                                                <Banknote size={32} className="mb-2 opacity-50" />
+                                                <p className="mb-0">No payments recorded</p>
+                                                <small>Click "Add Payment" to record a new payment</small>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </Table>
+                    </Card>
+
+
+                </div>
+
+
 
 
 

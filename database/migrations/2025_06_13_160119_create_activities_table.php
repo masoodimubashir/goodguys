@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('purchased_items', function (Blueprint $table) {
+        Schema::create('activities', function (Blueprint $table) {
             $table->id();
             $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
             $table->string('unit_type')->nullable();
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('price');
             $table->integer('total');
             $table->integer('multiplier');
-            $table->boolean('payment_flow')->comment('1=in,0=out');
+            $table->boolean('payment_flow')->nullable()->comment('1=in,0=out');
             $table->text('narration')->nullable();
             $table->tinyInteger('created_by')->nullable();
             $table->tinyInteger('updated_by')->nullable();
@@ -33,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('purchased_items');
+        Schema::dropIfExists('activities');
     }
 };

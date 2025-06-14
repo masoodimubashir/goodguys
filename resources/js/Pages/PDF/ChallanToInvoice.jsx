@@ -32,7 +32,7 @@ const FONT_SIZES = {
 };
 
 const styles = StyleSheet.create({
-   page1: {
+  page1: {
     paddingTop: '35%',
     paddingRight: 40,
     paddingBottom: 40,
@@ -270,7 +270,19 @@ const ChallanToInvoice = ({ company_profile, data, client, bankAccount }) => {
 
   const serviceCharge = parseFloat(data?.service_charge) || 0;
   const rawItems = data?.items || [];
+
   const tableData = rawItems.filter((item, index, self) => {
+    const firstOccurrenceIndex = self.findIndex((i) => {
+
+      return i.description === item.description && i.unit_type === item.unit_type && i.price === item.price && i.qty === item.qty;
+    });
+    return index === firstOccurrenceIndex;
+
+  });
+
+
+  // Step 2: Filter out duplicates (keep only first occurrence)
+  const filteredItems = rawItems.filter((item, index, self) => {
 
 
     const firstOccurrenceIndex = self.findIndex((i) => {
@@ -280,55 +292,34 @@ const ChallanToInvoice = ({ company_profile, data, client, bankAccount }) => {
     return index === firstOccurrenceIndex;
   });
 
-  // Step 1: Find duplicates (items that appear more than once)
-  const itemIdCounts = rawItems.reduce((acc, item) => {
-    const key = item.id; // or use `item.challan_reference` if needed
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-
-  // Step 2: Filter out duplicates (keep only first occurrence)
-  const filteredItems = rawItems.filter((item, index, self) => {
-
-
-    const firstOccurrenceIndex = self.findIndex((i) => {
-
-      return i.description === item.description && i.unit_type === item.unit_type && i.price === item.price && i.qty === item.qty && item.is_credited === 0;
-    });
-    return index === firstOccurrenceIndex;
-  });
 
 
   let subtotal = 0, inTotal = 0, outTotal = 0;
 
+
+
   const items = filteredItems.map((item, index) => {
-
-
-    const quantity = parseFloat(item.qty) || 0;
     const price = parseFloat(item.price) || 0;
-    const total = quantity * price;
+    const total = item.total;
 
-    if (item.unit_type === 'in') inTotal += total;
-    else outTotal += total;
+    if (item.payment_flow === 1) inTotal += total;
+    else if (item.payment_flow === 0) outTotal += total;
 
     if (item.is_price_visible) subtotal += total;
 
-    return {
-      ...item,
-      serialNo: index + 1,
-      quantity,
-      price,
-      itemTotal: total,
-    };
+    return { ...item, price, total };
   });
 
   const serviceChargeAmount = outTotal * serviceCharge / 100;
   const outWithServiceCharge = outTotal + serviceChargeAmount;
+  const balance = inTotal - outTotal;
+  const spends = outTotal;
   const remainingBalance = inTotal - outWithServiceCharge;
   const hasPrices = items.some(i => i.is_price_visible);
 
   const ITEMS_PER_PAGE = 20;
   const pages = Math.ceil(items.length / ITEMS_PER_PAGE);
+
 
   return (
     <Document>
@@ -349,16 +340,16 @@ const ChallanToInvoice = ({ company_profile, data, client, bankAccount }) => {
                 <View style={styles.table}>
                   <View style={styles.tableHeader}>
                     <Text style={[styles.totalsLabel, { color: 'white' }]}>BALANCE SUMMARY</Text>
-                    <Text style={[styles.totalsValue, { color: 'white' }]}>AMOUNT (₹)</Text>
+                    <Text style={[styles.totalsValue, { color: 'white' }]}>AMOUNT</Text>
                   </View>
                   <View style={styles.totalsRow}>
                     <Text style={styles.totalsLabel}>Account Total:</Text>
                     <Text style={styles.totalsValue}>{inTotal.toFixed(2)}</Text>
                   </View>
                   <View style={[styles.totalsRow, { backgroundColor: COLORS.accent }]}>
-                    <Text style={[styles.totalsLabel, { color: 'white' }]}>Total Spend:</Text><Text style={[styles.totalsValue, { color: 'white' }]}>{outTotal}</Text>
+                    <Text style={[styles.totalsLabel, { color: 'white' }]}>Total Spend:</Text><Text style={[styles.totalsValue, { color: 'white' }]}>{spends}</Text>
                   </View>
-                  <View style={styles.totalsRow}><Text style={styles.totalsLabel}>Total Payment (SC Included):</Text>
+                  <View style={styles.totalsRow}><Text style={styles.totalsLabel}>Total Payment (Inclusive Of Service Charge):</Text>
                     <Text style={styles.totalsValue}>{outWithServiceCharge} ({serviceChargeAmount})</Text>
                   </View>
                   <View style={[styles.totalsRow, { backgroundColor: COLORS.accent }]}><Text style={[styles.totalsLabel, { color: 'white' }]}>Remaining Balance:</Text>

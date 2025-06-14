@@ -24,7 +24,6 @@ class StoreClientAccountRequest extends FormRequest
         return [
             'client_id' => 'required|exists:clients,id',
             'payment_type' => 'required|string',
-            'payment_flow' => 'required|in:in,out',
             'amount' => 'required|integer',
             'narration' => 'nullable|string',
             'created_at' => 'required|date'

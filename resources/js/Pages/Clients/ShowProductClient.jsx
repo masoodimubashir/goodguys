@@ -10,7 +10,7 @@ import 'datatables.net-responsive';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import { ClientInfoCard } from '@/Components/ClientInfoCard';
 import { BankAccountCard } from '@/Components/BankAccountCard';
-import { FileText, Activity, BarChart3, IndianRupee, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { FileText, Activity, BarChart3, IndianRupee, Eye, EyeOff, RefreshCw, ActivityIcon } from 'lucide-react';
 import ProjectDocumentTab from '@/Components/ProjectDocumentTab';
 import PurchaseItemsTab from '@/Components/PurchaseItemsTab';
 import { PurchaseListModal } from '@/Components/PurchaseListModal';
@@ -19,9 +19,9 @@ import Swal from 'sweetalert2';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Button, Card, Col, Form, InputGroup, Modal, Row, Table } from 'react-bootstrap';
 import PurchaseListTab from '@/Components/PurchaseListTab';
-import ClientVendorPayments from '@/Components/ClientVendorPayments';
+import ActivityTab from '@/Components/Activity';
 
-export default function ShowClient({ client, purchase_items, vendors = [], company_profile = null, BankProfile = null, client_vendors = [], payments = [] }) {
+export default function ShowClient({ client, purchase_items, vendors = [], company_profile = null, BankProfile = null, client_vendors = [], activities = [] }) {
 
     const flash = usePage().props.flash;
 
@@ -104,12 +104,12 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
     useEffect(() => {
         let results = purchaseItems;
 
-        
+
 
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
             results = results.filter(item =>
-                item.unit_type?.toLowerCase()?.includes(term) ,
+                item.unit_type?.toLowerCase()?.includes(term),
             );
         }
 
@@ -473,26 +473,9 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
             .filter(item => item.unit_type === 'out')
             .reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
 
-        const sumTotal = validItems.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0) - sumIn - sumOut;
-
-        // Final calculation: sum of in - sum of out - sum of total
-        const balance = sumIn - sumOut - sumTotal;
-
-        // Total Spend Of the client
         const spends = validItems.filter(item =>
-            !item.unit_type || item.unit_type === 'null'
+            item.unit_type !== 'in' || !item.unit_type || item.unit_type === 'null'
         ).reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
-
-        // validItems already defined above for consistency
-
-        const averagePrice = validItems.length > 0
-            ? validItems.reduce((sum, item) => sum + parseFloat(item.price || 0), 0) / validItems.length
-            : 0;
-
-        const totalQuantity = validItems.reduce((sum, item) => {
-            const qty = parseFloat(item.qty) || 0;
-            return sum + qty;
-        }, 0);
 
         const categories = {};
         validItems.forEach(item => {
@@ -500,22 +483,10 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
             categories[category] = (categories[category] || 0) + 1;
         });
 
-        const topCategory = Object.keys(categories).reduce((a, b) =>
-            categories[a] > categories[b] ? a : b, '');
-
-        const topCategoryCount = topCategory ? categories[topCategory] : 0;
-
         return {
-            balance,
-            spends,
-            averagePrice,
-            totalItems: validItems.length,
-            totalQuantity,
-            topCategory,
-            topCategoryCount,
-            topCategoryPercentage: validItems.length > 0
-                ? Math.round((topCategoryCount / validItems.length) * 100)
-                : 0
+            deposit: sumIn,
+            balance: sumIn - sumOut,
+            spends: spends,
         };
     };
 
@@ -570,6 +541,11 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                                                     <h6 className="mb-1 fw-bold">{formatCurrency(analytics.balance)}</h6>
                                                     <small className="text-muted">Balance</small>
                                                 </div>
+                                                <div className="text-center">
+                                                    <h6 className="mb-1 fw-bold">{formatCurrency(analytics.deposit)}</h6>
+                                                    <small className="text-muted">Deposits</small>
+                                                </div>
+
                                             </div>
                                         </Card.Body>
                                     </Card>
@@ -596,20 +572,28 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
 
                 {/* Tabs Section */}
                 <ul className="nav nav-tabs" role="tablist">
-
                     <li className="nav-item" role="presentation">
-                        <button className="nav-link d-flex align-items-center gap-1 active" data-bs-toggle="tab" data-bs-target="#vendor-tab" type="button" role="tab">
+                        <button className="nav-link d-flex align-items-center gap-1 active" data-bs-toggle="tab" data-bs-target="#purchase-items-tab" type="button" role="tab">
+                            <Activity size={16} />
+                            Ledger
+                        </button>
+                    </li>
+                    <li className="nav-item" role="presentation">
+                        <button className="nav-link d-flex align-items-center gap-1" data-bs-toggle="tab" data-bs-target="#client-vendor-payment-tab" type="button" role="tab">
+                            <ActivityIcon size={16} />
+
+                            Activities
+                        </button>
+                    </li>
+                    <li className="nav-item" role="presentation">
+                        <button className="nav-link d-flex align-items-center gap-1 " data-bs-toggle="tab" data-bs-target="#vendor-tab" type="button" role="tab">
                             <Activity size={16} />
                             Party List
                         </button>
                     </li>
 
-                    <li className="nav-item" role="presentation">
-                        <button className="nav-link d-flex align-items-center gap-1" data-bs-toggle="tab" data-bs-target="#purchase-items-tab" type="button" role="tab">
-                            <Activity size={16} />
-                            Ledger
-                        </button>
-                    </li>
+
+
 
                     <li className="nav-item" role="presentation">
                         <button className="nav-link d-flex align-items-center gap-1" data-bs-toggle="tab" data-bs-target="#pdf-tab" type="button" role="tab">
@@ -623,26 +607,15 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                             Documents
                         </button>
                     </li>
-                    <li className="nav-item" role="presentation">
-                        <button className="nav-link d-flex align-items-center gap-1" data-bs-toggle="tab" data-bs-target="#client-vendor-payment-tab" type="button" role="tab">
-                            <IndianRupee size={16} />
-                            Payments
-                        </button>
-                    </li>
+
 
 
                 </ul>
 
                 <div className="tab-content">
 
-                    <div className="tab-pane fade show active" id="vendor-tab" role="tabpanel">
-                        <PurchaseListTab
-                            client={client}
-                            clientVendors={client_vendors}
-                        />
-                    </div>
 
-                    <div className="tab-pane fade show" id="purchase-items-tab" role="tabpanel">
+                    <div className="tab-pane fade show active" id="purchase-items-tab" role="tabpanel">
                         <PurchaseItemsTab
                             filteredItems={filteredItems}
                             purchaseItems={purchaseItems}
@@ -674,8 +647,22 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                             isCreating={isCreating}
                             purchase_items={purchase_items}
                             client={client}
+                            client_vendors={client_vendors}
                         />
                     </div>
+
+                    <div className="tab-pane fade" id="client-vendor-payment-tab" role="tabpanel">
+                        <ActivityTab activities={activities} />
+
+                    </div>
+
+                    <div className="tab-pane fade " id="vendor-tab" role="tabpanel">
+                        <PurchaseListTab
+                            client={client}
+                            clientVendors={client_vendors}
+                        />
+                    </div>
+
 
                     <div className="tab-pane fade" id="pdf-tab" role="tabpanel">
                         <PdfTable client={client} CompanyProfile={company_profile} BankProfile={BankProfile} />
@@ -685,10 +672,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                         <ProjectDocumentTab client={client} />
                     </div>
 
-                    <div className="tab-pane fade" id="client-vendor-payment-tab" role="tabpanel">
-                        <ClientVendorPayments payments={payments} />
 
-                    </div>
 
 
                 </div>
@@ -801,8 +785,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                                                     <td>{formatCurrency(item.price)}</td>
                                                     <td>
                                                         {
-                                                            item.qty > 0 ?
-                                                                formatCurrency(item.price * item.qty) : item.price
+                                                            item.total
                                                         }
                                                     </td>
                                                 </tr>

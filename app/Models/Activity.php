@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class PurchasedItem extends Model
+class Activity extends Model
 {
 
     public $timestamps = false;
@@ -25,5 +25,6 @@ class PurchasedItem extends Model
         'updated_at',
         'multiplier',
         'payment_flow'
+
     ];
 }

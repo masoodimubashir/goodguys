@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreReturnListrequest extends FormRequest
+class StoreActivityRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,12 +23,14 @@ class StoreReturnListrequest extends FormRequest
     {
         return [
             'client_id' => 'required|exists:clients,id',
-            'purchase_list_id' => 'required|exists:purchase_lists,id',
-            'item_name' => 'required|string|max:100',
-            'return_date' => 'required|date',
-            'price' => 'required|integer|min:1',
-            'narration' => 'required|string|max:255',
+            'unit_type' => 'nullable|string',
+            'description' => 'nullable|string',
+            'qty' => 'required|integer',
+            'price' => 'required|integer',
+            'narration' => 'nullable|string',
+            'total' => 'required|integer',
+            'created_at' => 'required|date',
+            'multiplier' => 'required|integer|min:1',
         ];
     }
 }
-

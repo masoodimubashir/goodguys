@@ -1,6 +1,6 @@
-import React from 'react';
-import { Link } from '@inertiajs/react';
-import { Badge, Button, InputGroup, Form, Table } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Link, router } from '@inertiajs/react';
+import { Badge, Button, InputGroup, Form, Table, Pagination } from 'react-bootstrap';
 import {
     Plus,
     ShoppingCart,
@@ -14,516 +14,593 @@ import {
     Text,
     Save,
     Edit,
-    Trash2
+    Trash
 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
+import { ShowMessage } from './ShowMessage';
 
 const PurchaseItemsTab = ({
     filteredItems,
     purchaseItems,
-    setPurchaseItems,
     editingItemId,
-    setEditingItemId,
     editedItems,
-    setEditedItems,
     newItem,
     setNewItem,
     challanState,
     setChallanState,
     searchTerm,
     setSearchTerm,
-    dateRange,
     setDateRange,
     startDate,
     endDate,
     handleItemChange,
     handleNewItemChange,
-    saveItem,
-    deleteItem,
-    createItem,
     toggleProductSelection,
     openChallanForm,
     resetDateFilter,
     formatCurrency,
     CustomTooltip,
-    isCreating,
     expandedItems,
     client,
     purchase_items,
+    client_vendors
 }) => {
+
+
+    const [isCreating, setIsCreating] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    // Vendor search state
+    const [vendorSearchTerm, setVendorSearchTerm] = useState('');
+    const [showVendorSuggestions, setShowVendorSuggestions] = useState(false);
+    const [selectedVendor, setSelectedVendor] = useState(null);
+      const isVendorSelected = !!selectedVendor;
+
+    // Filter vendors based on search term
+    const filteredVendors = client_vendors.filter(vendor =>
+        vendor.vendor_name.toLowerCase().includes(vendorSearchTerm.toLowerCase())
+    );
+
+    // Handle vendor selection
+    const handleVendorSelect = (vendor) => {
+        setSelectedVendor(vendor);
+        setVendorSearchTerm(vendor.vendor_name);
+        setShowVendorSuggestions(false);
+    };
+
+    // Handle vendor input change
+    const handleVendorInputChange = (e) => {
+        setVendorSearchTerm(e.target.value);
+        setShowVendorSuggestions(true);
+        setSelectedVendor(null);
+    };
+
+    // Pagination logic
+    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+    const paginatedItems = filteredItems.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    const savePayment = async () => {
+        setIsCreating(true);
+
+        try {
+            if (!vendorSearchTerm) {
+                ShowMessage('error', 'Please enter a vendor name');
+                setIsCreating(false);
+                return;
+            }
+
+            // Common data for both endpoints
+            const commonData = {
+                client_id: client.id,
+                description: newItem.description,
+                narration: newItem.narration,
+                created_at: newItem.created_at,
+                unit_type: newItem.unit_type, // Added unit_type to both requests
+                price: Number(newItem.price),
+            };
+
+            // If vendor exists in the list (selected from dropdown)
+            if (selectedVendor) {
+                const paymentData = {
+                    ...commonData,
+                    vendor_id: selectedVendor.id,
+                    amount: Number(newItem.price), // Using price as amount for payment
+                    transaction_date: newItem.created_at,
+                };
+
+                await router.post(route('purchase-list-payments.store'), paymentData, {
+                    onSuccess: () => {
+                        ShowMessage('success', 'Payment created successfully');
+                        resetForm();
+                    },
+                    onError: (errors) => {
+                        ShowMessage('error', 'Failed to create payment');
+                        console.error(errors);
+                    }
+                });
+            }
+            // If vendor doesn't exist (new vendor)
+            else {
+                const itemData = {
+                    ...commonData,
+                    vendor_name: vendorSearchTerm,
+                    qty: Number(newItem.qty),
+                    multiplier: Number(newItem.multiplier) || 1,
+                };
+
+                await router.post('/purchased-item', itemData, {
+                    onSuccess: () => {
+                        ShowMessage('success', 'Item created successfully');
+                        resetForm();
+                    },
+                    onError: (errors) => {
+                        ShowMessage('error', 'Failed to create item');
+                        console.error(errors);
+                    }
+                });
+            }
+        } catch (error) {
+            ShowMessage('error', 'An unexpected error occurred');
+            console.error(error);
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    const resetForm = () => {
+        setNewItem({
+            client_id: client?.id,
+            unit_type: '',
+            description: '',
+            price: '',
+            narration: '',
+            show: false
+        });
+        setVendorSearchTerm('');
+        setSelectedVendor(null);
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+    };
+
 
 
     return (
         <>
-            <div className="">
-                <div className="d-flex justify-content-between align-items-center mb-2">
+            <div className="d-flex justify-content-between align-items-center mb-2">
+                <div className="d-flex align-items-center gap-2">
+                    <Badge bg="primary" pill>
+                        {filteredItems.length} items
+                    </Badge>
+                </div>
+                <div className="d-flex gap-2">
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => setNewItem(prev => ({ ...prev, show: true }))}
+                    >
+                        <Plus size={16} /> Add Entry
+                    </Button>
+                    <Button
+                        variant="success"
+                        size="sm"
+                        onClick={openChallanForm}
+                        disabled={!Object.values(challanState.selectedProducts).some(selected => selected)}
+                    >
+                        <ShoppingCart size={16} /> Create Challan
+                    </Button>
+                </div>
+            </div>
+
+            {/* Search and Filter Section */}
+            <div className="d-flex gap-3">
+                <div className="flex-grow-1">
+                    <InputGroup>
+                        <InputGroup.Text>
+                            <Search size={14} />
+                        </InputGroup.Text>
+                        <Form.Control
+                            type="text"
+                            placeholder="Search items..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </InputGroup>
+                </div>
+                <div className="d-flex gap-2">
                     <div className="d-flex align-items-center gap-2">
-                        <Badge bg="primary" pill>
-                            {filteredItems.length} items
-                        </Badge>
-                    </div>
-                    <div className="d-flex gap-2">
-                        <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => setNewItem(prev => ({ ...prev, show: true }))}
-                        >
-                            <Plus size={16} /> Add Entry
-                        </Button>
-                        <Button
-                            variant="success"
-                            size="sm"
-                            onClick={openChallanForm}
-                            disabled={!Object.values(challanState.selectedProducts).some(selected => selected)}
-                        >
-                            <ShoppingCart size={16} /> Create Challan
-                        </Button>
-                        
+                        <DatePicker
+                            selectsRange={true}
+                            startDate={startDate}
+                            endDate={endDate}
+                            onChange={(update) => setDateRange(update)}
+                            isClearable={true}
+                            placeholderText="Filter by date range"
+                            className="form-control form-control-sm"
+                        />
+                        {(startDate || endDate) && (
+                            <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                onClick={resetDateFilter}
+                                title="Clear date filter"
+                            >
+                                <XCircle size={14} />
+                            </Button>
+                        )}
                     </div>
                 </div>
+            </div>
 
-                {/* Search and Filter Section */}
-                <div className="d-flex gap-3">
-                    <div className="flex-grow-1">
-                        <InputGroup>
-                            <InputGroup.Text>
-                                <Search size={14} />
-                            </InputGroup.Text>
-                            <Form.Control
-                                type="text"
-                                placeholder="Search items..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </InputGroup>
-                    </div>
-                    <div className="d-flex gap-2">
-                        <div className="d-flex align-items-center gap-2">
-                            <DatePicker
-                                selectsRange={true}
-                                startDate={startDate}
-                                endDate={endDate}
-                                onChange={(update) => setDateRange(update)}
-                                isClearable={true}
-                                placeholderText="Filter by date range"
-                                className="form-control form-control-sm"
-                            />
-                            {(startDate || endDate) && (
-                                <Button
-                                    variant="outline-secondary"
-                                    size="sm"
-                                    onClick={resetDateFilter}
-                                    title="Clear date filter"
-                                >
-                                    <XCircle size={14} />
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-                </div>
+            <Table hover responsive size='sm' className="mb-0">
+                <thead className="table-light">
+                    <tr>
+                        <th>
+                            <Button
+                                variant="link"
+                                className="p-0"
+                                onClick={() => {
+                                    const allSelected = purchaseItems.every(item => challanState.selectedProducts[item.id]);
+                                    const newSelection = {};
+                                    purchaseItems.forEach(item => {
+                                        newSelection[item.id] = !allSelected;
+                                    });
+                                    setChallanState(prev => ({
+                                        ...prev,
+                                        selectedProducts: newSelection
+                                    }));
+                                }}
+                                title="Select all for challan"
+                            >
+                                <Check
+                                    size={18}
+                                    className={purchaseItems.length > 0 && purchaseItems.every(item => challanState.selectedProducts[item.id])
+                                        ? "text-danger"
+                                        : "text-muted"}
+                                />
+                            </Button>
+                        </th>
+                        <th>
+                            <div className="d-flex align-items-center gap-2">
+                                <FileText size={14} />
+                                Vendor/Description
+                            </div>
+                        </th>
+                        <th>
+                            <div className="d-flex align-items-center gap-2">
+                                <Package size={14} />
+                                Unit Type
+                            </div>
+                        </th>
+                        <th>
+                            <div className="d-flex align-items-center gap-2">
+                                <Activity size={14} />
+                                Quantity
+                            </div>
+                        </th>
+                        <th>
+                            <div className="d-flex align-items-center gap-2">
+                                <IndianRupee size={14} />
+                                Pay
+                            </div>
+                        </th>
+                        <th>
+                            <div className="d-flex align-items-center gap-2">
+                                <IndianRupee size={14} />
+                                Multiplier
+                            </div>
+                        </th>
+                        <th>
+                            <div className="d-flex align-items-center gap-2">
+                                <IndianRupee size={14} />
+                                Total
+                            </div>
+                        </th>
+                        <th>
+                            <div className="d-flex align-items-center gap-2">
+                                <Text size={14} />
+                                Narration
+                            </div>
+                        </th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
 
-                <Table hover responsive size='sm' className="mb-0" >
-                    <thead className="table-light">
-                        <tr>
-                            <th>
-                                <Button
-                                    variant="link"
-                                    className="p-0"
-                                    onClick={() => {
-                                        const allSelected = purchaseItems.every(item => challanState.selectedProducts[item.id]);
-                                        const newSelection = {};
-                                        purchaseItems.forEach(item => {
-                                            newSelection[item.id] = !allSelected;
-                                        });
-                                        setChallanState(prev => ({
-                                            ...prev,
-                                            selectedProducts: newSelection
-                                        }));
-                                    }}
-                                    title="Select all for challan"
-                                >
-                                    <Check
-                                        size={18}
-                                        className={purchaseItems.length > 0 && purchaseItems.every(item => challanState.selectedProducts[item.id])
-                                            ? "text-danger"
-                                            : "text-muted"}
-                                    />
-                                </Button>
-                            </th>
-                            <th>
-                                <div className="d-flex align-items-center gap-2">
-                                    <FileText size={14} />
-                                    Description
-                                </div>
-                            </th>
-                            <th>
-                                <div className="d-flex align-items-center gap-2">
-                                    <Package size={14} />
-                                    Unit Type
-                                </div>
-                            </th>
-                            <th>
-                                <div className="d-flex align-items-center gap-2">
-                                    <Activity size={14} />
-                                    Quantity
-                                </div>
-                            </th>
-                            <th>
-                                <div className="d-flex align-items-center gap-2">
-                                    <IndianRupee size={14} />
-                                    Price
-                                </div>
-                            </th>
-                            <th>
-                                <div className="d-flex align-items-center gap-2">
-                                    <IndianRupee size={14} />
-                                    Total
-                                </div>
-                            </th>
-                            <th>
-                                <div className="d-flex align-items-center gap-2">
-                                    <Text size={14} />
-                                    Narration
-                                </div>
-                            </th>
-                            {/* <th style={{ width: '140px' }}>Actions</th> */}
-                        </tr>
-                    </thead>
+                <tbody>
 
-                    <tbody>
-                        {/* New Item Row */}
-                        {newItem.show && (
-                            <tr className="table-warning bounce-in" key="new-item">
-                                <td></td>
-                                <td>
+                    {newItem.show && (
+                        <tr className="table-warning bounce-in" key="new-item">
+                            <td></td>
+                            <td>
+                                <div className="position-relative">
                                     <Form.Control
-                                        size="sm"
                                         type="text"
-                                        placeholder="Item description"
-                                        value={newItem.description}
-                                        onChange={e => handleNewItemChange('description', e.target.value)}
-                                    />
-                                    <br />
-                                    <Form.Control
-                                        size='sm'
-                                        type='date'
-                                        value={newItem.created_at}
-                                        onChange={e => handleNewItemChange('created_at', e.target.value)}
-                                    />
-                                </td>
-                                <td>
-                                    <Form.Control
                                         size="sm"
-                                        type="text"
-                                        placeholder="Unit type"
-                                        value={newItem.unit_type}
-                                        onChange={e => handleNewItemChange('unit_type', e.target.value)}
+                                        placeholder="Search or enter party name"
+                                        value={vendorSearchTerm}
+                                        onChange={handleVendorInputChange}
+                                        onFocus={() => setShowVendorSuggestions(true)}
+                                        onBlur={() => setTimeout(() => setShowVendorSuggestions(false), 200)}
                                     />
-                                </td>
-                                <td>
-                                    <Form.Control
-                                        size="sm"
-                                        type="number"
-                                        min="1"
-                                        placeholder="Quantity"
-                                        value={newItem.qty}
-                                        onChange={e => handleNewItemChange('qty', e.target.value)}
-                                    />
-                                </td>
-                                <td>
-                                    <Form.Control
-                                        size="sm"
-                                        type="number"
-                                        min="0"
-                                        placeholder="Price"
-                                        value={newItem.price}
-                                        onChange={e => handleNewItemChange('price', e.target.value)}
-                                    />
-                                </td>
-                                <td>
-                                    {newItem.qty > 0 ?
-                                        formatCurrency((parseFloat(newItem.price) || 0) * (parseInt(newItem.qty) || 1)) :
-                                        formatCurrency(newItem.price || 0)}
-                                </td>
-                                <td>
-                                    <Form.Control
-                                        size="sm"
-                                        as="textarea"
-                                        placeholder="Enter narration"
-                                        value={newItem.narration}
-                                        onChange={e => handleNewItemChange('narration', e.target.value)}
-                                    />
-                                </td>
-                                <td>
-                                    <div className="d-flex gap-1">
-                                        <CustomTooltip text="Save item">
-                                            <Button
-                                                size="sm"
-                                                variant="success"
-                                                onClick={createItem}
-                                                disabled={!newItem.description || !newItem.unit_type || !newItem.qty || !newItem.price}
-                                                className="bounce-in"
-                                            >
-                                                <Save size={12} />
-                                            </Button>
-                                        </CustomTooltip>
-                                        <CustomTooltip text="Cancel">
-                                            <Button
-                                                size="sm"
-                                                variant="outline-secondary"
-                                                onClick={() => setNewItem(prev => ({
-                                                    client_id: client?.id,
-                                                    unit_type: '',
-                                                    description: '',
-                                                    qty: '',
-                                                    price: '',
-                                                    narration: '',
-                                                    show: false
-                                                }))}
-                                            >
-                                                <XCircle size={12} />
-                                            </Button>
-                                        </CustomTooltip>
-                                    </div>
-                                </td>
-                            </tr>
-                        )}
-
-                        {filteredItems.map((item, index) => {
-                            const isExpanded = expandedItems?.includes(item.id);
-                            const isEditing = editingItemId === item.id;
-                            const totalValue = item.qty > 1 ? (parseFloat(item.price) || 1) * (parseInt(item.qty) || 1) : item.price;
-
-                            return (
-                                <React.Fragment key={item.id}>
-                                    <tr className="align-middle">
-                                        <td>
-                                            <Button
-                                                variant="link"
-                                                className="p-0"
-                                                onClick={() => toggleProductSelection(item.id)}
-                                                title="Select for challan"
-                                            >
-                                                <Check
-                                                    size={18}
-                                                    className={challanState.selectedProducts[item.id] ? "text-danger" : "text-muted"}
-                                                />
-                                            </Button>
-                                        </td>
-                                        <td>
-                                            {isEditing ? (
-                                                <Form.Control
-                                                    size="sm"
-                                                    type="text"
-                                                    value={editedItems[item.id]?.description || item.description}
-                                                    onChange={e => handleItemChange(item.id, 'description', e.target.value)}
-                                                />
+                                    {showVendorSuggestions && (
+                                        <div className="position-absolute bg-white border mt-1 w-100 shadow-sm z-3"
+                                            style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                            {filteredVendors.length > 0 ? (
+                                                filteredVendors.map(vendor => (
+                                                    <div key={vendor.id}
+                                                        className="px-3 py-2 cursor-pointer hover-bg-light text-black"
+                                                        onClick={() => handleVendorSelect(vendor)}>
+                                                        {vendor.vendor_name}
+                                                    </div>
+                                                ))
                                             ) : (
-                                                <div>
-                                                    <span className="fw-bold">{item.description ?? 'NA'}</span>
-                                                    <br />
-                                                    <small className="text-muted">
-                                                        {new Date(item.created_at).toLocaleDateString('en-IN', {
-                                                            year: 'numeric',
-                                                            month: 'long',
-                                                            day: 'numeric'
-                                                        })}
-                                                    </small>
+                                                <div className="px-3 py-2 text-muted">
+                                                    {vendorSearchTerm ?
+                                                        "Press Tab" :
+                                                        "Start typing to search vendors"}
                                                 </div>
                                             )}
-                                        </td>
-                                        <td>
-                                            {isEditing ? (
-                                                <Form.Control
-                                                    size="sm"
-                                                    type="text"
-                                                    value={editedItems[item.id]?.unit_type || item.unit_type}
-                                                    onChange={e => handleItemChange(item.id, 'unit_type', e.target.value)}
-                                                />
-                                            ) : (
-                                                <span className="fw-medium">{item.unit_type ?? 'NA'}</span>
-                                            )}
-                                        </td>
-                                        <td>
-                                            {isEditing ? (
-                                                <Form.Control
-                                                    size="sm"
-                                                    type="number"
-                                                    min="0"
-                                                    value={editedItems[item.id]?.qty ?? ''}
-                                                    onChange={e => handleItemChange(
-                                                        item.id,
-                                                        'qty',
-                                                        e.target.value === '' ? '' : parseInt(e.target.value) || 0
-                                                    )}
-                                                    onFocus={e => e.target.select()}
-                                                    placeholder="Enter quantity"
-                                                />
-                                            ) : (
-                                                <span className="fw-bold">{item.qty > 1 ? item.qty : 'NA'}</span>
-                                            )}
-                                        </td>
-                                        <td>
-                                            {isEditing ? (
-                                                <Form.Control
-                                                    size="sm"
-                                                    type="number"
-                                                    min="0"
-                                                    step="0.01"
-                                                    value={editedItems[item.id]?.price ?? ''}
-                                                    onChange={e => handleItemChange(
-                                                        item.id,
-                                                        'price',
-                                                        e.target.value === '' ? '' : parseFloat(e.target.value) || 0
-                                                    )}
-                                                    onFocus={e => e.target.select()}
-                                                    placeholder="Enter price"
-                                                />
-                                            ) : (
-                                                <span className="fw-bold text-primary">
-                                                    {formatCurrency(item.price)}
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td>
-                                            <span className="fw-bold text-success">
-                                                {formatCurrency(totalValue)}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {isEditing ? (
-                                                <Form.Control
-                                                    as="textarea"
-                                                    rows={3}
-                                                    className="fade-in"
-                                                    value={editedItems[item.id]?.narration || item.narration || ''}
-                                                    onChange={e => handleItemChange(item.id, 'narration', e.target.value)}
-                                                    placeholder="Enter item narration..."
-                                                    style={{
-                                                        minWidth: '200px',
-                                                        transition: 'all 0.3s ease',
-                                                        border: '1px solid #dee2e6',
-                                                        borderRadius: '4px',
-                                                        fontSize: '14px'
-                                                    }}
-                                                />
-
-                                            ) : (
-                                                <span>
-                                                    {item.narration }
-                                                </span>
-                                            )
-
-                                            }
-                                        </td>
-                                        {/* <td>
-                                            {isEditing ? (
-                                                <div className="d-flex gap-1">
-                                                    <CustomTooltip text="Save changes">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="success"
-                                                            onClick={() => saveItem(item)}
-                                                            className="bounce-in"
-                                                        >
-                                                            <Save size={12} />
-                                                        </Button>
-                                                    </CustomTooltip>
-                                                    <CustomTooltip text="Cancel editing">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline-secondary"
-                                                            onClick={() => {
-                                                                setEditingItemId(null);
-                                                                setEditedItems(prev => {
-                                                                    const newState = { ...prev };
-                                                                    delete newState[item.id];
-                                                                    return newState;
-                                                                });
-                                                            }}
-                                                        >
-                                                            <XCircle size={12} />
-                                                        </Button>
-                                                    </CustomTooltip>
-                                                </div>
-                                            ) : (
-                                                <div className="d-flex gap-1">
-                                                        <Button
-                                                            variant="link"
-                                                            className="p-1 text-primary"
-                                                            onClick={() => {
-                                                                setEditingItemId(item.id);
-                                                                setEditedItems(prev => ({
-                                                                    ...prev,
-                                                                    [item.id]: {
-                                                                        id: item.id,
-                                                                        unit_type: item.unit_type,
-                                                                        description: item.description,
-                                                                        qty: item.qty,
-                                                                        price: item.price,
-                                                                        narration: item.narration
-                                                                    }
-                                                                }));
-                                                            }}
-                                                        >
-                                                            <Edit size={14} />
-                                                        </Button>
-                                                
-                                                </div>
-                                            )}
-                                        </td> */}
-                                    </tr>
-                                </React.Fragment>
-                            );
-                        })}
-
-                        {/* Empty State for Purchase Items */}
-                        {filteredItems.length === 0 && !newItem.show && (
-                            <tr>
-                                <td colSpan={8} className="text-center py-5">
-                                    <div className="text-muted">
-                                        <Package size={20} className="mb-3 opacity-50" />
-                                        <h5 className="mb-2">No Items Found</h5>
-                                        {searchTerm || (startDate || endDate) ? (
-                                            <p>No items match your search criteria</p>
-                                        ) : (
-                                            <p>No items available for this client</p>
-                                        )}
-                                    </div>
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </Table>
-
-                {/* Pagination */}
-                {purchase_items && purchase_items.links && (
-                    <div className="d-flex justify-content-between align-items-center mt-3 text-black">
-                        <div className="text-muted">
-                            Showing {purchase_items.from} to {purchase_items.to} of {purchase_items.total} entries
-                        </div>
-                        <ul className="pagination mb-0">
-                            {purchase_items.links.map((link, index) => (
-                                <li
-                                    key={index}
-                                    className={`page-item ${link.active ? 'active' : ''} ${!link.url ? 'disabled' : ''}`}
-                                >
-                                    {link.url ? (
-                                        <Link
-                                            href={link.url}
-                                            className="page-link"
-                                            preserveScroll
-                                        >
-                                            {link.label.replace('&laquo;', '«').replace('&raquo;', '»')}
-                                        </Link>
-                                    ) : (
-                                        <span className="page-link" dangerouslySetInnerHTML={{ __html: link.label }} />
+                                        </div>
                                     )}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
+                                </div>
+                                <Form.Control
+                                    size="sm"
+                                    type="text"
+                                    className="mt-2"
+                                    placeholder="Item description"
+                                    value={newItem.description}
+                                    onChange={(e) => handleNewItemChange('description', e.target.value)}
+                                    required
+                                />
+                                <Form.Control
+                                    size='sm'
+                                    type='date'
+                                    className="mt-2"
+                                    value={newItem.created_at}
+                                    onChange={(e) => handleNewItemChange('created_at', e.target.value)}
+                                    required
+                                />
+                            </td>
+                          
+
+                            {/* Unit Type: Always enabled in both cases */}
+                            <td>
+                                <Form.Control
+                                    size="sm"
+                                    type="text"
+                                    placeholder="Unit type"
+                                    value={newItem.unit_type}
+                                    onChange={(e) => handleNewItemChange('unit_type', e.target.value)}
+                                    required
+                                />
+                            </td>
+
+                            {/* Quantity: ENABLED ONLY when vendor IS selected */}
+                            <td>
+                                <Form.Control
+                                    size="sm"
+                                    type="number"
+                                    min="1"
+                                    placeholder="Quantity"
+                                    value={newItem.qty}
+                                    onChange={(e) => handleNewItemChange('qty', e.target.value)}
+                                    disabled={!isVendorSelected}
+                                />
+                            </td>
+
+                            {/* Price: ENABLED ONLY when vendor IS selected */}
+                            <td>
+                                <Form.Control
+                                    size="sm"
+                                    type="number"
+                                    min="0"
+                                    placeholder="Price"
+                                    value={newItem.price}
+                                    onChange={(e) => handleNewItemChange('price', e.target.value)}
+                                    required
+                                    disabled={!isVendorSelected}
+                                />
+                            </td>
+
+                            {/* Multiplier: ENABLED ONLY when vendor IS selected */}
+                            <td>
+                                <Form.Control
+                                    size="sm"
+                                    type="text"
+                                    placeholder="Multiplier"
+                                    value={newItem.multiplier || 1}
+                                    onChange={(e) => handleNewItemChange('multiplier', e.target.value)}
+                                    disabled={!isVendorSelected}
+                                />
+                            </td>
+
+                            {/* Total: Calculated, always visible */}
+                            <td>
+                                {newItem.qty > 0
+                                    ? formatCurrency((parseFloat(newItem.price) || 0) * (parseInt(newItem.qty) || 1) * (parseInt(newItem.multiplier) || 1))
+                                    : formatCurrency(newItem.price || 0)}
+                            </td>
+
+                            {/* Narration: ENABLED ONLY when vendor IS selected */}
+                            <td>
+                                <Form.Control
+                                    size="sm"
+                                    as="textarea"
+                                    placeholder="Enter narration"
+                                    value={newItem.narration}
+                                    onChange={(e) => handleNewItemChange('narration', e.target.value)}
+                                    required
+                                    disabled={!isVendorSelected}
+                                />
+                            </td>
+
+                            {/* Action Buttons */}
+                            <td>
+                                <div className="d-flex gap-1">
+                                    <Button
+                                        size="sm"
+                                        variant="success"
+                                        onClick={savePayment}
+                                        disabled={isCreating}
+                                    >
+                                        {isCreating ? 'Saving...' : <Save size={14} />}
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline-secondary"
+                                        onClick={() => {
+                                            setNewItem(prev => ({
+                                                ...prev,
+                                                show: false
+                                            }));
+                                            setVendorSearchTerm('');
+                                            setSelectedVendor(null);
+                                        }}
+                                    >
+                                        <XCircle size={14} />
+                                    </Button>
+                                </div>
+                            </td>
+                        </tr>
+                    )}
+                    {paginatedItems.map((item) => {
+                        const isEditing = editingItemId === item.id;
+                        const [localVendorSearch, setLocalVendorSearch] = useState(item.vendor_name || '');
+                        const [localShowSuggestions, setLocalShowSuggestions] = useState(false);
+
+                        return (
+                            <tr key={item.id} className="align-middle">
+                                <td>
+                                    <Button
+                                        variant="link"
+                                        className="p-0"
+                                        onClick={() => toggleProductSelection(item.id)}
+                                        title="Select for challan"
+                                    >
+                                        <Check
+                                            size={18}
+                                            className={challanState.selectedProducts[item.id] ? "text-danger" : "text-muted"}
+                                        />
+                                    </Button>
+                                </td>
+                                <td>
+                                    {isEditing ? (
+                                        <div className="position-relative">
+                                            <Form.Control
+                                                type="text"
+                                                size="sm"
+                                                placeholder="Search or enter vendor name"
+                                                value={localVendorSearch}
+                                                onChange={(e) => {
+                                                    setLocalVendorSearch(e.target.value);
+                                                    handleItemChange(item.id, 'vendor_name', e.target.value);
+                                                    setLocalShowSuggestions(true);
+                                                }}
+                                                onFocus={() => setLocalShowSuggestions(true)}
+                                            />
+                                            {localShowSuggestions && (
+                                                <div className="position-absolute bg-white border rounded mt-1 w-100 shadow-sm z-3"
+                                                    style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                                    {client_vendors
+                                                        .filter(v => v.vendor_name.toLowerCase().includes(localVendorSearch.toLowerCase()))
+                                                        .map(vendor => (
+                                                            <div key={vendor.id}
+                                                                className="px-3 py-2 cursor-pointer hover-bg-light"
+                                                                onClick={() => {
+                                                                    setLocalVendorSearch(vendor.vendor_name);
+                                                                    handleItemChange(item.id, 'vendor_name', vendor.vendor_name);
+                                                                    setLocalShowSuggestions(false);
+                                                                }}>
+                                                                {vendor.vendor_name}
+                                                            </div>
+                                                        ))
+                                                    }
+                                                </div>
+                                            )}
+                                            <Form.Control
+                                                size="sm"
+                                                type="text"
+                                                className="mt-2"
+                                                placeholder="Description"
+                                                value={editedItems[item.id]?.description || item.description}
+                                                onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <span className="fw-medium">{item.description || 'No description'}</span>
+                                            <br />
+                                            <small className="text-muted">
+                                                {new Date(item.created_at).toLocaleDateString('en-IN', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                })}
+                                            </small>
+                                        </div>
+                                    )}
+                                </td>
+                                <td>
+
+                                    <span className="fw-medium">{item.unit_type || 'NA'}</span>
+                                </td>
+                                <td>
+                                    <span className="fw-bold">{item.qty > 1 ? item.qty : 'NA'}</span>
+                                </td>
+                                <td>
+                                    <span className="fw-bold text-primary">
+                                        {formatCurrency(item.price)}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span className="fw-bold text-success">
+                                        {item.multiplier > 1 ? item.multiplier : 'NA'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span className="fw-bold text-success">
+                                        {formatCurrency(item.total)}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span>{item.narration}</span>
+                                </td>
+                                <td>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </Table>
+
+            {/* Pagination */}
+            <div className="d-flex justify-content-between align-items-center mt-3">
+                <div className="text-muted">
+                    Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredItems.length)} of {filteredItems.length} entries
+                </div>
+                <Pagination>
+                    <Pagination.Prev
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                    />
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                        <Pagination.Item
+                            key={page}
+                            active={page === currentPage}
+                            onClick={() => setCurrentPage(page)}
+                        >
+                            {page}
+                        </Pagination.Item>
+                    ))}
+                    <Pagination.Next
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                    />
+                </Pagination>
             </div>
         </>
     );

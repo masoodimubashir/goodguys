@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
+use App\Models\Activity;
 use App\Models\BankAccount;
 use App\Models\Client;
 use App\Models\CompanyProfile;
@@ -56,7 +57,7 @@ class AdminClientsController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('clients.index')->with('message', 'Client Created Successfully');
+            return redirect()->route('clients.show', $client->id)->with('message', 'Client Created Successfully');
         } catch (Exception $e) {
             Log::error($e);
             DB::rollBack();
@@ -78,9 +79,7 @@ class AdminClientsController extends Controller
             'purchaseLists.vendor',
             'accounts',
             'serviceCharge',
-            'purchaseItems',
             'projectDocuments',
-
         ]);
 
 
@@ -90,12 +89,12 @@ class AdminClientsController extends Controller
 
         $purchase_items = PurchasedItem::where('client_id', $client->id)
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        $payments = PurchaseListPayment::where('client_id', $client->id)
-            ->with('vendor')
-            ->orderBy('transaction_date', 'desc')
             ->get();
+
+        $activities = Activity::where('client_id', $client->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+      
 
         if ($client->client_type === 'Service Client') {
 
@@ -105,7 +104,7 @@ class AdminClientsController extends Controller
                 'vendors' => Vendor::orderBy('vendor_name')->get(),
                 'purchase_items' => $purchase_items,
                 'BankProfile' => BankAccount::first(),
-                'payments' => $payments,
+                'activities' => $activities
             ]);
         } else {
 
@@ -118,7 +117,7 @@ class AdminClientsController extends Controller
                 'purchase_items' => $purchase_items,
                 'BankProfile' => BankAccount::first(),
                 'client_vendors' => $clientVendors,
-                'payments' => $payments,
+                'activities' => $activities
 
             ]);
         }

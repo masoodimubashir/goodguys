@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePurchasedItemRequest;
 use App\Http\Requests\UpdatePurchasedItemRequest;
+use App\Models\Activity;
 use App\Models\Client;
 use App\Models\PurchasedItem;
 use Illuminate\Http\Request;
@@ -38,14 +39,33 @@ class PurchasesItemController extends Controller
 
         $data = $request->validated();
 
-
-        $data['total'] = $data['qty'] * $data['price'];
+        $data['total'] = ($data['qty'] * $data['price']) * $data['multiplier'];
 
         PurchasedItem::create(array_merge($data, [
+            'client_id' => $data['client_id'],
+            'unit_type' => $data['unit_type'],
+            'narration' => $data['narration'],
+            'description' => $data['description'],
+            'price' => $data['price'],
             'total' => $data['total'],
+            'multiplier' => $data['multiplier'],
             'created_by' => auth()->id(),
+            'payment_flow' => false,
             'created_at' => $data['created_at']
         ]));
+
+        Activity::create([
+            'client_id' => $data['client_id'],
+            'unit_type' => $data['unit_type'],
+            'narration' => $data['narration'],
+            'description' => $data['description'],
+            'price' => $data['price'],
+            'total' => $data['total'],
+            'multiplier' => $data['multiplier'],
+            'created_by' => auth()->id(),
+            'payment_flow' => false,
+            'created_at' => $data['created_at']
+        ]);
 
         return redirect()->back()->with('message', 'Item created successfully');
     }

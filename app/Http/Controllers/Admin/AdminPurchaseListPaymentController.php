@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePurchaseListPaymentForm;
 use App\Http\Requests\UpdatePurchaseListPaymentForm;
+use App\Models\Activity;
 use App\Models\PurchasedItem;
 use App\Models\PurchaseListPayment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class AdminPurchaseListPaymentController extends Controller
 {
@@ -32,26 +34,52 @@ class AdminPurchaseListPaymentController extends Controller
      */
     public function store(StorePurchaseListPaymentForm $request)
     {
-        $data = $request->validated();
 
+        try {
+            $data = $request->validated();
 
-        PurchaseListPayment::create(array_merge($data, [
-            'created_by' => auth()->user()->id
-        ]));
+            PurchaseListPayment::create([
+                'vendor_id' => $data['vendor_id'],
+                'client_id' => $data['client_id'],
+                'amount' => $data['amount'],
+                'narration' => $data['narration'],
+                'transaction_date' => $data['transaction_date'],
+                'created_by' => auth()->user()->id,
+                'created_at' => $data['transaction_date']
+            ]);
 
-        PurchasedItem::create([
-            'client_id' => $request->client_id,
-            'narration' => $request->narration,
-            'description' => $request->narration,
-            'price' => $request->amount,
-            'total' => $request->amount,
-            'created_by' => auth()->id(),
-            'is_credited' => false,
-            'created_at' => $data['transaction_date']
+            PurchasedItem::create([
+                'client_id' => $data['client_id'],
+                'unit_type' => $data['unit_type'],
+                'narration' => $data['narration'],
+                'description' => $data['narration'],
+                'price' => $data['amount'],
+                'total' => $data['amount'],
+                'multiplier' => 1,
+                'created_by' => auth()->id(),
+                'payment_flow' => false,
+                'created_at' => $data['transaction_date']
 
-        ]);
+            ]);
 
-        return redirect()->back()->with('message', 'Purchase created successfully');
+            Activity::create([
+                'client_id' => $data['client_id'],
+                'unit_type' => $data['unit_type'],
+                'narration' => $data['narration'],
+                'description' => $data['narration'],
+                'price' => $data['amount'],
+                'total' => $data['amount'],
+                'multiplier' => 1,
+                'created_by' => auth()->id(),
+                'payment_flow' => false,
+                'created_at' => $data['transaction_date']
+            ]);
+
+            return redirect()->back()->with('message', 'Purchase created successfully');
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return redirect()->back()->with('error', 'Failed! Something went Wrong');
+        }
     }
 
     /**

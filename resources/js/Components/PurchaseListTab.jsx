@@ -1,8 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Link } from '@inertiajs/react';
-import { CreditCard, Edit, Eye, Trash } from 'lucide-react';
+import { CreditCard, Edit, Eye, Link2, Pen, Trash, View } from 'lucide-react';
 import React from 'react';
-import { Button, Table } from 'react-bootstrap';
+import { Button, Table, Tooltip } from 'react-bootstrap';
 
 const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
 
@@ -11,7 +11,6 @@ const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
     const getFileExtension = (filename) => {
         return filename.split('.').pop().toLowerCase();
     };
-
 
 
     return (
@@ -38,7 +37,11 @@ const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
 
 
                                 <td className="text-start align-middle">
-                                    {entry.vendor_name}
+
+                                        <Link className='text-primary' href={route('purchase-list.index', ({ client_id: client?.id, vendor_id: entry.id }))}>
+                                            {entry.vendor_name}
+                                        </Link>
+
                                     <small className="text-muted"> <br />
                                         {new Date(entry.created_at).toLocaleDateString('en-IN', {
                                             year: 'numeric',
@@ -50,9 +53,7 @@ const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
 
                                 <td className="text-start align-middle">
                                     <div className="fw-medium">
-                                        <Link href={route('purchase-list.show', entry.id)} className="text-decoration-none">
-                                            {entry.contact_number}
-                                        </Link>
+                                        {entry.contact_number}
                                     </div>
                                 </td>
 
@@ -66,7 +67,7 @@ const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
 
                                 <td className="text-start align-middle">
                                     <Link href={route('purchase-list.index', ({ client_id: client?.id, vendor_id: entry.id }))}>
-                                        <Eye className='text-success' size={20} />
+                                        <Pen className='text-success' size={25} />
                                     </Link>
                                 </td>
                             </tr>

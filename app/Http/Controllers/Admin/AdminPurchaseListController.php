@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePurchaseListRequest;
 use App\Http\Requests\UpdatePurchaseListRequest;
+use App\Models\Activity;
 use App\Models\Client;
 use App\Models\ClientAccount;
 use App\Models\PurchasedItem;
@@ -89,7 +90,7 @@ class AdminPurchaseListController extends Controller
 
             $purchase_list = PurchaseList::create($validated);
 
-            PurchasedItem::create([
+            Activity::create([
                 'client_id' => $purchase_list->client_id,
                 'unit_type' => $purchase_list->list_name,
                 'description' => $purchase_list->vendor->vendor_name,
@@ -98,8 +99,8 @@ class AdminPurchaseListController extends Controller
                 'narration' => $purchase_list->bill_description,
                 'total' => $purchase_list->bill_total,
                 'created_by' => auth()->id(),
-                'is_credited' => true,
-                'created_at' =>  $validated['purchase_date']
+                'multiplier' => 1,
+                'created_at' =>  $validated['purchase_date'],
             ]);
 
             return redirect()->back()->with('message', 'Purchase list created successfully');

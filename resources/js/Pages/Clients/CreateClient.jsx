@@ -221,7 +221,7 @@ function FormFields({ data, errors, onChange }) {
             <div className="col-md-3">
                 <InputLabel
                     htmlFor="site_name"
-                    value={isServiceType ? "Enter Service Name" : "Enter Project Title"}
+                    value={isServiceType ? "Enter Site Name" : "Enter Project Title"}
                 />
                 <TextInput
                     className="form-control"

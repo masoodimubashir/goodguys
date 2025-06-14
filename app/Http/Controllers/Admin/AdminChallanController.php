@@ -44,6 +44,7 @@ class AdminChallanController extends Controller
 
         DB::beginTransaction();
 
+
         try {
             // Create Challan Reference
             $challanReference = ChallanRefrence::create([
@@ -66,7 +67,7 @@ class AdminChallanController extends Controller
                     'total' => $item['total'],
                     'created_by' => auth()->user()->id,
                     'created_at' => $item['created_at'],
-                    'is_credited' => $item['is_credited'],
+                    'payment_flow' => $item['payment_flow'] === 1 ? true : false,
                 ];
             }
 

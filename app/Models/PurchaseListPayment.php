@@ -10,6 +10,8 @@ class PurchaseListPayment extends Model
 {
 
 
+    public $timestamps = false;
+
     protected $fillable = [
         'vendor_id',
         'client_id',
@@ -18,6 +20,7 @@ class PurchaseListPayment extends Model
         'transaction_date',
         'created_by',
         'updated_by',
+        'created_at'
     ];
 
 

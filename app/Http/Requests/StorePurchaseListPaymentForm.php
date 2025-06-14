@@ -27,6 +27,7 @@ class StorePurchaseListPaymentForm extends FormRequest
             'amount' => 'required|integer',
             'narration' => 'required|string|max:255',
             'transaction_date' => 'required|date',
+            'unit_type' => 'required|string|max:255',
         ];
     }
 }

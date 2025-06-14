@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreReturnListrequest;
 use App\Http\Requests\UpdateReturnListrequest;
+use App\Models\Activity;
 use App\Models\ReturnList;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -34,15 +36,34 @@ class AdminReturnListController extends Controller
     {
         try {
 
+           DB::beginTransaction();
+
             $validated = $request->validated();
 
             ReturnList::create(array_merge($validated, [
                 'created_by' => auth()->id(),
             ]));
 
+            Activity::create([
+                'client_id' => $validated['client_id'],
+                'description' => $validated['item_name'],
+                'unit_type' => $validated['item_name'],
+                'qty' => 1,
+                'price' => $validated['price'],
+                'narration' => $validated['narration'],
+                'total' => $validated['price'],
+                'created_at' => $validated['return_date'],
+                'multiplier' => 1,
+                'created_by' => auth()->user()->id,
+                'payment_flow' => true,
+            ]);
+
+            DB::commit();
+
             return redirect()->back()->with('message', 'Return list created successfully');
         } catch (\Exception $e) {
             Log::error('Error creating return list: ' . $e->getMessage());
+            DB::rollBack();
             return redirect()->back()->with('error', 'Failed to create Return List');
         }
     }

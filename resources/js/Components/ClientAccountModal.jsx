@@ -49,23 +49,6 @@ const ClientAccountModal = ({ show, onHide, form, errors, isEditing, handleSubmi
                         <Form.Control.Feedback type="invalid">{errors.created_at}</Form.Control.Feedback>
                     </Form.Group>
 
-                    <Form.Group className="mb-3">
-                        <Form.Label>Payment Type</Form.Label>
-                        <Form.Control
-                            as="select"
-                            name="payment_flow"
-                            value={form.data.payment_flow}
-                            onChange={handleChange}
-                            isInvalid={!!errors.payment_flow}
-                        >
-                            <option value="">Select flow</option>
-                            <option value="in">In</option>
-                            <option value="out">Out</option>
-                        </Form.Control>
-                        <Form.Control.Feedback type="invalid">
-                            {errors.payment_flow}
-                        </Form.Control.Feedback>
-                    </Form.Group>
 
                     <Form.Group className="mb-3">
                         <Form.Label>Amount</Form.Label>

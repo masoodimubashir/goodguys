@@ -138,6 +138,17 @@ class Client extends Model
     }
 
 
+    /**
+     * Get all of the activities for the Client
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(Activity::class);
+    }
+
+
     protected function casts(): array
     {
         return [

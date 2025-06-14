@@ -268,27 +268,31 @@ const ChallanPdf = ({ company_profile, challan, client, bankAccount }) => {
   const currentDate = new Date().toLocaleDateString();
   const formattedDate = challan?.created_at ? new Date(challan.created_at).toLocaleDateString() : currentDate;
 
-  console.log(challan);
-  
 
   const serviceCharge = parseFloat(challan?.service_charge) || 0;
   const rawItems = challan?.challans || [];
   const hasPrices = rawItems.some(i => i.is_price_visible);
 
   let subtotal = 0, inTotal = 0, outTotal = 0;
-  const processedItems = rawItems.filter(i => i.is_credited === 0).map((item, index) => {
-    const qty = parseFloat(item.qty) || 0;
+  rawItems.map((item, index) => {
     const price = parseFloat(item.price) || 0;
-    const total = qty > 1 ? qty * price : price;
-    if (item.unit_type === 'in') inTotal += total;
-    else outTotal += total;
+    const total = item.total;
+
+
+    if (item.payment_flow === 1) inTotal += total;
+    else if (item.payment_flow === 0) outTotal += total;
+
     if (item.is_price_visible) subtotal += total;
+
     return { ...item, price, total };
   });
 
   const serviceChargeAmount = outTotal * serviceCharge / 100;
   const outWithServiceCharge = outTotal + serviceChargeAmount;
-  const remainingBalance = inTotal - outWithServiceCharge;
+  const balance = inTotal - outTotal;  
+  const spends = outTotal;             
+  const remainingBalance = inTotal - outWithServiceCharge;  
+
 
   const ITEMS_PER_PAGE = 20;
   const pages = Math.ceil(rawItems.length / ITEMS_PER_PAGE);
@@ -317,7 +321,7 @@ const ChallanPdf = ({ company_profile, challan, client, bankAccount }) => {
                     <Text style={styles.totalsValue}>{inTotal.toFixed(2)}</Text>
                   </View>
                   <View style={[styles.totalsRow, { backgroundColor: COLORS.accent }]}>
-                    <Text style={[styles.totalsLabel, { color: 'white' }]}>Total Spend:</Text><Text style={[styles.totalsValue, { color: 'white' }]}>{outTotal}</Text>
+                    <Text style={[styles.totalsLabel, { color: 'white' }]}>Total Spend:</Text><Text style={[styles.totalsValue, { color: 'white' }]}>{spends}</Text>
                   </View>
                   <View style={styles.totalsRow}><Text style={styles.totalsLabel}>Total Payment (Inclusive Of Service Charge):</Text>
                     <Text style={styles.totalsValue}>{outWithServiceCharge} ({serviceChargeAmount})</Text>

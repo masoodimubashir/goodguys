@@ -154,9 +154,9 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                     unit_type: item.unit_type,
                     created_by: client.created_by,
                     updated_by: client.updated_by,
-                    total: item.price * item.qty,
+                    total: item.total,
                     narration: item.narration,
-                    is_credited: item.is_credited,
+                    payment_flow: item.payment_flow,
                     created_at: item.created_at
                 }))
             ),
@@ -317,8 +317,6 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                                 <th>Challan No.</th>
                                 <th>Date</th>
                                 <th className="text-end">Items</th>
-                                <th className="text-end">Billed Amount  </th>
-                                <th className="text-end">Service Charge</th>
                                 <th className="text-center">Actions</th>
                             </tr>
                         </thead>
@@ -326,40 +324,6 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
 
                             {client.challan_refrences.map((ref) => {
                                 const items = ref.challans || [];
-                                // Filter out credited items
-                                const filteredItems = items.filter(item => item.is_credited === 0);
-
-                                let inTotal = 0, outTotal = 0;
-
-                                filteredItems.forEach(item => {
-                                    const qty = parseFloat(item.qty) || 0;
-                                    const price = parseFloat(item.price) || 0;
-                                    const unitType = item.unit_type;
-
-                                    const value = qty > 1 ? price * qty : price;
-
-                                    if (unitType === 'in') {
-                                        inTotal += value;
-                                    } else if (unitType !== 'in') {
-                                        outTotal += value;
-                                    }
-                                });
-
-                                // Calculate service charge on outTotal only (not on subtotal)
-                                const serviceRate = Number(ref.service_charge) || 0;
-                                const serviceCharge = outTotal * serviceRate / 100;
-                                const outWithServiceCharge = outTotal + serviceCharge;
-                                const balance = inTotal - outWithServiceCharge;
-
-                                // Calculate visible subtotal (only items with is_price_visible)
-                                const visibleSubtotal = filteredItems.reduce((sum, item) => {
-                                    if (item.is_price_visible) {
-                                        const qty = parseFloat(item.qty) || 0;
-                                        const price = parseFloat(item.price) || 0;
-                                        return sum + (qty > 1 ? price * qty : price);
-                                    }
-                                    return sum;
-                                }, 0);
 
                                 const isInvoiced = ref.invoice_id !== null;
 
@@ -383,12 +347,6 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                                         <td>{new Date(ref.created_at).toLocaleDateString()}</td>
 
                                         <td className="text-end">{items.length}</td>
-                                        <td className="text-end">₹{outWithServiceCharge.toLocaleString('en-IN')}</td>
-                                        <td className="text-end">
-                                            <Badge bg="warning" text="dark">
-                                                ₹{serviceCharge.toLocaleString('en-IN')} ({ref.service_charge}%)
-                                            </Badge>
-                                        </td>
 
                                         <td className="text-center">
                                             <div className="d-flex justify-content-center gap-2">

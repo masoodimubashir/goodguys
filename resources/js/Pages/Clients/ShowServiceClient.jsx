@@ -15,7 +15,8 @@ import {
     Download, RefreshCw, HandCoins, Undo2, BarChart3, Zap, Building2, User2,
     Phone, Mail, MapPin, Percent, TrendingUp, Banknote, Wallet, Receipt,
     Text, Box, Layers, PieChart, ShoppingBag, CreditCard, Database, ArrowRight,
-    Check, Search
+    Check, Search,
+    ActivityIcon
 } from 'lucide-react';
 import { ClientInfoCard } from '@/Components/ClientInfoCard';
 import { BankAccountCard } from '@/Components/BankAccountCard';
@@ -26,16 +27,16 @@ import ProjectDocumentTab from '@/Components/ProjectDocumentTab';
 import Swal from 'sweetalert2';
 import PurchaseItemsTab from '@/Components/PurchaseItemsTab';
 import ClientAccountModal from '@/Components/ClientAccountModal';
-import ClientVendorPayments from '@/Components/ClientVendorPayments';
+import ActivityTab from '@/Components/Activity';
 
-export default function ShowServiceClient({ client, vendors = [], client_vendors = [], purchase_items, payments = [] }) {
+export default function ShowServiceClient({ client, vendors = [], client_vendors = [], purchase_items, activities = [] }) {
     // State management
     const { delete: destroy } = useForm();
     const flash = usePage().props.flash;
 
-    const [activeTab, setActiveTab] = useState('vendor-lists');
-    const [purchaseItems, setPurchaseItems] = useState(purchase_items.data || []);
-    const [filteredItems, setFilteredItems] = useState(purchase_items.data || []);
+    const [activeTab, setActiveTab] = useState('purchase-items');
+    const [purchaseItems, setPurchaseItems] = useState(purchase_items || []);
+    const [filteredItems, setFilteredItems] = useState(purchase_items || []);
     const [editingItemId, setEditingItemId] = useState(null);
     const [editedItems, setEditedItems] = useState({});
     const [newItem, setNewItem] = useState({
@@ -90,7 +91,6 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
     const clientAccountForm = useInertiaForm({
         client_id: client.id || '',
         payment_type: '',
-        payment_flow: '',
         amount: '',
         narration: '',
         created_at: new Date().toISOString().split('T')[0],
@@ -128,62 +128,31 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
     }, [searchTerm, dateRange, purchaseItems]);
 
 
-    // Calculate analytics based on filtered items
     const calculateAnalytics = () => {
-        // Calculate separate sums for in, out, and total values (excluding is_created === 1)
-        const validItems = filteredItems.filter(item => item.is_credited !== 1);
 
-        const sumIn = validItems
-            .filter(item => item.unit_type === 'in')
+
+        const sumIn = filteredItems
+            .filter(item => item.payment_flow === 1)
             .reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
 
-        const sumOut = validItems
-            .filter(item => item.unit_type === 'out')
+        const sumOut = filteredItems
+            .filter(item => item.payment_flow === 0)
             .reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
 
-        const sumTotal = validItems.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0) - sumIn - sumOut;
-
-        // Final calculation: sum of in - sum of out - sum of total
-        const balance = sumIn - sumOut - sumTotal;
-
-        const spends = validItems.filter(item =>
-            item.unit_type !== 'in' || !item.unit_type || item.unit_type === 'null'
+        const spends = filteredItems.filter(item =>
+            item.payment_flow !== 1 || !item.payment_flow || item.payment_flow === 'null'
         ).reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
 
-
-        // validItems already defined above for consistency
-
-        const averagePrice = validItems.length > 0
-            ? validItems.reduce((sum, item) => sum + parseFloat(item.price || 0), 0) / validItems.length
-            : 0;
-
-        const totalQuantity = validItems.reduce((sum, item) => {
-            const qty = parseFloat(item.qty) || 0;
-            return sum + qty;
-        }, 0);
-
         const categories = {};
-        validItems.forEach(item => {
-            const category = item.unit_type || 'Uncategorized';
+        filteredItems.forEach(item => {
+            const category = item.payment_flow || 'Uncategorized';
             categories[category] = (categories[category] || 0) + 1;
         });
 
-        const topCategory = Object.keys(categories).reduce((a, b) =>
-            categories[a] > categories[b] ? a : b, '');
-
-        const topCategoryCount = topCategory ? categories[topCategory] : 0;
-
         return {
-            balance,
-            spends,
-            averagePrice,
-            totalItems: validItems.length,
-            totalQuantity,
-            topCategory,
-            topCategoryCount,
-            topCategoryPercentage: validItems.length > 0
-                ? Math.round((topCategoryCount / validItems.length) * 100)
-                : 0
+            deposit: sumIn,
+            balance: sumIn - sumOut,
+            spends: spends,
         };
     };
 
@@ -461,18 +430,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
     };
 
-    // Delete handler
-    const handleDelete = (itemId, type) => {
-        destroy(route(`${type}.destroy`, itemId), {
-            preserveScroll: true,
-            onSuccess: () => {
-                ShowMessage('success', 'Item deleted successfully');
-            },
-            onError: () => {
-                ShowMessage('error', 'Failed to delete item');
-            }
-        });
-    };
+
 
     // Toggle product selection for challan
     const toggleProductSelection = (id) => {
@@ -511,7 +469,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                 is_price_visible: challanForm.data.is_price_visible,
                 qty: product.qty,
                 total: product.total,
-                is_credited: product.is_credited,
+                payment_flow: product.payment_flow,
                 created_at: product.created_at
             }));
 
@@ -599,6 +557,10 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                                         <h6 className="mb-1 fw-bold">{formatCurrency(analytics.balance)}</h6>
                                         <small className="text-muted">Balance</small>
                                     </div>
+                                    <div className="text-center">
+                                        <h6 className="mb-1 fw-bold">{formatCurrency(analytics.deposit)}</h6>
+                                        <small className="text-muted">Deposits</small>
+                                    </div>
                                 </div>
                             </Card.Body>
                         </Card>
@@ -622,15 +584,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
 
             <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
-                <Tab eventKey="vendor-lists" title={<span className="d-flex align-items-center gap-1"><ShoppingBag size={16} /> Party List</span>}>
-                    <PurchaseListTab
-                        client={client}
-                        handleEditAccount={(purchase_list) => openPurchaseListModal(purchase_list)}
-                        handleDeleteItem={handleDelete}
-                        clientVendors={client_vendors}
-                    />
-                </Tab>
-                <Tab eventKey="purchase-items" title={<span className="d-flex align-items-center gap-1"><Package size={16} /> Ledger</span>}>
+                <Tab eventKey="purchase-items" title={<span className="d-flex align-items-center gap-1"><Package size={16} /> Payments</span>}>
                     <PurchaseItemsTab
                         filteredItems={filteredItems}
                         purchaseItems={purchaseItems}
@@ -662,14 +616,26 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                         isCreating={isCreating}
                         purchase_items={purchase_items}
                         client={client}
+                        client_vendors={client_vendors}
                     />
                 </Tab>
-                <Tab eventKey="project-document-lists" title={<span className="d-flex align-items-center gap-1"><FileText size={16} /> Document</span>}>
+                <Tab eventKey="activities-lists" title={<span className="d-flex align-items-center gap-1">
+                    <ActivityIcon size={16} /> Activities</span>}>
+                    <ActivityTab activities={activities} client={client} />
+                </Tab>
+                <Tab eventKey="vendor-lists" title={<span className="d-flex align-items-center gap-1"><ShoppingBag size={16} /> Party List</span>}>
+                    <PurchaseListTab
+                        client={client}
+                        handleEditAccount={(purchase_list) => openPurchaseListModal(purchase_list)}
+                        clientVendors={client_vendors}
+                    />
+                </Tab>
+                <Tab eventKey="project-document-lists" title={<span className="d-flex align-items-center gap-1">
+                    <FileText size={16} /> Document</span>}>
                     <ProjectDocumentTab client={client} />
                 </Tab>
-                <Tab eventKey="client-vendor-payments" title={<span className="d-flex align-items-center gap-1"><IndianRupee size={16} /> Payments</span>}>
-                    <ClientVendorPayments payments={payments}  />
-                </Tab>
+
+
             </Tabs>
 
             <PurchaseListModal
@@ -768,8 +734,8 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                                             <td>{item.description ?? 'NA'}</td>
                                             <td>{item.unit_type ?? 'NA'}</td>
                                             <td>{item.qty > 1 ? item.qty : 'NA'}</td>
-                                            <td>{formatCurrency(item.price)}</td>
-                                            <td>{item.qty > 0 ? formatCurrency(item.price * item.qty) : item.price}</td>
+                                            <td>{item.price}</td>
+                                            <td>{item.total}</td>
                                         </tr>
                                     ))}
                                 </tbody>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminAccountsController;
+use App\Http\Controllers\Admin\AdminActivityController;
 use App\Http\Controllers\Admin\AdminBankAccountController;
 use App\Http\Controllers\Admin\AdminChallanController;
 use App\Http\Controllers\Admin\AdminClientAccountController;
@@ -112,10 +113,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Client Account
     Route::resource('/client-account', AdminClientAccountController::class);
 
-
     // Route For PurchaseListpayment
     Route::resource('purchase-list-payments', AdminPurchaseListPaymentController::class);
 
+    // Route For Activity
+    Route::resource('activity', AdminActivityController::class);
     
 });
 

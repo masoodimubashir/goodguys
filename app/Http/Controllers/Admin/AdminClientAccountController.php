@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreClientAccountRequest;
+use App\Models\Activiity;
+use App\Models\Activity;
 use App\Models\ClientAccount;
 use App\Models\PurchasedItem;
 use Exception;
@@ -40,27 +42,41 @@ class AdminClientAccountController extends Controller
 
                 $validatedData = $request->validated();
 
+
                 ClientAccount::create([
                     "client_id" => $validatedData["client_id"],
                     "payment_type" => $validatedData["payment_type"],
-                    "payment_flow" => $validatedData['payment_flow'] === 'in' ? true : false,
                     "amount" => $validatedData["amount"],
                     "narration" => $validatedData["narration"],
-                    'created_at' => $validatedData['created_at']
+                    'created_at' => $validatedData['created_at'],
+                    'payment_flow' => true,
                 ]);
-                
+
                 PurchasedItem::create([
                     'client_id' => $validatedData["client_id"],
-                    'unit_type' => $validatedData['payment_flow'],
                     'description' => $validatedData["payment_type"],
                     'qty' => 1,
                     'price' => $validatedData["amount"],
                     'narration' => $validatedData["narration"],
                     'total' => $validatedData["amount"],
                     'created_by' => auth()->id(),
-                    'created_at' => $validatedData['created_at']
+                    'multiplier' => 1,
+                    'created_at' => $validatedData['created_at'],
+                    'payment_flow' => true
                 ]);
 
+                Activity::create([
+                    'client_id' => $validatedData["client_id"],
+                    'description' => $validatedData["payment_type"],
+                    'qty' => 1,
+                    'price' => $validatedData["amount"],
+                    'narration' => $validatedData["narration"],
+                    'total' => $validatedData["amount"],
+                    'created_by' => auth()->id(),
+                    'multiplier' => 1,
+                    'created_at' => $validatedData['created_at'],
+                    'payment_flow' => true
+                ]);
             });
 
             return redirect()->back()->with('message', 'Payment Done');

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
             $table->string('payment_type');
-            $table->boolean('payment_flow')->comment('1 = In, 0 = Out');
+            $table->boolean('payment_flow')->default(true)->comment('1=in,0=out');
             $table->integer('amount');
             $table->string('narration')->nullable();
             $table->timestamps();
