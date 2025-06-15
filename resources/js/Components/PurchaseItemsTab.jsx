@@ -14,7 +14,10 @@ import {
     Text,
     Save,
     Edit,
-    Trash
+    Trash,
+    ArrowBigDown,
+    ArrowUp,
+    Minus
 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import { ShowMessage } from './ShowMessage';
@@ -39,10 +42,7 @@ const PurchaseItemsTab = ({
     openChallanForm,
     resetDateFilter,
     formatCurrency,
-    CustomTooltip,
-    expandedItems,
     client,
-    purchase_items,
     client_vendors
 }) => {
 
@@ -55,7 +55,7 @@ const PurchaseItemsTab = ({
     const [vendorSearchTerm, setVendorSearchTerm] = useState('');
     const [showVendorSuggestions, setShowVendorSuggestions] = useState(false);
     const [selectedVendor, setSelectedVendor] = useState(null);
-      const isVendorSelected = !!selectedVendor;
+    const isVendorSelected = !!selectedVendor;
 
     // Filter vendors based on search term
     const filteredVendors = client_vendors.filter(vendor =>
@@ -93,13 +93,11 @@ const PurchaseItemsTab = ({
                 return;
             }
 
-            // Common data for both endpoints
             const commonData = {
                 client_id: client.id,
-                description: newItem.description,
                 narration: newItem.narration,
                 created_at: newItem.created_at,
-                unit_type: newItem.unit_type, // Added unit_type to both requests
+                unit_type: newItem.unit_type,
                 price: Number(newItem.price),
             };
 
@@ -108,7 +106,8 @@ const PurchaseItemsTab = ({
                 const paymentData = {
                     ...commonData,
                     vendor_id: selectedVendor.id,
-                    amount: Number(newItem.price), // Using price as amount for payment
+                    description: selectedVendor.vendor_name, // Use vendor name as description
+                    amount: Number(newItem.price),
                     transaction_date: newItem.created_at,
                 };
 
@@ -127,6 +126,7 @@ const PurchaseItemsTab = ({
             else {
                 const itemData = {
                     ...commonData,
+                    description: vendorSearchTerm, // Use the typed text as description
                     vendor_name: vendorSearchTerm,
                     qty: Number(newItem.qty),
                     multiplier: Number(newItem.multiplier) || 1,
@@ -315,6 +315,7 @@ const PurchaseItemsTab = ({
                     {newItem.show && (
                         <tr className="table-warning bounce-in" key="new-item">
                             <td></td>
+
                             <td>
                                 <div className="position-relative">
                                     <Form.Control
@@ -340,22 +341,14 @@ const PurchaseItemsTab = ({
                                             ) : (
                                                 <div className="px-3 py-2 text-muted">
                                                     {vendorSearchTerm ?
-                                                        "Press Tab" :
+                                                        "Press Enter to use as description" :
                                                         "Start typing to search vendors"}
                                                 </div>
                                             )}
                                         </div>
                                     )}
                                 </div>
-                                <Form.Control
-                                    size="sm"
-                                    type="text"
-                                    className="mt-2"
-                                    placeholder="Item description"
-                                    value={newItem.description}
-                                    onChange={(e) => handleNewItemChange('description', e.target.value)}
-                                    required
-                                />
+                                {/* Removed the separate description field */}
                                 <Form.Control
                                     size='sm'
                                     type='date'
@@ -365,7 +358,7 @@ const PurchaseItemsTab = ({
                                     required
                                 />
                             </td>
-                          
+
 
                             {/* Unit Type: Always enabled in both cases */}
                             <td>
@@ -388,7 +381,7 @@ const PurchaseItemsTab = ({
                                     placeholder="Quantity"
                                     value={newItem.qty}
                                     onChange={(e) => handleNewItemChange('qty', e.target.value)}
-                                    disabled={!isVendorSelected}
+                                    disabled={isVendorSelected}
                                 />
                             </td>
 
@@ -402,7 +395,6 @@ const PurchaseItemsTab = ({
                                     value={newItem.price}
                                     onChange={(e) => handleNewItemChange('price', e.target.value)}
                                     required
-                                    disabled={!isVendorSelected}
                                 />
                             </td>
 
@@ -414,7 +406,7 @@ const PurchaseItemsTab = ({
                                     placeholder="Multiplier"
                                     value={newItem.multiplier || 1}
                                     onChange={(e) => handleNewItemChange('multiplier', e.target.value)}
-                                    disabled={!isVendorSelected}
+                                    disabled={isVendorSelected}
                                 />
                             </td>
 
@@ -434,7 +426,6 @@ const PurchaseItemsTab = ({
                                     value={newItem.narration}
                                     onChange={(e) => handleNewItemChange('narration', e.target.value)}
                                     required
-                                    disabled={!isVendorSelected}
                                 />
                             </td>
 
@@ -469,8 +460,8 @@ const PurchaseItemsTab = ({
                     )}
                     {paginatedItems.map((item) => {
                         const isEditing = editingItemId === item.id;
-                        const [localVendorSearch, setLocalVendorSearch] = useState(item.vendor_name || '');
-                        const [localShowSuggestions, setLocalShowSuggestions] = useState(false);
+                        // const [localVendorSearch, setLocalVendorSearch] = useState(item.vendor_name || '');
+                        // const [localShowSuggestions, setLocalShowSuggestions] = useState(false);
 
                         return (
                             <tr key={item.id} className="align-middle">
@@ -553,7 +544,7 @@ const PurchaseItemsTab = ({
                                 </td>
                                 <td>
                                     <span className="fw-bold text-primary">
-                                        {formatCurrency(item.price)}
+                                        {formatCurrency(item.price)} {item.payment_flow === 1 ? <Plus size={13}/> : <Minus size={13}/>}
                                     </span>
                                 </td>
                                 <td>
@@ -563,7 +554,7 @@ const PurchaseItemsTab = ({
                                 </td>
                                 <td>
                                     <span className="fw-bold text-success">
-                                        {formatCurrency(item.total)}
+                                        {formatCurrency(item.total)}  {item.payment_flow === 1 ? <Plus size={13}/> : <Minus size={13}/>}
                                     </span>
                                 </td>
                                 <td>

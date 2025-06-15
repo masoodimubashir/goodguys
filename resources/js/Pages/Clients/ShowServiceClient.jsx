@@ -6,16 +6,13 @@ import Modal from 'react-bootstrap/Modal';
 import PurchaseListTab from '@/Components/PurchaseListTab';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import {
-    Card, Table, Button, Badge, ProgressBar, Row, Form, Tabs, Tab, InputGroup,
+    Card, Table, Button, Row, Form, Tabs, Tab, InputGroup,
     Col
 } from 'react-bootstrap';
 import {
-    ShoppingCart, Plus, Edit, Trash2, Save, XCircle, ChevronDown, ChevronRight,
-    FileText, Calendar, IndianRupee, Activity, Package, RotateCcw, Eye, EyeOff,
-    Download, RefreshCw, HandCoins, Undo2, BarChart3, Zap, Building2, User2,
-    Phone, Mail, MapPin, Percent, TrendingUp, Banknote, Wallet, Receipt,
-    Text, Box, Layers, PieChart, ShoppingBag, CreditCard, Database, ArrowRight,
-    Check, Search,
+    FileText, Package, Eye, EyeOff,
+    RefreshCw, BarChart3,
+    ShoppingBag,
     ActivityIcon
 } from 'lucide-react';
 import { ClientInfoCard } from '@/Components/ClientInfoCard';
@@ -31,14 +28,25 @@ import ActivityTab from '@/Components/Activity';
 
 export default function ShowServiceClient({ client, vendors = [], client_vendors = [], purchase_items, activities = [] }) {
     // State management
-    const { delete: destroy } = useForm();
     const flash = usePage().props.flash;
 
     const [activeTab, setActiveTab] = useState('purchase-items');
     const [purchaseItems, setPurchaseItems] = useState(purchase_items || []);
     const [filteredItems, setFilteredItems] = useState(purchase_items || []);
-    const [editingItemId, setEditingItemId] = useState(null);
     const [editedItems, setEditedItems] = useState({});
+    const [showAnalytics, setShowAnalytics] = useState(true);
+    const [animatingCards, setAnimatingCards] = useState(new Set());
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const [dateRange, setDateRange] = useState([null, null]);
+    const [startDate, endDate] = dateRange;
+
+    // Modal states
+    const [showPurchaseListModal, setShowPurchaseListModal] = useState(false);
+    const [showClientAccountModal, setShowClientAccountModal] = useState(false);
+    const [currentPurchaseList, setCurrentPurchaseList] = useState(null);
+    const [currentClientAccount, setCurrentClientAccount] = useState(null);
+
     const [newItem, setNewItem] = useState({
         client_id: '',
         unit_type: '',
@@ -49,19 +57,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         show: false,
         created_at: new Date().toISOString().split('T')[0],
     });
-    const [showAnalytics, setShowAnalytics] = useState(true);
-    const [animatingCards, setAnimatingCards] = useState(new Set());
 
-    const [isCreating, setIsCreating] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [dateRange, setDateRange] = useState([null, null]);
-    const [startDate, endDate] = dateRange;
-
-    // Modal states
-    const [showPurchaseListModal, setShowPurchaseListModal] = useState(false);
-    const [showClientAccountModal, setShowClientAccountModal] = useState(false);
-    const [currentPurchaseList, setCurrentPurchaseList] = useState(null);
-    const [currentClientAccount, setCurrentClientAccount] = useState(null);
 
     // Challan state
     const [challanState, setChallanState] = useState({
@@ -93,6 +89,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         payment_type: '',
         amount: '',
         narration: '',
+        payment_flow: true,
         created_at: new Date().toISOString().split('T')[0],
     });
 
@@ -125,6 +122,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         }
 
         setFilteredItems(results);
+
     }, [searchTerm, dateRange, purchaseItems]);
 
 
@@ -158,6 +156,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
     const analytics = calculateAnalytics();
 
+
     // Handle field changes for editing
     const handleItemChange = (itemId, field, value) => {
         setEditedItems(prev => ({
@@ -177,143 +176,11 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         }));
     };
 
-    // Save edited item
-    const saveItem = (item) => {
-        if (!item?.id) {
-            ShowMessage('Error', 'Cannot save item - missing ID');
-            return;
-        }
 
-        const payload = {
-            _method: 'PUT',
-            client_id: client.id,
-            ...editedItems[item.id],
-            qty: editedItems[item.id]?.qty !== undefined ?
-                Number(editedItems[item.id].qty) : item.qty,
-            price: editedItems[item.id]?.price !== undefined ?
-                Number(editedItems[item.id].price) : item.price
-        };
 
-        const cleanPayload = Object.fromEntries(
-            Object.entries(payload).filter(([_, v]) => v !== undefined && v !== null)
-        );
 
-        router.post(`/purchased-item/${item.id}`, cleanPayload, {
-            onSuccess: (response) => {
-                const updatedItem = response.props?.item || response.item;
 
-                if (updatedItem) {
-                    setPurchaseItems(prev => prev.map(i =>
-                        i.id === item.id ? updatedItem : i
-                    ));
-                } else {
-                    // Fallback: merge the changes
-                    setPurchaseItems(prev => prev.map(i =>
-                        i.id === item.id ? { ...i, ...cleanPayload } : i
-                    ));
-                }
 
-                setEditingItemId(null);
-                setEditedItems(prev => {
-                    const newState = { ...prev };
-                    delete newState[item.id];
-                    return newState;
-                });
-
-                ShowMessage('Success', 'Item updated successfully');
-            },
-            onError: (errors) => {
-                ShowMessage('Error', 'Failed to update item');
-            }
-        });
-    };
-
-    // Delete item
-    const deleteItem = (itemId) => {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: 'You are about to delete this item. This action cannot be undone.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                router.delete(`/purchased-item/${itemId}`, {
-                    onSuccess: () => {
-                        setPurchaseItems(prev => prev.filter(i => i.id !== itemId));
-                        ShowMessage('Success', 'Item deleted successfully');
-                    },
-                    onError: (errors) => {
-                        ShowMessage('Error', 'Failed to delete item');
-                    }
-                });
-            }
-        });
-    };
-
-    // Create new item
-    const createItem = () => {
-        setIsCreating(true);
-        const itemData = {
-            client_id: client.id,
-            unit_type: newItem.unit_type,
-            description: newItem.description,
-            qty: Number(newItem.qty),
-            price: Number(newItem.price),
-            narration: newItem.narration,
-            created_at: newItem.created_at
-        };
-
-        router.post('/purchased-item', itemData, {
-            onSuccess: (response) => {
-                const createdItem = response.props?.item ||
-                    response.props?.purchase_item ||
-                    response.props?.data?.item ||
-                    response.item ||
-                    response.data?.item;
-
-                if (createdItem) {
-                    setPurchaseItems(prev => [...prev, createdItem]);
-                    ShowMessage('Success', 'Item created successfully');
-                } else {
-                    router.reload({
-                        only: ['client'],
-                        onSuccess: (updated) => {
-                            setPurchaseItems(updated.props.client.purchase_items || []);
-                            ShowMessage('Success', 'Item created');
-                        }
-                    });
-                }
-
-                setNewItem({
-                    client_id: client.id,
-                    unit_type: '',
-                    description: '',
-                    qty: '',
-                    price: '',
-                    narration: '',
-                    show: false
-                });
-            },
-            onError: (errors) => {
-                ShowMessage('Error', 'Failed to create item');
-            },
-            onFinish: () => {
-                setIsCreating(false);
-            }
-        });
-    };
-
-    // Custom tooltip component
-    const CustomTooltip = ({ text, children }) => (
-        <div className="position-relative d-inline-block">
-            {children}
-            <div className="tooltip-custom">
-                <span className="tooltiptext">{text}</span>
-            </div>
-        </div>
-    );
 
     // Flash messages
     useEffect(() => {
@@ -341,10 +208,6 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         }
         setShowClientAccountModal(true);
     };
-
-
-
-
 
     // Form submission handlers
     const handlePurchaseListSubmit = async (e) => {
@@ -588,33 +451,22 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                     <PurchaseItemsTab
                         filteredItems={filteredItems}
                         purchaseItems={purchaseItems}
-                        setPurchaseItems={setPurchaseItems}
-                        editingItemId={editingItemId}
-                        setEditingItemId={setEditingItemId}
                         editedItems={editedItems}
-                        setEditedItems={setEditedItems}
                         newItem={newItem}
                         setNewItem={setNewItem}
                         challanState={challanState}
                         setChallanState={setChallanState}
                         searchTerm={searchTerm}
                         setSearchTerm={setSearchTerm}
-                        dateRange={dateRange}
                         setDateRange={setDateRange}
                         startDate={startDate}
                         endDate={endDate}
                         handleItemChange={handleItemChange}
                         handleNewItemChange={handleNewItemChange}
-                        saveItem={saveItem}
-                        deleteItem={deleteItem}
-                        createItem={createItem}
                         toggleProductSelection={toggleProductSelection}
                         openChallanForm={openChallanForm}
                         resetDateFilter={resetDateFilter}
                         formatCurrency={formatCurrency}
-                        CustomTooltip={CustomTooltip}
-                        isCreating={isCreating}
-                        purchase_items={purchase_items}
                         client={client}
                         client_vendors={client_vendors}
                     />
@@ -655,6 +507,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                 errors={clientAccountForm.errors}
                 isEditing={!!currentClientAccount}
                 handleSubmit={handleClientAccountSubmit}
+                balance={analytics.balance}
             />
 
             <Modal

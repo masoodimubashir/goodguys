@@ -23,28 +23,17 @@ import ActivityTab from '@/Components/Activity';
 
 export default function ShowClient({ client, purchase_items, vendors = [], company_profile = null, BankProfile = null, client_vendors = [], activities = [] }) {
 
+    // State management
     const flash = usePage().props.flash;
 
-    // State management for purchase items
-    const [purchaseItems, setPurchaseItems] = useState(purchase_items.data || []);
-    const [filteredItems, setFilteredItems] = useState(purchase_items.data || []);
-    const [editingItemId, setEditingItemId] = useState(null);
+    const [purchaseItems, setPurchaseItems] = useState(purchase_items || []);
+    const [filteredItems, setFilteredItems] = useState(purchase_items || []);
     const [editedItems, setEditedItems] = useState({});
-    const [newItem, setNewItem] = useState({
-        client_id: client.id || '',
-        unit_type: '',
-        description: '',
-        qty: 1,
-        price: '',
-        narration: '',
-        show: false
-    });
+    const [showAnalytics, setShowAnalytics] = useState(true);
+
     const [searchTerm, setSearchTerm] = useState('');
     const [dateRange, setDateRange] = useState([null, null]);
     const [startDate, endDate] = dateRange;
-    const [isCreating, setIsCreating] = useState(false);
-    const [showAnalytics, setShowAnalytics] = useState(true);
-
 
     // Modal states
     const [showPurchaseListModal, setShowPurchaseListModal] = useState(false);
@@ -53,25 +42,32 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
     const [currentClientAccount, setCurrentClientAccount] = useState(null);
     const [animatingCards, setAnimatingCards] = useState(new Set());
 
+
+
+    const [newItem, setNewItem] = useState({
+        client_id: '',
+        unit_type: '',
+        description: '',
+        qty: 1,
+        price: '',
+        narration: '',
+        show: false,
+        created_at: new Date().toISOString().split('T')[0],
+    });
+
     // Challan state
     const [challanState, setChallanState] = useState({
         showChallanForm: false,
         selectedProducts: {}
     });
 
-
-
-    // Refs
-    const tableRef = useRef(null);
-    const costIncurredRef = useRef(null);
-
-    // Form handlers
-    const costIncurredForm = useInertiaForm({
+    const challanForm = useForm({
         client_id: client.id,
-        entry_name: '',
-        count: '',
-        selling_price: '',
-        buying_price: '',
+        service_charge: client.service_charge?.service_charge || 0,
+        challan: [],
+        challan_number: '',
+        challan_date: new Date().toISOString().split('T')[0],
+        is_price_visible: true,
     });
 
     const purchaseListForm = useInertiaForm({
@@ -87,9 +83,10 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
     const clientAccountForm = useInertiaForm({
         client_id: client.id || '',
         payment_type: '',
-        payment_flow: '',
         amount: '',
-        narration: ''
+        narration: '',
+        created_at: new Date().toISOString().split('T')[0],
+        payment_flow: true,
     });
 
     // Format currency
@@ -100,64 +97,40 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
         }).format(amount || 0);
     };
 
-    // Filter items based on search term and date range
-    useEffect(() => {
-        let results = purchaseItems;
+
+    const calculateAnalytics = () => {
 
 
+        const sumIn = filteredItems
+            .filter(item => item.payment_flow === 1)
+            .reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
 
-        if (searchTerm) {
-            const term = searchTerm.toLowerCase();
-            results = results.filter(item =>
-                item.unit_type?.toLowerCase()?.includes(term),
-            );
-        }
+        const sumOut = filteredItems
+            .filter(item => item.payment_flow === 0)
+            .reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
 
-        if (startDate && endDate) {
-            results = results.filter(item => {
-                const itemDate = new Date(item.created_at);
-                return itemDate >= startDate && itemDate <= endDate;
-            });
-        }
+        const spends = filteredItems.filter(item =>
+            item.payment_flow !== 1 || !item.payment_flow || item.payment_flow === 'null'
+        ).reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
 
-        setFilteredItems(results);
-    }, [searchTerm, dateRange, purchaseItems]);
+        const categories = {};
+        filteredItems.forEach(item => {
+            const category = item.payment_flow || 'Uncategorized';
+            categories[category] = (categories[category] || 0) + 1;
+        });
 
-    // Initialize DataTables
-    useEffect(() => {
-        const initializeDataTables = () => {
-            const tables = [
-                tableRef.current?.querySelector('table'),
-                costIncurredRef.current?.querySelector('table')
-            ].filter(Boolean);
-
-            tables.forEach(table => {
-                if ($.fn.DataTable.isDataTable(table)) {
-                    $(table).DataTable().destroy();
-                }
-                $(table).DataTable({
-                    responsive: true,
-                    pageLength: 10,
-                    lengthMenu: [[10, 20, 40, -1], [10, 20, 40, "All"]]
-                });
-            });
+        return {
+            deposit: sumIn,
+            balance: sumIn - sumOut,
+            spends: spends,
         };
+    };
 
-        initializeDataTables();
-
-        return () => {
-            $('.dataTable').DataTable().destroy().clear();
-        };
-    }, [client.invoices, client.proformas, client.accounts, client.cost_incurred, purchaseItems]);
-
-    // Flash messages
-    useEffect(() => {
-        if (flash.message) ShowMessage('success', flash.message);
-        if (flash.error) ShowMessage('error', flash.error);
-    }, [flash]);
+    const analytics = calculateAnalytics();
 
     // Handle field changes for editing
     const handleItemChange = (itemId, field, value) => {
+
         setEditedItems(prev => ({
             ...prev,
             [itemId]: {
@@ -169,110 +142,44 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
 
     // Handle new item field changes
     const handleNewItemChange = (field, value) => {
+
         setNewItem(prev => ({
             ...prev,
             [field]: value
         }));
     };
 
-    // Save edited item
-    const saveItem = (item) => {
-        if (!item?.id) {
-            ShowMessage('Error', 'Cannot save item - missing ID');
-            return;
+    // Filter items based on search term and date range
+    useEffect(() => {
+        let results = purchaseItems;
+
+        // Apply search filter
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            results = results.filter(item =>
+                item.unit_type?.toLowerCase()?.includes(term) ||
+                item.description?.toLowerCase().includes(term),
+            );
         }
 
-        const payload = {
-            _method: 'PUT',
-            client_id: client.id,
-            ...editedItems[item.id],
-            qty: editedItems[item.id]?.qty !== undefined ?
-                Number(editedItems[item.id].qty) : item.qty,
-            price: editedItems[item.id]?.price !== undefined ?
-                Number(editedItems[item.id].price) : item.price
-        };
+        // Apply date range filter if both dates are selected
+        if (startDate && endDate) {
+            results = results.filter(item => {
+                const itemDate = new Date(item.created_at);
+                return itemDate >= startDate && itemDate <= endDate;
+            });
+        }
 
-        const cleanPayload = Object.fromEntries(
-            Object.entries(payload).filter(([_, v]) => v !== undefined && v !== null)
-        );
+        setFilteredItems(results);
+    }, [searchTerm, dateRange, purchaseItems]);
 
-        router.post(`/purchased-item/${item.id}`, cleanPayload, {
-            onSuccess: () => {
-                setPurchaseItems(prev => prev.map(i =>
-                    i.id === item.id ? { ...i, ...cleanPayload } : i
-                ));
-                setEditingItemId(null);
-                setEditedItems(prev => {
-                    const newState = { ...prev };
-                    delete newState[item.id];
-                    return newState;
-                });
-                ShowMessage('Success', 'Item updated successfully');
-            },
-            onError: () => {
-                ShowMessage('Error', 'Failed to update item');
-            }
-        });
-    };
 
-    // Delete item
-    const deleteItem = (itemId) => {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: 'You are about to delete this item. This action cannot be undone.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                router.delete(`/purchased-item/${itemId}`, {
-                    onSuccess: () => {
-                        setPurchaseItems(prev => prev.filter(i => i.id !== itemId));
-                        ShowMessage('success', 'Item deleted successfully');
-                    },
-                    onError: () => {
-                        ShowMessage('error', 'Failed to delete item');
-                    }
-                });
-            }
-        });
-    };
 
-    // Create new item
-    const createItem = () => {
-        setIsCreating(true);
-        const itemData = {
-            client_id: client.id,
-            unit_type: newItem.unit_type,
-            description: newItem.description,
-            qty: Number(newItem.qty),
-            price: Number(newItem.price),
-            narration: newItem.narration
-        };
-
-        router.post('/purchased-item', itemData, {
-            onSuccess: () => {
-                setPurchaseItems(prev => [...prev, itemData]);
-                ShowMessage('Success', 'Item created successfully');
-                setNewItem({
-                    client_id: client.id,
-                    unit_type: '',
-                    description: '',
-                    qty: '',
-                    price: '',
-                    narration: '',
-                    show: false
-                });
-            },
-            onError: () => {
-                ShowMessage('Error', 'Failed to create item');
-            },
-            onFinish: () => {
-                setIsCreating(false);
-            }
-        });
-    };
+    // Flash messages
+    useEffect(() => {
+        if (flash.message) ShowMessage('success', flash.message);
+        if (flash.error) ShowMessage('error', flash.error);
+    }, [flash]);
 
     // Modal handlers
     const openPurchaseListModal = (item = null) => {
@@ -295,10 +202,20 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
         setShowClientAccountModal(true);
     };
 
+
     // Form submission handlers
     const handlePurchaseListSubmit = async (e) => {
         e.preventDefault();
+
+        const formData = new FormData();
+        for (const key in purchaseListForm.data) {
+            if (purchaseListForm.data[key] !== null) {
+                formData.append(key, purchaseListForm.data[key]);
+            }
+        }
+
         const isEditing = !!currentPurchaseList;
+        const currentId = currentPurchaseList?.id;
 
         const options = {
             preserveScroll: true,
@@ -306,22 +223,22 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                 purchaseListForm.reset();
                 setShowPurchaseListModal(false);
                 setCurrentPurchaseList(null);
-
+                ShowMessage('success', `Purchase list ${isEditing ? 'updated' : 'created'} successfully`);
                 setTimeout(() => {
                     window.location.reload();
                 }, 1000);
-                ShowMessage('success', `Purchase list ${isEditing ? 'updated' : 'created'} successfully`);
 
             },
-            onError: () => {
+            onError: (errors) => {
                 ShowMessage('error', 'Failed to save purchase list');
             }
         };
 
-        if (isEditing) {
-            router.put(route('purchase-list.update', currentPurchaseList.id), options);
+        if (isEditing && currentId) {
+            formData.append('_method', 'PUT');
+            router.post(route('purchase-list.update', currentId), formData, options);
         } else {
-            router.post(route('purchase-list.store'), options);
+            router.post(route('purchase-list.store'), formData, options);
         }
 
 
@@ -330,32 +247,47 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
 
     const handleClientAccountSubmit = async (e) => {
         e.preventDefault();
+
+        const formData = new FormData();
+        for (const key in clientAccountForm.data) {
+            if (clientAccountForm.data[key] !== null) {
+                formData.append(key, clientAccountForm.data[key]);
+            }
+        }
+
         const isEditing = !!currentClientAccount;
+        const currentId = currentClientAccount?.id;
 
         const options = {
             preserveScroll: true,
             onSuccess: () => {
+
                 clientAccountForm.reset();
                 setShowClientAccountModal(false);
                 setCurrentClientAccount(null);
+                router.reload();
+                ShowMessage('success', `Client account ${isEditing ? 'updated' : 'created'} successfully`);
                 setTimeout(() => {
                     window.location.reload();
                 }, 1000);
-                ShowMessage('success', `Client account ${isEditing ? 'updated' : 'created'} successfully`);
 
             },
-            onError: () => {
+            onError: (errors) => {
                 ShowMessage('error', 'Failed to save client account');
             }
+
         };
 
-        if (isEditing) {
-            router.put(route('client-account.update', currentClientAccount.id), options);
+        if (isEditing && currentId) {
+            formData.append('_method', 'PUT');
+            router.post(route('client-account.update', currentId), formData, options);
         } else {
-            router.post(route('client-account.store'), options);
+            router.post(route('client-account.store'), formData, options);
         }
 
     };
+
+
 
     // Toggle product selection for challan
     const toggleProductSelection = (id) => {
@@ -368,12 +300,6 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
         }));
     };
 
-    // Reset date filter
-    const resetDateFilter = () => {
-        setDateRange([null, null]);
-    };
-
-
     // Open challan creation form
     const openChallanForm = () => {
         const hasSelectedItems = Object.values(challanState.selectedProducts).some(selected => selected);
@@ -384,18 +310,9 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
         setChallanState(prev => ({ ...prev, showChallanForm: true }));
     };
 
-    // Custom tooltip component
-    const CustomTooltip = ({ text, children }) => (
-        <div className="position-relative d-inline-block">
-            {children}
-            <div className="tooltip-custom">
-                <span className="tooltiptext">{text}</span>
-            </div>
-        </div>
-    );
-
     // Handle challan creation
     const handleCreateChallan = (e) => {
+
         e.preventDefault();
 
         const selectedItems = purchaseItems
@@ -403,16 +320,14 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
             .map(product => ({
                 item_id: product.id,
                 description: product.description,
-                unit_type: product.unit_type,
+                unit_type: product.unit_type ?? 'NA',
                 price: product.price,
-                narration: product.narration || '',
+                narration: product.narration ?? 'NA',
                 is_price_visible: challanForm.data.is_price_visible,
                 qty: product.qty,
                 total: product.total,
-                is_credited: product.is_credited,
-                unit_type: product.unit_type ?? 'NA',
-                narration: product.narration || '',
-
+                payment_flow: product.payment_flow,
+                created_at: product.created_at
             }));
 
         const payload = {
@@ -429,6 +344,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                     showChallanForm: false
                 }));
                 ShowMessage('success', 'Challan created successfully');
+                router.reload();
             },
             onError: (errors) => {
                 ShowMessage('error', 'Failed to create challan');
@@ -436,16 +352,10 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
         });
     };
 
-
-    // Challan Form
-    const challanForm = useForm({
-        client_id: client.id,
-        service_charge: client.service_charge?.service_charge || 0,
-        challan: [],
-        challan_number: '',
-        challan_date: new Date().toISOString().split('T')[0],
-        is_price_visible: true,
-    });
+    // Reset date filter
+    const resetDateFilter = () => {
+        setDateRange([null, null]);
+    };
 
     // Handle analytics refresh
     const handleAnalytics = () => {
@@ -460,38 +370,6 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
         // Toggle analytics visibility
         setShowAnalytics(!showAnalytics);
     };
-
-    const calculateAnalytics = () => {
-        // Calculate separate sums for in, out, and total values (excluding is_created === 1)
-        const validItems = filteredItems.filter(item => item.is_credited !== 1);
-
-        const sumIn = validItems
-            .filter(item => item.unit_type === 'in')
-            .reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
-
-        const sumOut = validItems
-            .filter(item => item.unit_type === 'out')
-            .reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
-
-        const spends = validItems.filter(item =>
-            item.unit_type !== 'in' || !item.unit_type || item.unit_type === 'null'
-        ).reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
-
-        const categories = {};
-        validItems.forEach(item => {
-            const category = item.unit_type || 'Uncategorized';
-            categories[category] = (categories[category] || 0) + 1;
-        });
-
-        return {
-            deposit: sumIn,
-            balance: sumIn - sumOut,
-            spends: spends,
-        };
-    };
-
-
-    const analytics = calculateAnalytics();
 
     return (
         <AuthenticatedLayout>
@@ -619,40 +497,29 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                         <PurchaseItemsTab
                             filteredItems={filteredItems}
                             purchaseItems={purchaseItems}
-                            setPurchaseItems={setPurchaseItems}
-                            editingItemId={editingItemId}
-                            setEditingItemId={setEditingItemId}
                             editedItems={editedItems}
-                            setEditedItems={setEditedItems}
                             newItem={newItem}
                             setNewItem={setNewItem}
                             challanState={challanState}
                             setChallanState={setChallanState}
                             searchTerm={searchTerm}
                             setSearchTerm={setSearchTerm}
-                            dateRange={dateRange}
                             setDateRange={setDateRange}
                             startDate={startDate}
                             endDate={endDate}
                             handleItemChange={handleItemChange}
                             handleNewItemChange={handleNewItemChange}
-                            saveItem={saveItem}
-                            deleteItem={deleteItem}
-                            createItem={createItem}
                             toggleProductSelection={toggleProductSelection}
                             openChallanForm={openChallanForm}
                             resetDateFilter={resetDateFilter}
                             formatCurrency={formatCurrency}
-                            CustomTooltip={CustomTooltip}
-                            isCreating={isCreating}
-                            purchase_items={purchase_items}
                             client={client}
                             client_vendors={client_vendors}
                         />
                     </div>
 
                     <div className="tab-pane fade" id="client-vendor-payment-tab" role="tabpanel">
-                        <ActivityTab activities={activities} />
+                        <ActivityTab activities={activities} client={client} />
 
                     </div>
 
@@ -695,6 +562,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                 errors={clientAccountForm.errors}
                 isEditing={!!currentClientAccount}
                 handleSubmit={handleClientAccountSubmit}
+                balance={analytics.balance}
             />
 
             {/* Challan Creation Modal */}

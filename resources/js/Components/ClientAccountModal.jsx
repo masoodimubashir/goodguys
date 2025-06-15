@@ -1,14 +1,43 @@
-import React from 'react';
-import { Modal, Button, Form } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Modal, Button, Form, InputGroup } from 'react-bootstrap';
 
-const ClientAccountModal = ({ show, onHide, form, errors, isEditing, handleSubmit }) => {
+const ClientAccountModal = ({ show, onHide, form, errors, isEditing, handleSubmit, balance }) => {
+    const [isReturnPayment, setIsReturnPayment] = useState(false);
+    const [returnAmount, setReturnAmount] = useState(0);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         form.setData(name, value);
-
     };
 
+    const handleCheckboxChange = (e) => {
+        const checked = e.target.checked;
+        setIsReturnPayment(checked);
+        form.setData('payment_flow', !checked); // false when checked (return payment)
+
+        // If it's a return payment, set the amount to the balance value
+        if (checked) {
+            setReturnAmount(balance || 0);
+            form.setData('amount', balance || 0);
+        } else {
+            setReturnAmount(0);
+            form.setData('amount', '');
+        }
+    };
+
+    const handleAmountChange = (e) => {
+        const value = e.target.value;
+        setReturnAmount(value);
+        form.setData('amount', value);
+    };
+
+    useEffect(() => {
+        // Reset the form when modal is opened/closed
+        if (!show) {
+            setIsReturnPayment(false);
+            setReturnAmount(0);
+        }
+    }, [show]);
 
     return (
         <Modal show={show} onHide={onHide} centered>
@@ -16,12 +45,14 @@ const ClientAccountModal = ({ show, onHide, form, errors, isEditing, handleSubmi
                 <Modal.Header closeButton>
                     <Modal.Title>
                         <h5 className="text-primary">
-                            {isEditing ? 'Edit' : 'Create'}  Payment
+                            {isEditing ? 'Edit' : 'Create'} Payment
                         </h5>
                     </Modal.Title>
                 </Modal.Header>
 
                 <Modal.Body>
+
+
                     <Form.Group className="mb-3">
                         <Form.Label>Payment Description</Form.Label>
                         <Form.Control
@@ -30,8 +61,7 @@ const ClientAccountModal = ({ show, onHide, form, errors, isEditing, handleSubmi
                             value={form.data.payment_type}
                             onChange={handleChange}
                             isInvalid={!!errors.payment_type}
-                        >
-                        </Form.Control>
+                        />
                         <Form.Control.Feedback type="invalid">
                             {errors.payment_type}
                         </Form.Control.Feedback>
@@ -49,19 +79,50 @@ const ClientAccountModal = ({ show, onHide, form, errors, isEditing, handleSubmi
                         <Form.Control.Feedback type="invalid">{errors.created_at}</Form.Control.Feedback>
                     </Form.Group>
 
+                    <Form.Group>
+                        <Form.Check
+                            type="checkbox"
+                            label="Return Amount"
+                            checked={isReturnPayment}
+                            onChange={handleCheckboxChange}
+                        />
+                    </Form.Group>
+
+                    {isReturnPayment && (
+                        <Form.Group className="mb-3">
+                            <Form.Label>Available balance</Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={balance || 0}
+                                readOnly
+                                plaintext
+                            />
+                        </Form.Group>
+                    )}
 
                     <Form.Group className="mb-3">
                         <Form.Label>Amount</Form.Label>
-                        <Form.Control
-                            type="number"
-                            name="amount"
-                            value={form.data.amount}
-                            onChange={handleChange}
-                            isInvalid={!!errors.amount}
-                        />
+                        <InputGroup>
+                            <InputGroup.Text>₹</InputGroup.Text>
+                            <Form.Control
+                                type="number"
+                                name="amount"
+                                value={returnAmount}
+                                onChange={handleAmountChange}
+                                isInvalid={!!errors.amount}
+                                min="0"
+                                max={isReturnPayment ? balance : undefined}
+                                step="0.01"
+                            />
+                        </InputGroup>
                         <Form.Control.Feedback type="invalid">
                             {errors.amount}
                         </Form.Control.Feedback>
+                        {isReturnPayment && balance && (
+                            <Form.Text className="text-muted">
+                                Maximum return amount: ₹{balance}
+                            </Form.Text>
+                        )}
                     </Form.Group>
 
                     <Form.Group className="mb-3">

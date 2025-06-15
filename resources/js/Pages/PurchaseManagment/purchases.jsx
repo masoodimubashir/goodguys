@@ -434,7 +434,8 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                         <thead className="table-light">
                             <tr>
                                 <th style={{ width: '40px' }}></th>
-                                <th>Bill Proof</th>
+                                    <th>Bill Proof</th>
+
                                 <th>
                                     <div className="d-flex align-items-center gap-2">
                                         <FileText size={14} />
@@ -486,12 +487,16 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                             </td>
                                             <td>
                                                 <div className="position-relative">
-                                                    <img
-                                                        src={`/storage/${purchase.bill}`}
-                                                        alt="Bill Proof"
-                                                        className="rounded"
-                                                        style={{ width: '50px', height: '50px', objectFit: 'cover' }}
-                                                    />
+                                                    {
+                                                        purchase.bill ? <img
+                                                            src={`/storage/${purchase.bill}`}
+                                                            alt="Bill Proof"
+                                                            className="rounded"
+                                                            style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                                                        />
+                                                        : 'NA'
+                                                    }
+
                                                     <div
                                                         className="position-absolute top-0 start-0 d-flex align-items-center justify-content-center rounded"
                                                         style={{

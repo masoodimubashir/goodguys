@@ -42,6 +42,7 @@ class AdminClientAccountController extends Controller
 
                 $validatedData = $request->validated();
 
+                $payment_flow = $validatedData['payment_flow'] === 'true' ? 1 : 0;
 
                 ClientAccount::create([
                     "client_id" => $validatedData["client_id"],
@@ -49,7 +50,7 @@ class AdminClientAccountController extends Controller
                     "amount" => $validatedData["amount"],
                     "narration" => $validatedData["narration"],
                     'created_at' => $validatedData['created_at'],
-                    'payment_flow' => true,
+                    'payment_flow' => $payment_flow,
                 ]);
 
                 PurchasedItem::create([
@@ -62,7 +63,7 @@ class AdminClientAccountController extends Controller
                     'created_by' => auth()->id(),
                     'multiplier' => 1,
                     'created_at' => $validatedData['created_at'],
-                    'payment_flow' => true
+                    'payment_flow' => $payment_flow
                 ]);
 
                 Activity::create([
@@ -75,7 +76,7 @@ class AdminClientAccountController extends Controller
                     'created_by' => auth()->id(),
                     'multiplier' => 1,
                     'created_at' => $validatedData['created_at'],
-                    'payment_flow' => true
+                    'payment_flow' => $payment_flow
                 ]);
             });
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import { Badge, Button, InputGroup, Form, Table } from 'react-bootstrap';
-import { Search, FileText, Package, Activity, IndianRupee, Text, XCircle, ChevronLeft, ChevronRight, Plus, Save } from 'lucide-react';
+import { Search, FileText, Package, Activity, IndianRupee, Text, XCircle, ChevronLeft, ChevronRight, Plus, Save, Minus } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import { ShowMessage } from './ShowMessage';
 
@@ -47,9 +47,7 @@ const ActivityTab = ({ activities, client, }) => {
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
             results = results.filter(activity =>
-                (activity.description?.toLowerCase().includes(term)) ||
-                (activity.narration?.toLowerCase().includes(term)) ||
-                (activity.unit_type?.toLowerCase().includes(term))
+                (activity.description?.toLowerCase().includes(term)) 
             );
         }
 
@@ -173,7 +171,7 @@ const ActivityTab = ({ activities, client, }) => {
                         </InputGroup.Text>
                         <Form.Control
                             type="text"
-                            placeholder="Search activities..."
+                            placeholder="Search by description..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -352,8 +350,6 @@ const ActivityTab = ({ activities, client, }) => {
                                             !newActivity.multiplier ||
                                             !newActivity.unit_type ||
                                             !newActivity.narration ||
-                                            !newActivity.qty ||
-                                            !newActivity.total ||
                                             !newActivity.created_at
 
                                         }
@@ -406,7 +402,7 @@ const ActivityTab = ({ activities, client, }) => {
                             </td>
                             <td>
                                 <span className="fw-bold text-primary">
-                                    {(activity.price)}
+                                    {(activity.price)} {activity.payment_flow === 1 ? <Plus size={13}/> : <Minus size={13}/>}
                                 </span>
                             </td>
                             <td>
@@ -416,7 +412,7 @@ const ActivityTab = ({ activities, client, }) => {
                             </td>
                             <td>
                                 <span className="fw-bold text-success">
-                                    {activity.total || totalValue}
+                                    {activity.total || totalValue} {activity.payment_flow === 1 ? <Plus size={13}/> : <Minus size={13}/>}
                                 </span>
                             </td>
                             <td>
