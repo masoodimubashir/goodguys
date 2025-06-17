@@ -27,7 +27,7 @@ class UpdateInventoryRequest extends FormRequest
             'buying_price'      => ['bail', 'required', 'numeric', 'min:1'],
             'item_type'         => ['bail', 'required', 'string', 'min:3', 'max:100'],
             'item_sub_type'     => ['nullable', 'string', 'max:100'],
-            'description'       => ['required', 'string', 'max:1000'],
+            'description'       => ['nullable', 'string', 'max:1000'],
             'count'             => ['bail', 'required', 'integer', 'min:1'],
             'item_dimensions'                 => ['bail', 'required', 'array', 'min:1', 'max:3'],
             'item_dimensions.*.type'          => ['required', 'string', 'min:1', 'max:50'],

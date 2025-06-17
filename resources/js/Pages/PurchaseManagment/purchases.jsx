@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import {
-    Edit, Trash2, Plus, ChevronDown, ChevronRight,
+ Plus, ChevronDown, ChevronRight,
     ShoppingCart, Package, RotateCcw, IndianRupee, Calendar,
     FileText, Activity, BarChart3, XCircle, Eye, EyeOff,
-    Download, Percent, Receipt, Zap, Banknote, TrendingUp,
+    Download, Receipt, Banknote, TrendingUp,
     Wallet,
-    Undo2,
     Save
 } from 'lucide-react';
 import { Card, Table, Form, Button, Badge, ProgressBar, Row, Col, Tooltip, OverlayTrigger } from 'react-bootstrap';
@@ -13,7 +12,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
 import { Link, router } from '@inertiajs/react';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
-import Swal from 'sweetalert2';
 
 const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
 
@@ -35,7 +33,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
     // Calculate payment totals
     const totalPayments = purchaseListPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
     const payableAmount = totalPurchases - totalReturns;
-    const remainingBalance = payableAmount - totalPayments;
+    const remainingBalance = payableAmount  - totalPayments;
 
     const paymentProgress = payableAmount > 0 ?
         (totalPayments / payableAmount) * 100 :
@@ -302,24 +300,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                 Analytics
                             </Button>
                         </CustomTooltip>
-                        <Button
-                            variant="success"
-                            size="sm"
-                            className="d-flex align-items-center gap-2"
-                            onClick={() => {
-                                setNewPayment({
-                                    client_id: client.id,
-                                    vendor_id: vendor.id,
-                                    amount: '',
-                                    transaction_date: new Date().toISOString().split('T')[0],
-                                    narration: '',
-                                    // Add other default fields as needed
-                                });
-                            }}
-                        >
-                            <Plus size={14} />
-                            Add Payment
-                        </Button>
+                        
                     </div>
 
                 </div>

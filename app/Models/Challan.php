@@ -25,6 +25,10 @@ class Challan extends Model
         'is_credited',
         'created_at',
     ];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+    ];
               
     public function challanRefrence(): BelongsTo
     {

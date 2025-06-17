@@ -74,7 +74,7 @@ export default function PdfTable({ client, CompanyProfile, BankProfile }) {
     const handleConvertToInvoice = (id) => {
         Swal.fire({
             title: 'Convert to Quotation?',
-            text: 'This will create a new invoice from the proforma',
+            text: 'This will create a new Quotation',
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -152,7 +152,7 @@ export default function PdfTable({ client, CompanyProfile, BankProfile }) {
 
                                     <td className="text-start">
                                         <span className={`badge ${entry.type === 'Invoice' ? 'bg-primary' : 'bg-info'} text-white d-flex align-items-center gap-1`}>
-                                            {entry.type}
+                                            {entry.type === 'Invoice' ? 'Quotation' : 'Estimate'}
                                         </span>
                                     </td>
 

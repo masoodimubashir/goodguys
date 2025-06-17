@@ -27,7 +27,7 @@ class StoreBankAccountRequest extends FormRequest
             'ifsc_code' => 'required|string|max:32',
             'holder_name' => 'required|string|max:100',
             'account_number' => 'required|string|max:32',
-            'upi_number' => 'nullable|sometimes|string|max:32',
+            'upi_number' => 'required|sometimes|string|max:32',
             'upi_address' => 'required|string|max:250',
             'signature_image' =>  'required|file|mimes:jpeg|max:2048',
             'company_stamp_image' => 'required|file|mimes:jpeg|max:2048',

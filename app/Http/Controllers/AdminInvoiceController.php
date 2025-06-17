@@ -308,11 +308,11 @@ class AdminInvoiceController extends Controller
             }
 
             DB::commit();
-            return redirect()->back()->with('message', 'Invoice created successfully');
+            return redirect()->back()->with('message', 'Quotation created successfully');
         } catch (Exception $e) {
             Log::error('Error creating invoice: ' . $e->getMessage());
             DB::rollBack();
-            return redirect()->back()->with('error', 'Failed to create invoice');
+            return redirect()->back()->with('error', 'Failed to create Quotation');
         }
     }
 }

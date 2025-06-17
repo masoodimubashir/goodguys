@@ -1,4 +1,4 @@
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import React, { useEffect, useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -22,9 +22,17 @@ export default function Field({ fields: initialPaginatedData }) {
         'Actions'
     ];
 
-    useEffect(() => {
-        if (flash.message) ShowMessage('success', flash.message);
-        if (flash.error) ShowMessage('error', flash.error);
+     useEffect(() => {
+        if (flash.message) {
+            ShowMessage('success', flash.message);
+            // Clear the flash message
+            router.reload({ only: [], preserveScroll: true, preserveState: true });
+        }
+        if (flash.error) {
+            ShowMessage('error', flash.error);
+            // Clear the flash message
+            router.reload({ only: [], preserveScroll: true, preserveState: true });
+        }
     }, [flash]);
 
     // Frontend search function

@@ -470,7 +470,7 @@ export const InvoicePdf = ({ client, CompanyProfile, BankProfile, data }) => {
                 <Text style={styles.col4}>Quantity</Text>
                 <Text style={styles.col5}>Price</Text>
                 <Text style={styles.col6}>Total</Text>
-                <Text style={styles.col3}>Dimensions</Text>
+                <Text style={styles.col3}>Description/Dimensions</Text>
 
               </View>
 

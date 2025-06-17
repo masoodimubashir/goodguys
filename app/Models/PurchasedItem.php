@@ -26,4 +26,10 @@ class PurchasedItem extends Model
         'multiplier',
         'payment_flow'
     ];
+
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 }

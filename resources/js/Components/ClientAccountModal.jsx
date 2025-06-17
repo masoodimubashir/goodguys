@@ -1,43 +1,83 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useForm } from '@inertiajs/react';
 import { Modal, Button, Form, InputGroup } from 'react-bootstrap';
 
-const ClientAccountModal = ({ show, onHide, form, errors, isEditing, handleSubmit, balance }) => {
+const ClientAccountModal = ({
+    show,
+    onHide,
+    isEditing,
+    balance,
+    client,
+    setPurchaseItems,
+    setFilteredItems
+}) => {
+    // Initialize form with default values
+    const { data, setData, post, put, processing, errors, reset } = useForm({
+        client_id: client?.id,
+        payment_type: '',
+        amount: '',
+        narration: '',
+        payment_flow: true,
+        created_at: new Date().toISOString().split('T')[0],
+    });
+
     const [isReturnPayment, setIsReturnPayment] = useState(false);
     const [returnAmount, setReturnAmount] = useState(0);
 
+    // Initialize form with initialData when provided (for editing)
+    useEffect(() => {
+        reset();
+        setIsReturnPayment(false);
+        setReturnAmount();
+    }, [show]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        form.setData(name, value);
+        setData(name, value);
     };
 
     const handleCheckboxChange = (e) => {
         const checked = e.target.checked;
         setIsReturnPayment(checked);
-        form.setData('payment_flow', !checked); // false when checked (return payment)
+        setData('payment_flow', !checked);
 
-        // If it's a return payment, set the amount to the balance value
         if (checked) {
-            setReturnAmount(balance || 0);
-            form.setData('amount', balance || 0);
+            setReturnAmount(balance);
+            setData('amount', balance);
         } else {
-            setReturnAmount(0);
-            form.setData('amount', '');
+            setReturnAmount();
+            setData('amount', '');
         }
     };
 
     const handleAmountChange = (e) => {
         const value = e.target.value;
         setReturnAmount(value);
-        form.setData('amount', value);
+        setData('amount', value);
     };
 
-    useEffect(() => {
-        // Reset the form when modal is opened/closed
-        if (!show) {
-            setIsReturnPayment(false);
-            setReturnAmount(0);
-        }
-    }, [show]);
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        const url = isEditing && initialData?.id
+            ? `/client-account/${initialData.id}`
+            : '/client-account';
+
+        const method = isEditing ? put : post;
+
+        method(url, {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                onHide();
+                reset();
+                if (page.props.purchase_items) {
+                    setPurchaseItems(page.props.purchase_items);
+                    setFilteredItems(page.props.purchase_items);
+                }
+            },
+
+        });
+    };
 
     return (
         <Modal show={show} onHide={onHide} centered>
@@ -51,14 +91,12 @@ const ClientAccountModal = ({ show, onHide, form, errors, isEditing, handleSubmi
                 </Modal.Header>
 
                 <Modal.Body>
-
-
                     <Form.Group className="mb-3">
                         <Form.Label>Payment Description</Form.Label>
                         <Form.Control
                             type="text"
                             name="payment_type"
-                            value={form.data.payment_type}
+                            value={data.payment_type}
                             onChange={handleChange}
                             isInvalid={!!errors.payment_type}
                         />
@@ -71,12 +109,14 @@ const ClientAccountModal = ({ show, onHide, form, errors, isEditing, handleSubmi
                         <Form.Label>Date</Form.Label>
                         <Form.Control
                             type="date"
-                            name='created_at'
-                            value={form.data.created_at}
+                            name="created_at"
+                            value={data.created_at}
                             onChange={handleChange}
                             isInvalid={!!errors.created_at}
                         />
-                        <Form.Control.Feedback type="invalid">{errors.created_at}</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">
+                            {errors.created_at}
+                        </Form.Control.Feedback>
                     </Form.Group>
 
                     <Form.Group>
@@ -112,7 +152,6 @@ const ClientAccountModal = ({ show, onHide, form, errors, isEditing, handleSubmi
                                 isInvalid={!!errors.amount}
                                 min="0"
                                 max={isReturnPayment ? balance : undefined}
-                                step="0.01"
                             />
                         </InputGroup>
                         <Form.Control.Feedback type="invalid">
@@ -131,7 +170,7 @@ const ClientAccountModal = ({ show, onHide, form, errors, isEditing, handleSubmi
                             as="textarea"
                             rows={2}
                             name="narration"
-                            value={form.data.narration}
+                            value={data.narration}
                             onChange={handleChange}
                             isInvalid={!!errors.narration}
                         />
@@ -142,11 +181,21 @@ const ClientAccountModal = ({ show, onHide, form, errors, isEditing, handleSubmi
                 </Modal.Body>
 
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={onHide}>
+                    <Button variant="secondary" onClick={onHide} disabled={processing}>
                         Cancel
                     </Button>
-                    <Button variant="primary" type="submit">
-                        {isEditing ? 'Update' : 'Create'}
+                    <Button
+                        variant="primary"
+                        type="submit"
+                        disabled={processing}
+                    >
+                        {processing ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            </>
+                        ) : (
+                            isEditing ? 'Update' : 'Create'
+                        )}
                     </Button>
                 </Modal.Footer>
             </Form>

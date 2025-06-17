@@ -24,7 +24,7 @@ class UpdateVendorRequest extends FormRequest
     {
         return [
             'vendor_name' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:20',
+            'contact_number' => 'required|integer|digits:10',
              'email' => [
                 'required',
                 'email',

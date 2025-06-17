@@ -55,9 +55,6 @@ export default function PurchasedProduct({ vendor, clientAccounts, purchaseLists
         return filtered.slice(startIdx, startIdx + clientsPerPage);
     }, [clientSummaries, searchTerm, currentPage]);
 
-    console.log(filteredClients);
-    
-
     const totalPages = Math.ceil(clientSummaries.length / clientsPerPage);
 
     const toggleClientExpand = (clientId) => {
@@ -65,7 +62,7 @@ export default function PurchasedProduct({ vendor, clientAccounts, purchaseLists
     };
 
     const breadcrumbs = [
-        { href: '/client-vendor', label: 'Vendor', active: false },
+        { href: '/client-vendor', label: 'Parties', active: false },
         { href: `/client-vendor/${vendor.id}`, label: vendor.vendor_name, active: true }
     ];
 

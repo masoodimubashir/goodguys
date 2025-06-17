@@ -10,6 +10,7 @@ class Activity extends Model
     public $timestamps = false;
 
 
+
     protected $fillable = [
         'client_id',
         'unit_type',
@@ -24,7 +25,14 @@ class Activity extends Model
         'created_at',
         'updated_at',
         'multiplier',
-        'payment_flow'
+        'payment_flow',
+        'created_at'
 
+    ];
+
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 }

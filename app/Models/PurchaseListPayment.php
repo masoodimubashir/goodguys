@@ -24,6 +24,10 @@ class PurchaseListPayment extends Model
     ];
 
 
+    protected $casts = [
+        'transaction_date' => 'datetime',
+        'created_at' => 'datetime',
+    ];
     
     /**
      * Get the vendor that owns the PurchaseManagment

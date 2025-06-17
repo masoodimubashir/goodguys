@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
 import { Table } from 'react-bootstrap';
@@ -8,6 +8,8 @@ import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function User({ users: initialPaginatedData }) {
+
+
     const [paginatedData, setPaginatedData] = useState(initialPaginatedData);
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredData, setFilteredData] = useState(initialPaginatedData.data);
@@ -17,19 +19,27 @@ export default function User({ users: initialPaginatedData }) {
     const tableHead = ['Name', 'Email', 'Actions'];
 
     useEffect(() => {
-        if (flash.message) ShowMessage('success', flash.message);
-        if (flash.error) ShowMessage('error', flash.error);
+        if (flash.message) {
+            ShowMessage('success', flash.message);
+            // Clear the flash message
+            router.reload({ only: [], preserveScroll: true, preserveState: true });
+        }
+        if (flash.error) {
+            ShowMessage('error', flash.error);
+            // Clear the flash message
+            router.reload({ only: [], preserveScroll: true, preserveState: true });
+        }
     }, [flash]);
 
     // Frontend search function
     const handleSearch = (e) => {
         const term = e.target.value.toLowerCase();
         setSearchTerm(term);
-        
+
         if (term === '') {
             setFilteredData(paginatedData.data);
         } else {
-            const filtered = paginatedData.data.filter(user => 
+            const filtered = paginatedData.data.filter(user =>
                 user.name.toLowerCase().includes(term) ||
                 user.email.toLowerCase().includes(term)
             );
@@ -69,7 +79,6 @@ export default function User({ users: initialPaginatedData }) {
                             onSuccess: (data) => {
                                 setPaginatedData(data.props.users);
                                 setFilteredData(data.props.users.data);
-                                ShowMessage('success', flash.message || 'User deleted successfully');
                             }
                         });
                     },
@@ -82,8 +91,8 @@ export default function User({ users: initialPaginatedData }) {
     return (
         <AuthenticatedLayout>
             <Head title="Users" />
-            
-            <div className="row g-4 mt-4">
+
+            <div className="row g-4">
                 <div className="d-flex justify-content-between align-items-center">
                     <BreadCrumbHeader breadcrumbs={[
                         { href: route('users.index'), label: 'Users', active: true }
@@ -132,9 +141,9 @@ export default function User({ users: initialPaginatedData }) {
                                         {auth.user.role === 'admin' && (
                                             <td className="text-end">
                                                 <div className="d-flex gap-4 justify-content-end">
-                                                    <button 
-                                                        className="dropdown-item" 
-                                                        onClick={() => handleDelete(user.id)} 
+                                                    <button
+                                                        className="dropdown-item"
+                                                        onClick={() => handleDelete(user.id)}
                                                         title="Delete"
                                                     >
                                                         <i className="ti ti-trash text-danger"></i>
@@ -164,29 +173,29 @@ export default function User({ users: initialPaginatedData }) {
                             <div className="d-flex">
                                 <ul className="pagination pagination-sm mb-0">
                                     <li className={`page-item ${!paginatedData.prev_page_url ? 'disabled' : ''}`}>
-                                        <button 
-                                            className="page-link" 
+                                        <button
+                                            className="page-link"
                                             onClick={() => goToPage(paginatedData.prev_page_url)}
                                             disabled={!paginatedData.prev_page_url}
                                         >
                                             <ChevronLeft size={16} />
                                         </button>
                                     </li>
-                                    
+
                                     {Array.from({ length: paginatedData.last_page }, (_, i) => i + 1).map(page => (
                                         <li key={page} className={`page-item ${page === paginatedData.current_page ? 'active' : ''}`}>
-                                            <button 
-                                                className="page-link" 
+                                            <button
+                                                className="page-link"
                                                 onClick={() => goToPage(`${paginatedData.path}?page=${page}`)}
                                             >
                                                 {page}
                                             </button>
                                         </li>
                                     ))}
-                                    
+
                                     <li className={`page-item ${!paginatedData.next_page_url ? 'disabled' : ''}`}>
-                                        <button 
-                                            className="page-link" 
+                                        <button
+                                            className="page-link"
                                             onClick={() => goToPage(paginatedData.next_page_url)}
                                             disabled={!paginatedData.next_page_url}
                                         >

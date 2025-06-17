@@ -6,16 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePurchaseListRequest;
 use App\Http\Requests\UpdatePurchaseListRequest;
 use App\Models\Activity;
-use App\Models\Client;
 use App\Models\ClientAccount;
-use App\Models\PurchasedItem;
 use App\Models\PurchaseList;
 use App\Models\PurchaseListPayment;
 use App\Models\Vendor;
+use Carbon\Carbon;
 use Exception;
-use Illuminate\Container\Attributes\Log as AttributesLog;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -87,8 +84,9 @@ class AdminPurchaseListController extends Controller
                 $validated['bill'] = $request->file('bill')->store('purchase-lists', 'public');
             }
 
-
-            $purchase_list = PurchaseList::create($validated);
+            $purchase_list = PurchaseList::create(array_merge($validated, [
+                'created_at' => Carbon::parse($validated['purchase_date'])->setTimeFromTimeString(now()->format('H:i:s')),
+            ]));
 
             Activity::create([
                 'client_id' => $purchase_list->client_id,
@@ -100,7 +98,7 @@ class AdminPurchaseListController extends Controller
                 'total' => $purchase_list->bill_total,
                 'created_by' => auth()->id(),
                 'multiplier' => 1,
-                'created_at' =>  $validated['purchase_date'],
+                'created_at' =>  Carbon::parse($validated['purchase_date'])->setTimeFromTimeString(now()->format('H:i:s')),
             ]);
 
             return redirect()->back()->with('message', 'Purchase list created successfully');

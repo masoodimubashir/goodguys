@@ -36,7 +36,7 @@ const CreateClientVendor = () => {
         post(route('client-vendor.store'), {
             preserveScroll: true,
             onSuccess: () => {
-                ShowMessage('success', 'Vendor created successfully');
+                ShowMessage('success', 'Party created successfully');
                 reset(); // Reset form after successful submission
             },
             onError: (errors) => {
@@ -48,12 +48,12 @@ const CreateClientVendor = () => {
 
 
     const breadcrumbs = [
-        { href: '/client-vendor', label: 'Vendors', active: true }
+        { href: '/client-vendor', label: 'Parties', active: true }
     ];
 
     return (
         <>
-            <Head title="Create Vendor" />
+            <Head title="Create Party" />
 
             <AuthenticatedLayout>
                 <div className="row">
@@ -81,7 +81,7 @@ const CreateClientVendor = () => {
                                                 className={`form-control ${errors.vendor_name ? 'is-invalid' : ''}`}
                                                 value={data.vendor_name}
                                                 onChange={e => setData('vendor_name', e.target.value)}
-                                                placeholder="Enter vendor name"
+                                                placeholder="Enter Party name"
                                                 disabled={processing}
                                                 required
                                             />
@@ -148,7 +148,7 @@ const CreateClientVendor = () => {
                                             className={`form-control ${errors.address ? 'is-invalid' : ''}`}
                                             value={data.address}
                                             onChange={e => setData('address', e.target.value)}
-                                            placeholder="Enter vendor address"
+                                            placeholder="Enter party address"
                                             rows="3"
                                             disabled={processing}
                                         />
@@ -170,7 +170,7 @@ const CreateClientVendor = () => {
                                             className={`form-control ${errors.description ? 'is-invalid' : ''}`}
                                             value={data.description}
                                             onChange={e => setData('description', e.target.value)}
-                                            placeholder="Enter vendor description or notes"
+                                            placeholder="Enter party description or notes"
                                             rows="4"
                                             disabled={processing}
                                         />
@@ -197,7 +197,7 @@ const CreateClientVendor = () => {
                                             ) : (
                                                 <>
                                                     <i className="fas fa-save me-1"></i>
-                                                    Create Vendor
+                                                    Create party
                                                 </>
                                             )}
                                         </button>

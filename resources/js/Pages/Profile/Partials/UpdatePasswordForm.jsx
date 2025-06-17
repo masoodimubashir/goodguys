@@ -68,30 +68,11 @@ export default function UpdatePasswordForm() {
 
                         <form className="app-form" onSubmit={updatePassword}>
                             <div className="row">
-                                <div className="col-12">
-                                    <div className="mb-3">
-                                        <InputLabel htmlFor="password" value="New Password" />
 
-
-                                        <TextInput
-                                            id="password"
-                                            ref={passwordInput}
-                                            value={data.password}
-                                            onChange={(e) => handleOnChange('password', e.target.value)}
-                                            type="password"
-                                            className="mt-1 block w-full"
-                                            autoComplete="new-password"
-                                        />
-                                    </div>
-
-
-
-                                    <InputError message={errors.password} className="mt-2" />
-                                </div>
 
 
                                 <div className="col-12">
-                                    <div className="mb-3">
+                                    <div>
                                         <InputLabel
                                             htmlFor="current_password"
                                             value="Current Password"
@@ -110,13 +91,35 @@ export default function UpdatePasswordForm() {
                                     </div>
                                     <InputError
                                         message={errors.current_password}
-                                        className="mt-2"
                                     />
 
                                 </div>
 
                                 <div className="col-12">
-                                    <div className="mb-3">
+                                    <div className="mt-3">
+                                        <InputLabel htmlFor="password" value="New Password" />
+
+
+                                        <TextInput
+                                            id="password"
+                                            ref={passwordInput}
+                                            value={data.password}
+                                            onChange={(e) => handleOnChange('password', e.target.value)}
+                                            type="password"
+                                            className="mt-1 block w-full"
+                                            autoComplete="new-password"
+                                        />
+                                    </div>
+
+
+
+                                    <InputError message={errors.password} />
+                                </div>
+
+
+
+                                <div className="col-12">
+                                    <div className="mt-3">
                                         <InputLabel
                                             htmlFor="password_confirmation"
                                             value="Confirm Password"
@@ -137,7 +140,7 @@ export default function UpdatePasswordForm() {
                                     />
 
                                 </div>
-                                <div className="col-12">
+                                <div className="col-12 mt-4">
                                     <div className="text-end">
                                         <button disabled={processing} className="btn btn-primary"
                                             type="submit"> {processing ? 'submitting' : 'submit'}

@@ -41,11 +41,25 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
     const [dateRange, setDateRange] = useState([null, null]);
     const [startDate, endDate] = dateRange;
 
-    // Modal states
+    // State management in parent component
     const [showPurchaseListModal, setShowPurchaseListModal] = useState(false);
-    const [showClientAccountModal, setShowClientAccountModal] = useState(false);
     const [currentPurchaseList, setCurrentPurchaseList] = useState(null);
+
+    // In your parent component
+    const [showClientAccountModal, setShowClientAccountModal] = useState(false);
     const [currentClientAccount, setCurrentClientAccount] = useState(null);
+
+    // When opening the modal
+    const openPurchaseListModal = (item = null) => {
+        setCurrentPurchaseList(item);
+        setShowPurchaseListModal(true);
+    };
+
+    // When opening the modal for editing
+    const openClientAccountModal = (item = null) => {
+        setCurrentClientAccount(item);
+        setShowClientAccountModal(true);
+    };
 
     const [newItem, setNewItem] = useState({
         client_id: '',
@@ -70,27 +84,8 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         service_charge: client.service_charge?.service_charge || 0,
         challan: [],
         challan_number: '',
-        challan_date: new Date().toISOString().split('T')[0],
+        challan_date: '',
         is_price_visible: true,
-    });
-
-    const purchaseListForm = useInertiaForm({
-        vendor_id: '',
-        client_id: client.id || '',
-        list_name: '',
-        purchase_date: new Date().toISOString().split('T')[0],
-        bill: null,
-        bill_total: '',
-        bill_description: '',
-    });
-
-    const clientAccountForm = useInertiaForm({
-        client_id: client.id || '',
-        payment_type: '',
-        amount: '',
-        narration: '',
-        payment_flow: true,
-        created_at: new Date().toISOString().split('T')[0],
     });
 
     // Format currency
@@ -128,6 +123,8 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
     const calculateAnalytics = () => {
 
+        const returns = filteredItems.filter(item => item.payment_flow === null).reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+
 
         const sumIn = filteredItems
             .filter(item => item.payment_flow === 1)
@@ -138,8 +135,9 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             .reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
 
         const spends = filteredItems.filter(item =>
-            item.payment_flow !== 1 || !item.payment_flow || item.payment_flow === 'null'
-        ).reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+            item.payment_flow === 0
+        ).reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0) - returns;
+
 
         const categories = {};
         filteredItems.forEach(item => {
@@ -149,7 +147,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
         return {
             deposit: sumIn,
-            balance: sumIn - sumOut,
+            balance: (sumIn - sumOut) + returns,
             spends: spends,
         };
     };
@@ -177,122 +175,18 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
     };
 
 
-
-
-
-
-
-    // Flash messages
     useEffect(() => {
-        if (flash.message) ShowMessage('success', flash.message);
-        if (flash.error) ShowMessage('error', flash.error);
+        if (flash.message) {
+            ShowMessage('success', flash.message);
+            // Clear the flash message
+            router.reload({ only: [], preserveScroll: true, preserveState: true });
+        }
+        if (flash.error) {
+            ShowMessage('error', flash.error);
+            // Clear the flash message
+            router.reload({ only: [], preserveScroll: true, preserveState: true });
+        }
     }, [flash]);
-
-    // Modal handlers
-    const openPurchaseListModal = (item = null) => {
-        setCurrentPurchaseList(item);
-        if (item) {
-            purchaseListForm.setData(item);
-        } else {
-            purchaseListForm.reset();
-        }
-        setShowPurchaseListModal(true);
-    };
-
-    const openClientAccountModal = (item = null) => {
-        setCurrentClientAccount(item);
-        if (item) {
-            clientAccountForm.setData(item);
-        } else {
-            clientAccountForm.reset();
-        }
-        setShowClientAccountModal(true);
-    };
-
-    // Form submission handlers
-    const handlePurchaseListSubmit = async (e) => {
-        e.preventDefault();
-
-        const formData = new FormData();
-        for (const key in purchaseListForm.data) {
-            if (purchaseListForm.data[key] !== null) {
-                formData.append(key, purchaseListForm.data[key]);
-            }
-        }
-
-        const isEditing = !!currentPurchaseList;
-        const currentId = currentPurchaseList?.id;
-
-        const options = {
-            preserveScroll: true,
-            onSuccess: () => {
-                purchaseListForm.reset();
-                setShowPurchaseListModal(false);
-                setCurrentPurchaseList(null);
-                ShowMessage('success', `Purchase list ${isEditing ? 'updated' : 'created'} successfully`);
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-
-            },
-            onError: (errors) => {
-                ShowMessage('error', 'Failed to save purchase list');
-            }
-        };
-
-        if (isEditing && currentId) {
-            formData.append('_method', 'PUT');
-            router.post(route('purchase-list.update', currentId), formData, options);
-        } else {
-            router.post(route('purchase-list.store'), formData, options);
-        }
-
-
-
-    };
-
-    const handleClientAccountSubmit = async (e) => {
-        e.preventDefault();
-
-        const formData = new FormData();
-        for (const key in clientAccountForm.data) {
-            if (clientAccountForm.data[key] !== null) {
-                formData.append(key, clientAccountForm.data[key]);
-            }
-        }
-
-        const isEditing = !!currentClientAccount;
-        const currentId = currentClientAccount?.id;
-
-        const options = {
-            preserveScroll: true,
-            onSuccess: () => {
-
-                clientAccountForm.reset();
-                setShowClientAccountModal(false);
-                setCurrentClientAccount(null);
-                router.reload();
-                ShowMessage('success', `Client account ${isEditing ? 'updated' : 'created'} successfully`);
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-
-            },
-            onError: (errors) => {
-                ShowMessage('error', 'Failed to save client account');
-            }
-
-        };
-
-        if (isEditing && currentId) {
-            formData.append('_method', 'PUT');
-            router.post(route('client-account.update', currentId), formData, options);
-        } else {
-            router.post(route('client-account.store'), formData, options);
-        }
-
-    };
-
 
 
     // Toggle product selection for challan
@@ -335,6 +229,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                 payment_flow: product.payment_flow,
                 created_at: product.created_at
             }));
+
 
         const payload = {
             ...challanForm.data,
@@ -469,6 +364,9 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                         formatCurrency={formatCurrency}
                         client={client}
                         client_vendors={client_vendors}
+                        setPurchaseItems={setPurchaseItems}
+                        setFilteredItems={setFilteredItems}
+
                     />
                 </Tab>
                 <Tab eventKey="activities-lists" title={<span className="d-flex align-items-center gap-1">
@@ -493,21 +391,22 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             <PurchaseListModal
                 show={showPurchaseListModal}
                 onHide={() => setShowPurchaseListModal(false)}
-                form={purchaseListForm}
-                errors={purchaseListForm.errors}
-                isEditing={!!currentPurchaseList}
-                handleSubmit={handlePurchaseListSubmit}
                 vendors={vendors}
+                isEditing={!!currentPurchaseList}
+                initialData={currentPurchaseList}
+                setPurchaseItems={setPurchaseItems}
+                setFilteredItems={setFilteredItems}
+                client={client}
             />
 
             <ClientAccountModal
                 show={showClientAccountModal}
                 onHide={() => setShowClientAccountModal(false)}
-                form={clientAccountForm}
-                errors={clientAccountForm.errors}
                 isEditing={!!currentClientAccount}
-                handleSubmit={handleClientAccountSubmit}
                 balance={analytics.balance}
+                client={client}
+                setPurchaseItems={setPurchaseItems}
+                setFilteredItems={setFilteredItems}
             />
 
             <Modal

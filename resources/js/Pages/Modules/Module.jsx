@@ -1,4 +1,4 @@
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import React, { useState, useEffect } from "react";
 import { Head, useForm, usePage } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
@@ -19,10 +19,17 @@ export default function Module({ modules: initialModules }) {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const tableHead = ["Module Name", "Buying Price", "Selling Price", "Total Price", "Count", "Fields", "Actions"];
 
-    /** Show success/error messages on load */
-    useEffect(() => {
-        if (flash.message) ShowMessage("success", flash.message);
-        if (flash.error) ShowMessage("error", flash.error);
+     useEffect(() => {
+        if (flash.message) {
+            ShowMessage('success', flash.message);
+            // Clear the flash message
+            router.reload({ only: [], preserveScroll: true, preserveState: true });
+        }
+        if (flash.error) {
+            ShowMessage('error', flash.error);
+            // Clear the flash message
+            router.reload({ only: [], preserveScroll: true, preserveState: true });
+        }
     }, [flash]);
 
     // Filter modules based on search term

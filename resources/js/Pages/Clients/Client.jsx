@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
@@ -23,9 +23,17 @@ export default function Client({ clients: initialPaginatedData }) {
         'Service Charge', 'Actions'
     ];
 
-    useEffect(() => {
-        if (flash.message) ShowMessage('success', flash.message);
-        if (flash.error) ShowMessage('error', flash.error);
+     useEffect(() => {
+        if (flash.message) {
+            ShowMessage('success', flash.message);
+            // Clear the flash message
+            router.reload({ only: [], preserveScroll: true, preserveState: true });
+        }
+        if (flash.error) {
+            ShowMessage('error', flash.error);
+            // Clear the flash message
+            router.reload({ only: [], preserveScroll: true, preserveState: true });
+        }
     }, [flash]);
 
     // Frontend search function
@@ -80,7 +88,6 @@ export default function Client({ clients: initialPaginatedData }) {
                             onSuccess: (data) => {
                                 setPaginatedData(data.props.clients);
                                 setFilteredData(data.props.clients.data);
-                                ShowMessage('success', flash.message || 'Client deleted successfully');
                             }
                         });
                     },
@@ -91,14 +98,14 @@ export default function Client({ clients: initialPaginatedData }) {
     };
 
     const breadcrumbs = [
-        { href: '/clients', label: 'Back', active: true }
+        { href: '/clients', label: 'Clients', active: true }
     ];
 
     return (
         <AuthenticatedLayout>
             <Head title="Clients" />
 
-            <div className="row g-4 mb-3 mt-3">
+            <div className="row g-4">
                 <div className="d-flex justify-content-between align-items-center">
                     <BreadCrumbHeader breadcrumbs={breadcrumbs} />
 

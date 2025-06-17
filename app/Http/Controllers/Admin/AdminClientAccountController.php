@@ -8,6 +8,7 @@ use App\Models\Activiity;
 use App\Models\Activity;
 use App\Models\ClientAccount;
 use App\Models\PurchasedItem;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Container\Attributes\Log;
 use Illuminate\Http\Request;
@@ -42,14 +43,14 @@ class AdminClientAccountController extends Controller
 
                 $validatedData = $request->validated();
 
-                $payment_flow = $validatedData['payment_flow'] === 'true' ? 1 : 0;
+                $payment_flow = $validatedData['payment_flow'] === true ? 1 : 0;
 
                 ClientAccount::create([
                     "client_id" => $validatedData["client_id"],
                     "payment_type" => $validatedData["payment_type"],
                     "amount" => $validatedData["amount"],
                     "narration" => $validatedData["narration"],
-                    'created_at' => $validatedData['created_at'],
+                    'created_at' => Carbon::parse($validatedData['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
                     'payment_flow' => $payment_flow,
                 ]);
 
@@ -62,7 +63,7 @@ class AdminClientAccountController extends Controller
                     'total' => $validatedData["amount"],
                     'created_by' => auth()->id(),
                     'multiplier' => 1,
-                    'created_at' => $validatedData['created_at'],
+                    'created_at' => Carbon::parse($validatedData['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
                     'payment_flow' => $payment_flow
                 ]);
 
@@ -75,7 +76,7 @@ class AdminClientAccountController extends Controller
                     'total' => $validatedData["amount"],
                     'created_by' => auth()->id(),
                     'multiplier' => 1,
-                    'created_at' => $validatedData['created_at'],
+                    'created_at' => Carbon::parse($validatedData['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
                     'payment_flow' => $payment_flow
                 ]);
             });

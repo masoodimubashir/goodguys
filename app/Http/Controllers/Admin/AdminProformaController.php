@@ -102,11 +102,11 @@ class AdminProformaController extends Controller
 
             DB::commit();
             return redirect()->route('clients.show', [$proformaRefrence->client_id])
-                ->with('message', 'Proforma Created Successfully');
+                ->with('message', 'Estimate Created Successfully');
         } catch (Exception $e) {
-            Log::error('Failed to create proforma: ' . $e->getMessage());
+            Log::error('Failed to create Estimate: ' . $e->getMessage());
             DB::rollBack();
-            return redirect()->back()->with('error', 'Failed to Create Proforma: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to Create Estimate: ' . $e->getMessage());
         }
     }
 
@@ -139,7 +139,7 @@ class AdminProformaController extends Controller
                 'inventories' => $inventories,
             ]);
         } catch (ModelNotFoundException $e) {
-            return redirect()->back()->with('error', 'Invoice not found');
+            return redirect()->back()->with('error', 'Estimate not found');
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Something went wrong');
         }
@@ -225,7 +225,7 @@ class AdminProformaController extends Controller
         DB::commit();
 
         return redirect()->route('clients.show', [$proformaReference->client_id])
-            ->with('message', 'Proforma Updated Successfully');
+            ->with('message', 'Estimate Updated Successfully');
     }
 
     /**
@@ -249,16 +249,16 @@ class AdminProformaController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('message', 'Proforma and all related data deleted successfully');
+            return redirect()->back()->with('message', 'Estimate and all related data deleted successfully');
         } catch (ModelNotFoundException $e) {
             DB::rollBack();
             Log::error($e->getMessage());
 
-            return redirect()->back()->with('error', 'Proforma not found');
+            return redirect()->back()->with('error', 'Estimate not found');
         } catch (Exception $e) {
             Log::error($e->getMessage());
             DB::rollBack();
-            return redirect()->back()->with('error', 'Failed to delete proforma: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to delete Estimate: ' . $e->getMessage());
         }
     }
 }

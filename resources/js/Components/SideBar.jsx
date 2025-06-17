@@ -52,7 +52,7 @@ export const SideBar = () => {
             {/* Mobile overlay */}
             {isMobile && isSidebarOpen && (
                 <div 
-                    className="sidebar-overlay" 
+                    className="" 
                     onClick={closeSidebar}
                   
                 />

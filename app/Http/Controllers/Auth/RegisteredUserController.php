@@ -44,6 +44,6 @@ class RegisteredUserController extends Controller
 
         $user->addRole('client');
 
-        return redirect()->route('users.index');
+        return redirect()->route('users.index')->with('message', 'User created successfully');
     }
 }

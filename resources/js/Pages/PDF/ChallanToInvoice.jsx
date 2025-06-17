@@ -281,6 +281,9 @@ const ChallanToInvoice = ({ company_profile, data, client, bankAccount }) => {
   });
 
 
+  console.log(rawItems);
+
+
   // Step 2: Filter out duplicates (keep only first occurrence)
   const filteredItems = rawItems.filter((item, index, self) => {
 
@@ -294,28 +297,39 @@ const ChallanToInvoice = ({ company_profile, data, client, bankAccount }) => {
 
 
 
-  let subtotal = 0, inTotal = 0, outTotal = 0;
-
-
+  let subtotal = 0, inTotal = 0, outTotal = 0, returns = 0;
 
   const items = filteredItems.map((item, index) => {
     const price = parseFloat(item.price) || 0;
-    const total = item.total;
+    const total = parseFloat(item.total) || 0;
 
-    if (item.payment_flow === 1) inTotal += total;
-    else if (item.payment_flow === 0) outTotal += total;
+    if (item.payment_flow === 1) {
+      inTotal += total;
+    } else if (item.payment_flow === 0) {
+      outTotal += total;
+    } else if (item.payment_flow === null) {
+      returns += total;
+    }
 
     if (item.is_price_visible) subtotal += total;
 
     return { ...item, price, total };
   });
 
-  const serviceChargeAmount = outTotal * serviceCharge / 100;
-  const outWithServiceCharge = outTotal + serviceChargeAmount;
+  // Spends exclude returns
+  const spends = outTotal - returns;
+
+  // Service charge applies on spends
+  const serviceChargeAmount = spends * serviceCharge / 100;
+  const outWithServiceCharge = spends + serviceChargeAmount;
+
+  // Final balances
   const balance = inTotal - outTotal;
-  const spends = outTotal;
   const remainingBalance = inTotal - outWithServiceCharge;
+
+  // Flag to check if any visible prices exist
   const hasPrices = items.some(i => i.is_price_visible);
+
 
   const ITEMS_PER_PAGE = 20;
   const pages = Math.ceil(items.length / ITEMS_PER_PAGE);

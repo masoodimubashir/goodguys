@@ -522,7 +522,7 @@ export default function CreateProforma({ client, modules, inventories }) {
 
                     {/* Proforma Summary */}
                     <Card className="p-3 border rounded-3 mb-4">
-                        <h5 className="fw-bold mb-4">Proforma Summary</h5>
+                        <h5 className="fw-bold mb-4">Estimate Summary</h5>
                         <Row className="mb-2">
                             <Col>Subtotal</Col>
                             <Col className="text-end">₹{subtotal.toFixed(2)}</Col>

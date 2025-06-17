@@ -583,7 +583,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
 
                     {/* Proforma Summary */}
                     <Card className="p-3 border rounded-3 mb-4">
-                        <h5 className="fw-bold mb-4">Proforma Summary</h5>
+                        <h5 className="fw-bold mb-4">Estimate Summary</h5>
                         <Row className="mb-2">
                             <Col>Subtotal</Col>
                             <Col className="text-end">₹{subtotal.toFixed(2)}</Col>
@@ -601,7 +601,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
 
                     <div className="text-end">
                         <Button type="submit" variant="success" size="sm" disabled={processing}>
-                            {processing ? 'Updating...' : 'Update Proforma'}
+                            {processing ? 'Updating...' : 'Update Estimate'}
                         </Button>
                     </div>
                 </Form>

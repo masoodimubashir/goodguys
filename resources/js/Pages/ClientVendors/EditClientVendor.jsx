@@ -1,10 +1,11 @@
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
-import { useForm } from '@inertiajs/react'
+import { useForm, usePage } from '@inertiajs/react'
 import { Link } from '@inertiajs/react'
-import React from 'react'
+import React, { useEffect } from 'react'
 
 const EditClientVendor = ({ vendor }) => {
+
     // Initialize form with vendor data
     const { data, setData, put, processing, errors } = useForm({
         vendor_name: vendor.vendor_name || '',
@@ -20,7 +21,6 @@ const EditClientVendor = ({ vendor }) => {
         put(route('client-vendor.update', vendor.id), {
             preserveScroll: true,
             onSuccess: () => {
-                // Optional: You can add success notification here
             },
             onError: (errors) => {
                 console.error('Validation errors:', errors);
@@ -28,12 +28,14 @@ const EditClientVendor = ({ vendor }) => {
         });
     };
 
+   
+
     return (
         <AuthenticatedLayout>
 
             <div className="d-flex justify-content-between align-items-center">
                 <BreadCrumbHeader breadcrumbs={[
-                    { href: '/client-vendor', label: 'Vendor', active: true },
+                    { href: '/client-vendor', label: 'Party', active: true },
                 ]} />
             </div>
 
@@ -41,7 +43,7 @@ const EditClientVendor = ({ vendor }) => {
                 <div className="col-12">
                     <div className="card">
                         <div className="card-header d-flex justify-content-between align-items-center">
-                            <h5 className="card-title mb-0">Edit Vendor</h5>
+                            <h5 className="card-title mb-0">Edit Party</h5>
 
                         </div>
                         <div className="card-body">
@@ -50,7 +52,7 @@ const EditClientVendor = ({ vendor }) => {
                                     {/* Vendor Name */}
                                     <div className="col-md-4 mb-3">
                                         <label htmlFor="vendor_name" className="form-label required">
-                                            Vendor Name <span className="text-danger">*</span>
+                                            Party Name 
                                         </label>
                                         <input
                                             type="text"
@@ -59,7 +61,7 @@ const EditClientVendor = ({ vendor }) => {
                                             className={`form-control ${errors.vendor_name ? 'is-invalid' : ''}`}
                                             value={data.vendor_name}
                                             onChange={e => setData('vendor_name', e.target.value)}
-                                            placeholder="Enter vendor name"
+                                            placeholder="Enter Party name"
                                             disabled={processing}
                                             required
                                         />
@@ -127,7 +129,7 @@ const EditClientVendor = ({ vendor }) => {
                                         className={`form-control ${errors.address ? 'is-invalid' : ''}`}
                                         value={data.address}
                                         onChange={e => setData('address', e.target.value)}
-                                        placeholder="Enter vendor address"
+                                        placeholder="Enter party address"
                                         rows="3"
                                         disabled={processing}
                                     />
@@ -149,7 +151,7 @@ const EditClientVendor = ({ vendor }) => {
                                         className={`form-control ${errors.description ? 'is-invalid' : ''}`}
                                         value={data.description}
                                         onChange={e => setData('description', e.target.value)}
-                                        placeholder="Enter vendor description or notes"
+                                        placeholder="Enter party description or notes"
                                         rows="4"
                                         disabled={processing}
                                     />
@@ -161,14 +163,8 @@ const EditClientVendor = ({ vendor }) => {
                                 </div>
 
                                 {/* Form Actions */}
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <Link
-                                        href={route('client-vendor.index')}
-                                        className="btn btn-outline-secondary btn-sm"
-                                    >
-                                        Cancel
-                                    </Link>
-
+                                <div className="d-flex justify-content-end align-items-center">
+                                    
                                     <button
                                         type="submit"
                                         className="btn btn-primary btn-sm"
@@ -182,7 +178,7 @@ const EditClientVendor = ({ vendor }) => {
                                         ) : (
                                             <>
                                                 <i className="fas fa-save me-1"></i>
-                                                Update Vendor
+                                                Update Party
                                             </>
                                         )}
                                     </button>

@@ -123,7 +123,7 @@ const ProjectDocumentTab = ({ client }) => {
                 editForm('document_proof', null);
             },
             onError: (errors) => {
-                ShowMessage('error', 'Failed to save document.');
+                // ShowMessage('error', 'Failed to save document.');
             }
         });
     };

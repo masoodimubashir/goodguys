@@ -1,17 +1,22 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import React from 'react';
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
-import Button from '@/Components/Button';
+import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
 import { ShowMessage } from '@/Components/ShowMessage';
+import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
+import { Button } from 'react-bootstrap';
 
-const BankAccountForm = ({ bankAccount = null }) => {
+const BankAccountForm = ({ bankAccount = null, clientId }) => {
     const isEdit = !!bankAccount;
 
+    const { errors } = usePage().props;
 
-    const { data, setData, errors, processing } = useForm({
+    const { data, setData, processing, reset } = useForm({
+        client_id: clientId || bankAccount?.client_id || '',
         bank_name: bankAccount?.bank_name || '',
         ifsc_code: bankAccount?.ifsc_code || '',
         holder_name: bankAccount?.holder_name || '',
@@ -25,12 +30,13 @@ const BankAccountForm = ({ bankAccount = null }) => {
         _method: isEdit ? 'PUT' : 'POST',
     });
 
-    console.log(errors);
-
 
     const handleFileChange = (field, e) => {
-        setData(field, e.target.files[0]);
+        setData(field, e.target.files[0] || null);
     };
+
+    console.log(errors);
+
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -42,125 +48,218 @@ const BankAccountForm = ({ bankAccount = null }) => {
             }
         });
 
+        const routeName = isEdit ? 'bank-account.update' : 'bank-account.store';
+        const routeParams = isEdit ? [bankAccount.id] : [];
 
-        if (isEdit) {
-            // For updates, use POST with method spoofing
-            router.post(
-                route('bank-account.update', bankAccount.id),
-                formData,
-                {
-                    forceFormData: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        ShowMessage('success', 'Bank account updated successfully');
-                    },
-                    onError: (errors) => {
-                        ShowMessage('error', 'Failed to update bank account');
+        router.post(
+            route(routeName, ...routeParams),
+            formData,
+            {
+                forceFormData: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    ShowMessage('success', `Bank account ${isEdit ? 'updated' : 'created'} successfully`);
+                    if (!isEdit) {
+                        reset();
                     }
+                },
+                onError: (errors) => {
                 }
-            );
-        } else {
-            // For creation, use POST
-            router.post(
-                route('bank-account.store'),
-                formData,
-                {
-                    forceFormData: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        ShowMessage('success', 'Bank account created successfully');
-                    },
-                    onError: (errors) => {
-                        ShowMessage('error', 'Failed to create bank account');
-                    }
-                }
-            );
-        }
+            }
+        );
     };
+
+    const breadcrumbs = [
+        { href: '/bank-account/create', label: 'Bank', active: true }
+    ];
 
     return (
         <AuthenticatedLayout>
+
             <Head title={`${isEdit ? 'Edit' : 'Create'} Bank Account`} />
 
-            <div className="row m-1">
-                <div className="col-12">
-                    <ul className="app-line-breadcrumbs mb-3">
-                        <li>
-                            <Link href={route('dashboard')} className="f-s-14 f-w-500">
-                                <i className="iconoir-home-alt"></i>
-                            </Link>
-                        </li>
-                        <li className="active">
-                            <span className="f-s-14 f-w-500">{isEdit ? 'Edit' : 'Create'} Bank Account</span>
-                        </li>
-                    </ul>
+            <div className="container-fluid">
+                <div className="d-flex justify-content-between align-items-center">
+                    <BreadCrumbHeader breadcrumbs={breadcrumbs} />
                 </div>
-            </div>
 
-            <div className="row">
-                <div className="col-12">
-                    <div className="card">
-                        <div className="card-body">
-                            <form onSubmit={handleSubmit} encType="multipart/form-data">
-                                <div className="row">
-                                    {[
-                                            { id: 'bank_name', label: 'Bank Name' },
-                                            { id: 'holder_name', label: 'Account Holder Name' },
-                                            { id: 'account_number', label: 'Account Number' },
-                                            { id: 'ifsc_code', label: 'IFSC Code' },
-                                            { id: 'upi_number', label: 'UPI Number' },
-                                            { id: 'upi_address', label: 'UPI Address' },
-                                            { id: 'tax_number', label: 'Tax Number' },
-
-                                    ].map(({ id, label }) => (
-                                        <div className="col-md-4" key={id}>
-                                            <div className="mb-4">
-                                                <InputLabel htmlFor={id} value={label} />
+                <div className="row">
+                    <div className="col-12">
+                        <div className="card">
+                            <div className="card-body">
+                                <form className="app-form" onSubmit={handleSubmit} encType="multipart/form-data">
+                                    <div className="row">
+                                        {/* Bank Information */}
+                                        <div className="col-md-6">
+                                            <div className='mt-2'>
+                                                <InputLabel htmlFor="bank_name" value="Bank Name" />
                                                 <TextInput
-                                                    id={id}
+                                                    id="bank_name"
                                                     className="form-control"
-                                                    placeholder={`Enter ${label}`}
-                                                    value={data[id]}
-                                                    onChange={(e) => setData(id, e.target.value)}
+                                                    value={data.bank_name}
+                                                    onChange={(e) => setData('bank_name', e.target.value)}
                                                 />
-                                                <InputError message={errors[id]} />
+                                                <InputError message={errors.bank_name} className="invalid-feedback" />
                                             </div>
-                                        </div>
-                                    ))}
 
-                                    {[
-                                        { id: 'qr_code_image', label: 'QR Code Image (*JPEG)' },
-                                        { id: 'signature_image', label: 'Signature Image (*JPEG)' },
-                                        { id: 'company_stamp_image', label: 'Company Stamp Image (*JPEG)' },
-                                    ].map(({ id, label }) => (
-                                        <div className="col-md-4" key={id}>
-                                            <div className="mb-4">
-                                                <InputLabel htmlFor={id} value={label} />
+                                            <div className='mt-2'>
+                                                <InputLabel htmlFor="holder_name" value="Account Holder Name" />
+                                                <TextInput
+                                                    id="holder_name"
+                                                    className={`form-control `}
+                                                    value={data.holder_name}
+                                                    onChange={(e) => setData('holder_name', e.target.value)}
+                                                />
+                                                <InputError message={errors.holder_name} className="invalid-feedback" />
+                                            </div>
+
+                                            <div className='mt-2'>
+                                                <InputLabel htmlFor="account_number" value="Account Number" />
+                                                <TextInput
+                                                    id="account_number"
+                                                    className={`form-control `}
+                                                    value={data.account_number}
+                                                    onChange={(e) => setData('account_number', e.target.value)}
+                                                />
+                                                <InputError message={errors.account_number} className="invalid-feedback" />
+                                            </div>
+
+                                        </div>
+
+                                        {/* Bank Codes */}
+                                        <div className="col-md-6">
+
+                                            <div className='mt-2'>
+                                                <InputLabel htmlFor="ifsc_code" value="IFSC Code" />
+                                                <TextInput
+                                                    id="ifsc_code"
+                                                    className={`form-control `}
+                                                    value={data.ifsc_code}
+                                                    onChange={(e) => setData('ifsc_code', e.target.value)}
+                                                />
+                                                <InputError message={errors.ifsc_code} className="invalid-feedback" />
+                                            </div>
+                                            
+                                            <div className='mt-2'>
+                                                <InputLabel htmlFor="upi_number" value="UPI Number" />
+                                                <TextInput
+                                                    id="upi_number"
+                                                    className={`form-control`}
+                                                    value={data.upi_number}
+                                                    onChange={(e) => setData('upi_number', e.target.value)}
+                                                />
+                                                <InputError message={errors.upi_number} className="invalid-feedback" />
+                                            </div>
+
+                                            <div className='mt-2'>
+                                                <InputLabel htmlFor="upi_address" value="UPI Address" />
+                                                <TextInput
+                                                    id="upi_address"
+                                                    className={`form-control`}
+                                                    value={data.upi_address}
+                                                    onChange={(e) => setData('upi_address', e.target.value)}
+                                                />
+                                                <InputError message={errors.upi_address} className="invalid-feedback" />
+                                            </div>
+
+
+                                        </div>
+
+                                        {/* Document Uploads */}
+                                        <div className="col-md-6">
+
+                                            
+                                            <div className='mt-2'>
+                                                <InputLabel htmlFor="tax_number" value="Tax Number" />
+                                                <TextInput
+                                                    id="tax_number"
+                                                    className={`form-control`}
+                                                    value={data.tax_number}
+                                                    onChange={(e) => setData('tax_number', e.target.value)}
+                                                />
+                                                <InputError message={errors.tax_number} className="invalid-feedback" />
+                                            </div>
+                                           <div className='mt-2'>
+                                                <InputLabel htmlFor="company_stamp_image" value="Company Stamp Image" />
                                                 <input
                                                     type="file"
-                                                    id={id}
-                                                    className="form-control"
-                                                    onChange={(e) => handleFileChange(id, e)}
+                                                    id="company_stamp_image"
+                                                    className={`form-control`}
+                                                    onChange={(e) => handleFileChange('company_stamp_image', e)}
                                                     accept="image/*"
                                                 />
-                                                <InputError message={errors[id]} />
+                                                {bankAccount?.company_stamp_image && (
+                                                    <div className="mt-2">
+                                                        <span className="text-muted">Current: </span>
+                                                        <a href={`/storage/${bankAccount.company_stamp_image}`} target="_blank" rel="noopener noreferrer">
+                                                            View Image
+                                                        </a>
+                                                    </div>
+                                                )}
+                                                <InputError message={errors.company_stamp_image} className="invalid-feedback" />
+                                            </div>  
+                                        </div>
+
+                                        <div className="col-md-6">
+                                            <div className='mt-2'>
+                                                <InputLabel htmlFor="signature_image" value="Signature Image" />
+                                                <input
+                                                    type="file"
+                                                    id="signature_image"
+                                                    className={`form-control ${errors.signature_image ? 'is-invalid' : ''}`}
+                                                    onChange={(e) => handleFileChange('signature_image', e)}
+                                                    accept="image/*"
+                                                />
+                                                {bankAccount?.signature_image && (
+                                                    <div className="mt-2">
+                                                        <span className="text-muted">Current: </span>
+                                                        <a href={`/storage/${bankAccount.signature_image}`} target="_blank" rel="noopener noreferrer">
+                                                            View Image
+                                                        </a>
+                                                    </div>
+                                                )}
+                                                <InputError message={errors.signature_image} className="invalid-feedback" />
+                                            </div>
+                                               <div className='mt-2'>
+                                                <InputLabel htmlFor="qr_code_image" value="QR Code Image" />
+                                                <input
+                                                    type="file"
+                                                    id="qr_code_image"
+                                                    className={`form-control `}
+                                                    onChange={(e) => handleFileChange('qr_code_image', e)}
+                                                    accept="image/*"
+                                                />
+                                                {bankAccount?.qr_code_image && (
+                                                    <div className="mt-2">
+                                                        <span className="text-muted">Current: </span>
+                                                        <a href={`/storage/${bankAccount.qr_code_image}`} target="_blank" rel="noopener noreferrer">
+                                                            View Image
+                                                        </a>
+                                                    </div>
+                                                )}
+                                                <InputError message={errors.qr_code_image} className="invalid-feedback" />
                                             </div>
                                         </div>
-                                    ))}
 
-                                    <div className="col-12 text-end">
-                                        <Button className="btn btn-primary" disabled={processing}>
-                                            {processing
-                                                ? isEdit
-                                                    ? 'Updating...'
-                                                    : 'Creating...'
-                                                : isEdit
-                                                    ? 'Update Bank Account'
-                                                    : 'Create Bank Account'}
-                                        </Button>
+                                        <div className="col-12 text-end mt-4">
+
+                                            <Button
+                                                type="submit"
+                                                disabled={processing}
+                                            >
+                                                {processing ? (
+                                                    <>
+                                                        <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                                        {isEdit ? 'Updating...' : 'Creating...'}
+                                                    </>
+                                                ) : (
+                                                    isEdit ? 'Update Bank Account' : 'Create Bank Account'
+                                                )}
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
-                            </form>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>

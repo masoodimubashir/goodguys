@@ -8,6 +8,7 @@ use App\Http\Requests\UpdatePurchaseListPaymentForm;
 use App\Models\Activity;
 use App\Models\PurchasedItem;
 use App\Models\PurchaseListPayment;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -36,6 +37,7 @@ class AdminPurchaseListPaymentController extends Controller
     {
 
         try {
+
             $data = $request->validated();
 
             PurchaseListPayment::create([
@@ -43,9 +45,9 @@ class AdminPurchaseListPaymentController extends Controller
                 'client_id' => $data['client_id'],
                 'amount' => $data['amount'],
                 'narration' => $data['narration'],
-                'transaction_date' => $data['transaction_date'],
+                'transaction_date' =>  Carbon::parse($data['transaction_date'])->setTimeFromTimeString(now()->format('H:i:s')),
                 'created_by' => auth()->user()->id,
-                'created_at' => $data['transaction_date']
+                'created_at' =>  Carbon::parse($data['transaction_date'])->setTimeFromTimeString(now()->format('H:i:s'))
             ]);
 
             PurchasedItem::create([
@@ -58,7 +60,7 @@ class AdminPurchaseListPaymentController extends Controller
                 'multiplier' => 1,
                 'created_by' => auth()->id(),
                 'payment_flow' => false,
-                'created_at' => $data['transaction_date']
+                'created_at' =>  Carbon::parse($data['transaction_date'])->setTimeFromTimeString(now()->format('H:i:s'))
 
             ]);
 
@@ -72,7 +74,7 @@ class AdminPurchaseListPaymentController extends Controller
                 'multiplier' => 1,
                 'created_by' => auth()->id(),
                 'payment_flow' => false,
-                'created_at' => $data['transaction_date']
+                'created_at' =>  Carbon::parse($data['transaction_date'])->setTimeFromTimeString(now()->format('H:i:s'))
             ]);
 
             return redirect()->back()->with('message', 'Purchase created successfully');

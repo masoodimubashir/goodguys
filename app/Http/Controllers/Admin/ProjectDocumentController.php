@@ -47,7 +47,7 @@ class ProjectDocumentController extends Controller
                 'created_by' => auth()->id(),
             ]));
 
-            return redirect()->back()->with('success', 'Image uploaded successfully');
+            return redirect()->back()->with('message', 'Image uploaded successfully');
         } catch (\Exception $e) {
             Log::error('Error uploading Image: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error uploading Image');
@@ -96,13 +96,13 @@ class ProjectDocumentController extends Controller
             // Update the record
             $projectDocument->update($validated);
 
-            return redirect()->back()->with('success', 'Document updated successfully');
+            return redirect()->back()->with('message', 'Image updated successfully');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error('Document not found: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Document not found');
+            return redirect()->back()->with('error', 'Image not found');
         } catch (\Exception $e) {
             Log::error('Error updating document: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error updating document');
+            return redirect()->back()->with('error', 'Error updating Image');
         }
     }
 
@@ -124,11 +124,11 @@ class ProjectDocumentController extends Controller
 
             $projectDocument->delete();
 
-            return redirect()->route('clients.show', $clientId)->with('message', 'Document deleted successfully');
+            return redirect()->route('clients.show', $clientId)->with('message', 'Image deleted successfully');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return redirect()->back()->with('error', 'Document not found');
+            return redirect()->back()->with('error', 'Image not found');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error deleting document');
+            return redirect()->back()->with('error', 'Error deleting Image');
         }
     }
 }

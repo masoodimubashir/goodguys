@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import { Badge, Button, InputGroup, Form, Table, Pagination } from 'react-bootstrap';
 import {
@@ -13,10 +13,6 @@ import {
     IndianRupee,
     Text,
     Save,
-    Edit,
-    Trash,
-    ArrowBigDown,
-    ArrowUp,
     Minus
 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
@@ -43,7 +39,9 @@ const PurchaseItemsTab = ({
     resetDateFilter,
     formatCurrency,
     client,
-    client_vendors
+    client_vendors,
+    setPurchaseItems,
+    setFilteredItems,
 }) => {
 
 
@@ -87,65 +85,53 @@ const PurchaseItemsTab = ({
         setIsCreating(true);
 
         try {
-            if (!vendorSearchTerm) {
-                ShowMessage('error', 'Please enter a vendor name');
-                setIsCreating(false);
+            // Validation
+            if (!vendorSearchTerm.trim()) {
+                ShowMessage('error', 'Please enter a Party name');
                 return;
             }
 
-            const commonData = {
+            // Prepare data
+            const payload = {
                 client_id: client.id,
                 narration: newItem.narration,
                 created_at: newItem.created_at,
                 unit_type: newItem.unit_type,
                 price: Number(newItem.price),
-            };
-
-            // If vendor exists in the list (selected from dropdown)
-            if (selectedVendor) {
-                const paymentData = {
-                    ...commonData,
+                ...(selectedVendor ? {
                     vendor_id: selectedVendor.id,
-                    description: selectedVendor.vendor_name, // Use vendor name as description
+                    description: selectedVendor.vendor_name,
                     amount: Number(newItem.price),
                     transaction_date: newItem.created_at,
-                };
-
-                await router.post(route('purchase-list-payments.store'), paymentData, {
-                    onSuccess: () => {
-                        ShowMessage('success', 'Payment created successfully');
-                        resetForm();
-                    },
-                    onError: (errors) => {
-                        ShowMessage('error', 'Failed to create payment');
-                        console.error(errors);
-                    }
-                });
-            }
-            // If vendor doesn't exist (new vendor)
-            else {
-                const itemData = {
-                    ...commonData,
-                    description: vendorSearchTerm, // Use the typed text as description
+                } : {
+                    description: vendorSearchTerm,
                     vendor_name: vendorSearchTerm,
                     qty: Number(newItem.qty),
                     multiplier: Number(newItem.multiplier) || 1,
-                };
+                })
+            };
 
-                await router.post('/purchased-item', itemData, {
-                    onSuccess: () => {
-                        ShowMessage('success', 'Item created successfully');
-                        resetForm();
-                    },
-                    onError: (errors) => {
-                        ShowMessage('error', 'Failed to create item');
-                        console.error(errors);
+            // Make the request
+            const routeName = selectedVendor
+                ? 'purchase-list-payments.store'
+                : 'purchased-item.store';
+
+            const response = await router.post(route(routeName), payload, {
+                preserveScroll: true,
+                onSuccess: (page) => {
+                    if (page.props.purchase_items) {
+                        setPurchaseItems(page.props.purchase_items);
+                        setFilteredItems(page.props.purchase_items);
                     }
-                });
-            }
-        } catch (error) {
-            ShowMessage('error', 'An unexpected error occurred');
-            console.error(error);
+                    ShowMessage('success', 'Record created successfully');
+                    resetForm();
+                },
+                onError: (errors) => {
+                    const errorMsg = Object.values(errors).join('\n');
+                    ShowMessage('error', errorMsg || 'Failed to create record');
+                }
+            });
+
         } finally {
             setIsCreating(false);
         }
@@ -158,13 +144,12 @@ const PurchaseItemsTab = ({
             description: '',
             price: '',
             narration: '',
-            show: false
+            show: false,
+            created_at: new Date().toISOString().split('T')[0],
         });
         setVendorSearchTerm('');
         setSelectedVendor(null);
-        setTimeout(() => {
-            window.location.reload();
-        }, 1000);
+       
     };
 
 
@@ -267,7 +252,7 @@ const PurchaseItemsTab = ({
                         <th>
                             <div className="d-flex align-items-center gap-2">
                                 <FileText size={14} />
-                                Vendor/Description
+                                Party/Description
                             </div>
                         </th>
                         <th>
@@ -544,7 +529,7 @@ const PurchaseItemsTab = ({
                                 </td>
                                 <td>
                                     <span className="fw-bold text-primary">
-                                        {formatCurrency(item.price)} {item.payment_flow === 1 ? <Plus size={13}/> : <Minus size={13}/>}
+                                        {formatCurrency(item.price)} {item.payment_flow === 1 ? <Plus size={13} /> : <Minus size={13} />}
                                     </span>
                                 </td>
                                 <td>
@@ -554,7 +539,7 @@ const PurchaseItemsTab = ({
                                 </td>
                                 <td>
                                     <span className="fw-bold text-success">
-                                        {formatCurrency(item.total)}  {item.payment_flow === 1 ? <Plus size={13}/> : <Minus size={13}/>}
+                                        {formatCurrency(item.total)}  {item.payment_flow === 1 ? <Plus size={13} /> : <Minus size={13} />}
                                     </span>
                                 </td>
                                 <td>

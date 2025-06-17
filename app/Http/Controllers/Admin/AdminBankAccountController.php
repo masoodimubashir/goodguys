@@ -43,29 +43,29 @@ class AdminBankAccountController extends Controller
         try {
             $validated = $request->validated();
 
-            // Image fields to handle
             $imageFields = ['signature_image', 'company_stamp_image', 'qr_code_image'];
 
             foreach ($imageFields as $field) {
                 if ($request->hasFile($field)) {
-                    // Store file and update path
                     $validated[$field] = $request->file($field)->store('bank-accounts', 'public');
                 }
             }
 
-            $validated['created_by'] = auth()->id(); // Track creator
+            $validated['created_by'] = auth()->id();
 
             BankAccount::create($validated);
 
             return redirect()
                 ->back()
-                ->with('message', 'Bank Account created successfully.');
+                ->with('success', 'Bank Account created successfully.');
         } catch (Exception $e) {
             Log::error('BankAccount Store Error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Something went wrong while creating the record.');
+            return redirect()
+                ->back()
+                ->withErrors(['server_error' => 'Something went wrong while creating the record.'])
+                ->withInput();
         }
     }
-
 
     /**
      * Display the specified resource.

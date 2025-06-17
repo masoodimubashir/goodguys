@@ -36,11 +36,11 @@ class AdminClientVednorsController extends Controller
         $validated = $request->validated();
 
 
-        Vendor::create(array_merge($validated, [
+        $vendor = Vendor::create(array_merge($validated, [
             'created_by' => auth()->user()->id,
         ]));
 
-        return redirect()->route('client-vendor.index')
+        return redirect()->route('client-vendor.show', $vendor->id )
             ->with('message', 'Vendor created successfully');
     }
 
@@ -126,7 +126,7 @@ class AdminClientVednorsController extends Controller
             'updated_by' => auth()->user()->id,
         ]));
 
-        return redirect()->route('client-vendor.index')->with('message', 'Vendor updated successfully');
+        return redirect()->route('client-vendor.show', $vendor->id)->with('message', 'Vendor updated successfully');
     }
 
     /**
@@ -140,6 +140,6 @@ class AdminClientVednorsController extends Controller
         $vendor->delete();
 
         return redirect()->route('client-vendor.index')
-            ->with('message', 'Vendor deleted successfully');
+            ->with('message', 'Party deleted successfully');
     }
 }

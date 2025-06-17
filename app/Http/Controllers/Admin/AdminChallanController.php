@@ -13,6 +13,7 @@ use App\Models\CompanyProfile;
 use App\Models\PurchasedProduct;
 use App\Models\PurchaseList;
 use App\Models\ReturnList;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -44,7 +45,6 @@ class AdminChallanController extends Controller
 
         DB::beginTransaction();
 
-
         try {
             // Create Challan Reference
             $challanReference = ChallanRefrence::create([
@@ -55,6 +55,7 @@ class AdminChallanController extends Controller
 
             // Create Challan Items
             $challanItems = [];
+            
             foreach ($validated['challan'] as $item) {
                 $challanItems[] = [
                     'challan_refrence_id' => $challanReference->id,
@@ -66,8 +67,10 @@ class AdminChallanController extends Controller
                     'narration' => $item['narration'] ?? 'NA',
                     'total' => $item['total'],
                     'created_by' => auth()->user()->id,
-                    'created_at' => $item['created_at'],
-                    'payment_flow' => $item['payment_flow'] === 1 ? true : false,
+                    'created_at' => Carbon::parse($item['created_at'])->format('Y-m-d H:i:s'),
+                    'payment_flow' => $item['payment_flow'] === null
+                        ? null
+                        : (bool) $item['payment_flow'],
                 ];
             }
 
@@ -194,9 +197,9 @@ class AdminChallanController extends Controller
     }
 
 
-    public function createChallanPdf($id) {
+    public function createChallanPdf($id)
+    {
 
         dd($id);
-
     }
 }

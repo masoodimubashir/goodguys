@@ -1,4 +1,4 @@
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import React, { useEffect, useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -9,6 +9,11 @@ import { Edit2, Trash, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import Swal from "sweetalert2";
 
 export default function Inventory({ inventories: initialPaginatedData }) {
+
+
+    console.log(initialPaginatedData);
+    
+
     const [paginatedData, setPaginatedData] = useState(initialPaginatedData);
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredData, setFilteredData] = useState(initialPaginatedData.data);
@@ -22,14 +27,22 @@ export default function Inventory({ inventories: initialPaginatedData }) {
         'Buying Price',
         'Item Type',
         'Item Subtype',
-        'Description',
         'Dimensions',
+        'Description',
         'Actions'
     ];
 
     useEffect(() => {
-        if (flash.message) ShowMessage('success', flash.message);
-        if (flash.error) ShowMessage('error', flash.error);
+        if (flash.message) {
+            ShowMessage('success', flash.message);
+            // Clear the flash message
+            router.reload({ only: [], preserveScroll: true, preserveState: true });
+        }
+        if (flash.error) {
+            ShowMessage('error', flash.error);
+            // Clear the flash message
+            router.reload({ only: [], preserveScroll: true, preserveState: true });
+        }
     }, [flash]);
 
     // Frontend search function
@@ -93,14 +106,14 @@ export default function Inventory({ inventories: initialPaginatedData }) {
     };
 
     const breadcrumbs = [
-        { href: '/inventory', label: 'Back', active: true }
+        { href: '/inventory', label: 'Inventory', active: true }
     ];
 
     return (
         <AuthenticatedLayout>
             <Head title="Inventory" />
 
-            <div className="row g-4 mt-4">
+            <div className="row g-4">
                 <div className="d-flex justify-content-between align-items-center">
                     <BreadCrumbHeader breadcrumbs={breadcrumbs} />
                     <Link href={route('inventory.create')} className="btn btn-sm btn-primary">
@@ -143,7 +156,6 @@ export default function Inventory({ inventories: initialPaginatedData }) {
                                         <td>₹{(item.buying_price)}</td>
                                         <td>{item.item_type}</td>
                                         <td>{item.item_sub_type || <span className="text-muted">N/A</span>}</td>
-                                        <td>{item.description || <span className="text-muted">N/A</span>}</td>
                                         <td>
                                             {Array.isArray(item.item_dimensions) ? (
                                                 item.item_dimensions.map((dimension, index) => {
@@ -160,6 +172,8 @@ export default function Inventory({ inventories: initialPaginatedData }) {
                                                 <span className="text-muted">N/A</span>
                                             )}
                                         </td>
+                                        <td>{item.description || <span className="text-muted">N/A</span>}</td>
+
                                         <td>
                                             <div className="d-flex align-items-center justify-items-center">
                                                 <Link className="dropdown-item" href={route('inventory.edit', item.id)} title="Edit">
@@ -170,6 +184,7 @@ export default function Inventory({ inventories: initialPaginatedData }) {
                                                 </button>
                                             </div>
                                         </td>
+
                                     </tr>
                                 ))
                             ) : (

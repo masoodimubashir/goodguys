@@ -23,7 +23,7 @@ class StoreVendorRequest extends FormRequest
     {
         return [
             'vendor_name' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:20',
+            'contact_number' => 'required|integer|digits:10',
             'email' => 'required|email|unique:vendors,email|max:255',
             'address' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',

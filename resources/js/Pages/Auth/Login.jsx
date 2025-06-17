@@ -102,22 +102,9 @@ export default function Login({ status, canResetPassword }) {
                     </button>
                 </div>
 
-                <div className="app-divider-v justify-content-center">
-                    <p>OR</p>
-                </div>
+            
 
-                <div className="text-center gap-1">
-                    
-
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="text-secondary"
-                        >
-                            Forgot your password?
-                        </Link>
-                    )}
-                </div>
+               
             </form>
         </GuestLayout>
     );

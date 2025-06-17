@@ -273,25 +273,37 @@ const ChallanPdf = ({ company_profile, challan, client, bankAccount }) => {
   const rawItems = challan?.challans || [];
   const hasPrices = rawItems.some(i => i.is_price_visible);
 
-  let subtotal = 0, inTotal = 0, outTotal = 0;
+  let subtotal = 0, inTotal = 0, outTotal = 0, returns = 0;
+
   rawItems.map((item, index) => {
     const price = parseFloat(item.price) || 0;
-    const total = item.total;
+    const total = parseFloat(item.total) || 0;
 
+    // Categorize by payment_flow
+    if (item.payment_flow === 1) {
+      inTotal += total;
+    } else if (item.payment_flow === 0) {
+      outTotal += total;
+    } else if (item.payment_flow === null) {
+      returns += total;
+    }
 
-    if (item.payment_flow === 1) inTotal += total;
-    else if (item.payment_flow === 0) outTotal += total;
-
+    // Accumulate subtotal if price is visible
     if (item.is_price_visible) subtotal += total;
 
     return { ...item, price, total };
   });
 
-  const serviceChargeAmount = outTotal * serviceCharge / 100;
-  const outWithServiceCharge = outTotal + serviceChargeAmount;
-  const balance = inTotal - outTotal;  
-  const spends = outTotal;             
-  const remainingBalance = inTotal - outWithServiceCharge;  
+
+  const spends = outTotal - returns;
+
+  // Apply service charge
+  const serviceChargeAmount = spends * serviceCharge / 100;
+
+  const outWithServiceCharge = spends + serviceChargeAmount;
+
+  // Adjusted calculations
+  const remainingBalance = inTotal - outWithServiceCharge;
 
 
   const ITEMS_PER_PAGE = 20;

@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreReturnListrequest;
 use App\Http\Requests\UpdateReturnListrequest;
 use App\Models\Activity;
+use App\Models\PurchasedItem;
 use App\Models\ReturnList;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -36,7 +38,7 @@ class AdminReturnListController extends Controller
     {
         try {
 
-           DB::beginTransaction();
+            DB::beginTransaction();
 
             $validated = $request->validated();
 
@@ -52,10 +54,23 @@ class AdminReturnListController extends Controller
                 'price' => $validated['price'],
                 'narration' => $validated['narration'],
                 'total' => $validated['price'],
-                'created_at' => $validated['return_date'],
+                'created_at' => Carbon::parse($validated['return_date'])->setTimeFromTimeString(now()->format('H:i:s')),
                 'multiplier' => 1,
                 'created_by' => auth()->user()->id,
                 'payment_flow' => true,
+            ]);
+
+
+            PurchasedItem::create( [
+                'client_id' => $validated['client_id'],
+                'unit_type' => $validated['item_name'],
+                'narration' => $validated['narration'],
+                'description' => $validated['item_name'],
+                'price' => $validated['price'],
+                'total' => $validated['price'],
+                'multiplier' => 1,
+                'created_by' => auth()->id(),
+                'created_at' => Carbon::parse($validated['return_date'])->setTimeFromTimeString(now()->format('H:i:s')),
             ]);
 
             DB::commit();

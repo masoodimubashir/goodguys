@@ -25,12 +25,16 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
         'Actions'
     ];
 
-    console.log(paginatedData);
-    
 
     useEffect(() => {
-        if (flash.message) ShowMessage('success', flash.message);
-        if (flash.error) ShowMessage('error', flash.error);
+        if (flash?.message) {
+            ShowMessage('success', flash.message);
+            // Clear the flash message after showing it
+        }
+        if (flash?.error) {
+            ShowMessage('error', flash.error);
+            // Clear the flash message after showing it
+        }
     }, [flash]);
 
     // Frontend search function
@@ -100,7 +104,7 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="Vendors" />
+            <Head title="Parties" />
 
             <div className="row g-4 mt-4">
                 <div className="d-flex justify-content-between align-items-center">
@@ -119,7 +123,7 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
                         <input
                             type="text"
                             className="form-control"
-                            placeholder="Search vendors..."
+                            placeholder="Search Parties..."
                             value={searchTerm}
                             onChange={handleSearch}
                         />
