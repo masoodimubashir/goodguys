@@ -124,6 +124,8 @@ const styles = StyleSheet.create({
     fontSize: 10,
     alignItems: 'center' // ADD THIS LINE - centers all content vertically
   },
+
+
   col1: { width: '8%', fontSize: 8, paddingRight: 3, color: 'white' },
   col2: { width: '20%', fontSize: 8, paddingRight: 3, color: 'white' },
   col4: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'left', color: 'white' },
@@ -451,7 +453,7 @@ export const ProformaPdf = ({ client, CompanyProfile, BankProfile, data }) => {
         {Object.entries(groupedModules).map(([moduleName, items]) => (
           <View key={moduleName} style={styles.moduleSection}>
             {/* Module Name Header */}
-            <Text style={styles.moduleHeader}>Unit Type: {moduleName}</Text>
+            <Text style={styles.moduleHeader}>UNIT TYPE: {moduleName}</Text>
 
             {/* Table for Module Items */}
             <View style={styles.table}>

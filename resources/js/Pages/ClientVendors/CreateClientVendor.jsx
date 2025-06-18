@@ -72,7 +72,7 @@ const CreateClientVendor = () => {
                                         {/* Vendor Name */}
                                         <div className="col-md-4 mb-3">
                                             <label htmlFor="vendor_name" className="form-label required">
-                                                Party Name <span className="text-danger">*</span>
+                                                Party Name 
                                             </label>
                                             <input
                                                 type="text"
@@ -95,7 +95,7 @@ const CreateClientVendor = () => {
                                         {/* Contact Number */}
                                         <div className="col-md-4 mb-3">
                                             <label htmlFor="contact_number" className="form-label required">
-                                                Contact Number <span className="text-danger">*</span>
+                                                Contact Number 
                                             </label>
                                             <input
                                                 type="tel"

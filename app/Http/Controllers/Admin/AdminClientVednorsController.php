@@ -33,8 +33,8 @@ class AdminClientVednorsController extends Controller
      */
     public function store(StoreVendorRequest $request)
     {
+        
         $validated = $request->validated();
-
 
         $vendor = Vendor::create(array_merge($validated, [
             'created_by' => auth()->user()->id,

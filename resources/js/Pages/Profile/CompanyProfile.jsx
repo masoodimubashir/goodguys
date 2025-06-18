@@ -8,9 +8,10 @@ import Button from '@/Components/Button';
 import { ShowMessage } from '@/Components/ShowMessage';
 
 const CompanyProfile = ({ companyProfile = {} }) => {
-    const { flash } = usePage().props;
+    const { flash, errors } = usePage().props;
 
-    const { data, setData, errors, processing } = useForm({
+
+    const { data, setData,  processing } = useForm({
         id: companyProfile?.id || '',
         company_name: companyProfile?.company_name || '',
         company_address: companyProfile?.company_address || '',
@@ -18,6 +19,8 @@ const CompanyProfile = ({ companyProfile = {} }) => {
         company_email: companyProfile?.company_email || '',
         logo: null,
     });
+
+
 
     useEffect(() => {
         if (flash.message) ShowMessage('success', flash.message);

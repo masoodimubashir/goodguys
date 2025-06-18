@@ -123,10 +123,12 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     paddingVertical: 6,
     paddingHorizontal: 5,
     minHeight: 25,
+    fontSize: 10,
+    alignItems: 'center' // ADD THIS LINE - centers all content vertically
   },
   colSerial: { width: '8%', fontSize: FONT_SIZES.small },
   colDesc: { width: '18%', fontSize: FONT_SIZES.small },
@@ -196,7 +198,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     paddingTop: 5
   },
-   sectionTitle: {
+  sectionTitle: {
     marginBottom: 10,
   },
   footer: {
@@ -444,16 +446,8 @@ const BankDetails = ({ bankAccount }) => {
         </View>
         <View style={styles.bankDetailsColumn}>
           <View style={styles.bankInfoItem}>
-            <Text style={styles.bankInfoLabel}>Branch Code:</Text>
-            <Text style={styles.bankInfoValue}>{bankAccount.branch_code}</Text>
-          </View>
-          <View style={styles.bankInfoItem}>
             <Text style={styles.bankInfoLabel}>UPI ID:</Text>
             <Text style={styles.bankInfoValue}>{bankAccount.upi_address}</Text>
-          </View>
-          <View style={styles.bankInfoItem}>
-            <Text style={styles.bankInfoLabel}>SWIFT Code:</Text>
-            <Text style={styles.bankInfoValue}>{bankAccount.swift_code}</Text>
           </View>
           <View style={styles.bankInfoItem}>
             <Text style={styles.bankInfoLabel}>Tax Number:</Text>

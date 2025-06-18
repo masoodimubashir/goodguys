@@ -13,49 +13,13 @@ import { ClientInfoCard } from '@/Components/ClientInfoCard';
 const ViewChallans = ({ client, company_profile, bankAccount }) => {
 
     const [selectedChallans, setSelectedChallans] = useState([]);
-    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
-    const [invoiceData, setInvoiceData] = useState({
-        invoice_number: '',
-        invoice_date: new Date().toISOString().split('T')[0],
-        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    });
+  
 
     // Calculate client statistics
     const clientStats = {
 
         totalChallans: client.challan_refrences.length,
-        // totalInvoices: client.invoices?.length || 0,
-
-        // balance: client.challan_refrences.reduce((sum, ref) => {
-        //    const items = ref.challans || [];
-        //     // Filter out credited items
-        //     const filteredItems = items.filter(item => item.is_credited === 0);
-
-        //     let inTotal = 0, outTotal;
-
-        //     filteredItems.forEach(item => {
-        //         const qty = parseFloat(item.qty) || 0;
-        //         const price = parseFloat(item.price) || 0;
-        //         const unitType = item.unit_type;
-
-        //         const value = qty > 1 ? price * qty : price;
-
-        //         if (unitType === 'in') {
-        //             inTotal += value;
-        //         }
-
-        //     });
-
-        //     // Calculate service charge on outTotal only
-        //     const serviceCharge = parseFloat(ref.service_charge) || 0;
-        //     const serviceChargeAmount = outTotal * serviceCharge / 100;
-        //     const outWithServiceCharge = outTotal + serviceChargeAmount;
-
-        //     // Final balance: inTotal - outWithServiceCharge
-        //     const balance = inTotal - outWithServiceCharge;
-
-        //     return sum + balance;
-        // }, 0),
+      
 
         spends: client.challan_refrences.reduce((sum, ref) => {
             const items = ref.challans || [];
@@ -138,9 +102,6 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
         const selectedRefs = client.challan_refrences.filter(ref => selectedChallans.includes(ref.id));
         return {
             client_id: client.id,
-            invoice_number: invoiceData.invoice_number,
-            invoice_date: invoiceData.invoice_date,
-            due_date: invoiceData.due_date,
             service_charge: client?.service_charge?.service_charge,
             items: selectedRefs.flatMap(ref =>
                 ref.challans.map(item => ({
@@ -169,15 +130,6 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
     const data = prepareInvoiceData();
 
 
-    // Create invoice
-    const createInvoice = () => {
-        router.post(route('invoices.store'), prepareInvoiceData(), {
-            onSuccess: () => {
-                setShowInvoiceModal(false);
-                setSelectedChallans([]);
-            }
-        });
-    };
 
     const handleDelete = (id) => {
         Swal.fire({
@@ -231,42 +183,7 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                     </Col>
                 </Row>
 
-                {/* Client Analytics */}
-                <Row className="mb-4">
-
-                    {/* <Col md={4}>
-                        <Card className="border-0 shadow-sm">
-                            <Card.Body>
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 className="text-muted mb-2">Total Invoices</h6>
-                                        <h3 className="mb-0">{clientStats.totalInvoices}</h3>
-                                    </div>
-                                    <div className="bg-success bg-opacity-10 p-3 rounded">
-                                        <CreditCard size={20} className="text-white" />
-                                    </div>
-                                </div>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                    <Col md={4}>
-                        <Card className="border-0 shadow-sm">
-                            <Card.Body>
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 className="text-muted mb-2">Total Billed</h6>
-                                        <h3 className="mb-0">₹{clientStats.balance.toLocaleString('en-IN')}</h3>
-                                    </div>
-                                    <div className="bg-info bg-opacity-10 p-3 rounded">
-                                        <Calendar size={20} className="text-white" />
-                                    </div>
-                                </div>
-                            </Card.Body>
-                        </Card>
-                    </Col> */}
-
-                </Row>
-
+              
                 {/* Challans Table */}
                 <div>
                     <div className="d-flex justify-content-between align-items-center">
