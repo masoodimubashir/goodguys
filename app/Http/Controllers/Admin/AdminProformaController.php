@@ -52,14 +52,14 @@ class AdminProformaController extends Controller
         DB::beginTransaction();
 
         try {
+
             $data = $request->validated();
-
-
 
             // Step 1: Create Proforma Reference
             $proformaRefrence = ProformaRefrence::create([
-                'proforma_number' => uniqid('PRF-'),
+                'proforma_number' => uniqid('Est-'),
                 'client_id' => $data['client_id'],
+                'created_at' => $data['created_at']
             ]);
 
             // Step 2: Loop through each module (product)
@@ -157,7 +157,8 @@ class AdminProformaController extends Controller
 
         // Reset conversion status on update
         $proformaReference->update([
-            'is_converted_to_invoice' => 0
+            'is_converted_to_invoice' => 0,
+            'created_at' => $data['created_at']
         ]);
 
         // Track processed modules and items

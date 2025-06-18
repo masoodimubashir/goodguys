@@ -4,7 +4,6 @@ import { Container, Card, Row, Col, Form, Button, Accordion } from "react-bootst
 
 export default function EditProforma({ proforma, modules, inventories }) {
 
-    
 
     const { data, setData, put, processing, errors } = useForm({
         id: proforma.id,
@@ -13,6 +12,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
         client_address: proforma.client?.client_address || "",
         site_name: proforma.client?.site_name || "",
         service_charge: proforma.service_charge || 0,
+        created_at: proforma.created_at?.split('T')[0] || '',
         show_all_prices: true,
         products: [],
     });
@@ -22,7 +22,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
         if (proforma && proforma.proformas) {
             // Group items by module
             const modulesMap = {};
-            
+
             proforma.proformas.forEach(item => {
                 if (!modulesMap[item.proforma_module_id]) {
                     modulesMap[item.proforma_module_id] = {
@@ -125,12 +125,12 @@ export default function EditProforma({ proforma, modules, inventories }) {
     const removeItem = (productIndex, itemIndex) => {
         const newProducts = [...data.products];
         newProducts[productIndex].items.splice(itemIndex, 1);
-        
+
         // If last item is removed, remove the entire product
         if (newProducts[productIndex].items.length === 0) {
             newProducts.splice(productIndex, 1);
         }
-        
+
         setData("products", newProducts);
     };
 
@@ -290,20 +290,10 @@ export default function EditProforma({ proforma, modules, inventories }) {
                 <h4 className="text-center text-primary mb-5 fw-bold">Edit Estimate</h4>
 
                 <Form onSubmit={handleSubmit}>
+
                     <Row className="mb-4 g-3">
-                        <Col md={3}>
-                            <Form.Group>
-                                <Form.Check
-                                    size="sm"
-                                    type="switch"
-                                    id="price-visibility-switch"
-                                    label={data.show_all_prices ? "Showing all prices" : "Hiding all prices"}
-                                    checked={data.show_all_prices}
-                                    onChange={(e) => toggleAllPricesVisibility(e.target.checked)}
-                                />
-                            </Form.Group>
-                        </Col>
-                        <Col md={3}>
+
+                        <Col md={4}>
                             <Form.Group>
                                 <Form.Control
                                     size="sm"
@@ -315,7 +305,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
                             </Form.Group>
                         </Col>
 
-                        <Col md={3}>
+                        <Col md={4}>
                             <Form.Group>
                                 <Form.Control
                                     size="sm"
@@ -328,16 +318,39 @@ export default function EditProforma({ proforma, modules, inventories }) {
                             </Form.Group>
                         </Col>
 
-                        <Col md={3}>
+                        <Col md={4}>
                             <Form.Group>
                                 <Form.Control
                                     size="sm"
                                     type="text"
-                                    disabled
-
                                     value={data.site_name}
-                                    onChange={(e) => setData("site_name", parseFloat(e.target.value) || 0)}
                                     isInvalid={!!errors.site_name}
+                                    disabled
+                                />
+                            </Form.Group>
+                        </Col>
+
+                        <Col md={4}>
+                            <Form.Group>
+                                <Form.Control
+                                    size="sm"
+                                    type="date"
+                                    value={data.created_at}
+                                    onChange={(e) => setData("created_at", e.target.value)}
+                                    isInvalid={!!errors.created_at}
+                                />
+                            </Form.Group>
+                        </Col>
+
+                        <Col md={4}>
+                            <Form.Group>
+                                <Form.Check
+                                    size="sm"
+                                    type="switch"
+                                    id="price-visibility-switch"
+                                    label={data.show_all_prices ? "Showing all prices" : "Hiding all prices"}
+                                    checked={data.show_all_prices}
+                                    onChange={(e) => toggleAllPricesVisibility(e.target.checked)}
                                 />
                             </Form.Group>
                         </Col>
@@ -379,7 +392,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
                                                 onClick={() => removeProduct(productIndex)}
                                                 className="me-2"
                                             >
-                                                <i className="ti ti-trash"></i> 
+                                                <i className="ti ti-trash"></i>
                                             </Button>
                                             <Button
                                                 variant="outline-success"
@@ -398,7 +411,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
                                                 <Col md={12}>
                                                     <h6 className="mb-3">Item {itemIndex + 1}</h6>
                                                 </Col>
-                                                
+
                                                 <Col md={2}>
                                                     <Form.Group>
                                                         <Form.Label>Source</Form.Label>

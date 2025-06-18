@@ -169,7 +169,7 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
                                 <tr>
                                     <td colSpan={tableHead.length} className="text-center text-muted py-4">
                                         <i className="ti ti-users fs-4 d-block mb-2"></i>
-                                        {searchTerm ? 'No matching vendors found' : 'No vendors found'}
+                                        {searchTerm ? 'No matching parties found' : 'No parties found'}
                                     </td>
                                 </tr>
                             )}

@@ -118,7 +118,7 @@ export default function Dashboard({
                 </motion.div>
 
                 {/* Inventory Items Card */}
-                <motion.div
+                {/* <motion.div
                     className="col-md-6 col-xl-3 mb-4"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -145,7 +145,7 @@ export default function Dashboard({
                             </div>
                         </div>
                     </div>
-                </motion.div>
+                </motion.div> */}
 
                 {/* Total Inventory Value */}
                 <motion.div

@@ -19,8 +19,14 @@ class Proforma extends Model
         'is_price_visible',
         'proforma_module_id',
         'proforma_refrence_id',
+        'created_at',
+        'updated_at',
     ];
 
+
+    protected $casts = [
+        'created_at' => 'datetime',
+    ];
 
 
     public function module(): BelongsTo

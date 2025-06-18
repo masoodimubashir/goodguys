@@ -10,6 +10,7 @@ export default function CreateProforma({ client, modules, inventories }) {
         service_charge: client?.service_charge?.service_charge ?? 0,
         site_name: client?.site_name || "",
         show_all_prices: true,
+        created_at: new Date().toISOString().split('T')[0],
         products: [
             {
                 module_name: "",
@@ -38,7 +39,7 @@ export default function CreateProforma({ client, modules, inventories }) {
         setData("products", [
             ...data.products,
             {
-                module_name:  "",
+                module_name: "",
                 items: [
                     {
                         source: "custom",
@@ -121,7 +122,7 @@ export default function CreateProforma({ client, modules, inventories }) {
     // Handle item selection from inventory/module
     const handleItemSelect = (productIndex, itemIndex, sourceId) => {
 
-        
+
 
         const newProducts = [...data.products];
         const parsedId = parseInt(sourceId);
@@ -160,7 +161,7 @@ export default function CreateProforma({ client, modules, inventories }) {
                         const parts = dim.split(",");
                         return {
                             type: parts[0] || "",
-                            value:parts[1]  || "",
+                            value: parts[1] || "",
                             si: parts[2] || ""
                         };
                     }),
@@ -173,7 +174,7 @@ export default function CreateProforma({ client, modules, inventories }) {
 
     // Handle dimension changes
     const handleDimensionChange = (productIndex, itemIndex, dimIndex, field, value) => {
-        
+
         const newProducts = [...data.products];
         newProducts[productIndex].items[itemIndex].item_dimensions[dimIndex][field] = value;
         setData("products", newProducts);
@@ -231,19 +232,8 @@ export default function CreateProforma({ client, modules, inventories }) {
 
                 <Form onSubmit={handleSubmit}>
                     <Row className="mb-4 g-3">
-                        <Col md={3}>
-                            <Form.Group>
-                                <Form.Check
-                                    size="sm"
-                                    type="switch"
-                                    id="price-visibility-switch"
-                                    label={data.show_all_prices ? "Showing all prices" : "Hiding all prices"}
-                                    checked={data.show_all_prices}
-                                    onChange={(e) => toggleAllPricesVisibility(e.target.checked)}
-                                />
-                            </Form.Group>
-                        </Col>
-                        <Col md={3}>
+
+                        <Col md={4}>
                             <Form.Group>
                                 <Form.Control
                                     size="sm"
@@ -255,7 +245,7 @@ export default function CreateProforma({ client, modules, inventories }) {
                             </Form.Group>
                         </Col>
 
-                        <Col md={3}>
+                        <Col md={4}>
                             <Form.Group>
                                 <Form.Control
                                     size="sm"
@@ -268,7 +258,7 @@ export default function CreateProforma({ client, modules, inventories }) {
                             </Form.Group>
                         </Col>
 
-                        <Col md={3}>
+                        <Col md={4}>
                             <Form.Group>
                                 <Form.Control
                                     size="sm"
@@ -276,7 +266,32 @@ export default function CreateProforma({ client, modules, inventories }) {
                                     value={data.site_name}
                                     onChange={(e) => setData("site_name", parseFloat(e.target.value) || 0)}
                                     isInvalid={!!errors.site_name}
-                                    disabled    
+                                    disabled
+                                />
+                            </Form.Group>
+                        </Col>
+
+                        <Col md={4}>
+                            <Form.Group>
+                                <Form.Control
+                                    size="sm"
+                                    type="date"
+                                    value={data.created_at}
+                                    onChange={(e) => setData("created_at", e.target.value)}
+                                    isInvalid={!!errors.created_at}
+                                />
+                            </Form.Group>
+                        </Col>
+
+                        <Col md={4}>
+                            <Form.Group>
+                                <Form.Check
+                                    size="sm"
+                                    type="switch"
+                                    id="price-visibility-switch"
+                                    label={data.show_all_prices ? "Showing all prices" : "Hiding all prices"}
+                                    checked={data.show_all_prices}
+                                    onChange={(e) => toggleAllPricesVisibility(e.target.checked)}
                                 />
                             </Form.Group>
                         </Col>
@@ -318,7 +333,7 @@ export default function CreateProforma({ client, modules, inventories }) {
                                                 onClick={() => removeProduct(productIndex)}
                                                 className="me-2"
                                             >
-                                                <i className="ti ti-trash"></i> 
+                                                <i className="ti ti-trash"></i>
                                             </Button>
                                             <Button
                                                 variant="outline-success"

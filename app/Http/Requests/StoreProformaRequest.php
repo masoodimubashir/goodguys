@@ -28,6 +28,7 @@ class StoreProformaRequest extends FormRequest
             'show_all_prices' => ['required', 'boolean'],
             'service_charge' => ['nullable', 'integer'],
             'site_name' => ['required', 'string'],
+            'created_at' => ['required', 'date'],
 
             'products' => ['required', 'array', 'min:1'],
             'products.*.module_name' => ['required', 'string'],

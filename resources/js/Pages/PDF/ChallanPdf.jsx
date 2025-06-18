@@ -33,16 +33,7 @@ const FONT_SIZES = {
 
 const styles = StyleSheet.create({
   page1: {
-    paddingTop: '35%',
-    paddingRight: 40,
-    paddingBottom: 40,
-    paddingLeft: 40,
-    fontFamily: 'Helvetica',
-    backgroundColor: '#ffffff',
-    position: 'relative',
-  },
-  page2: {
-    paddingTop: 40,
+    paddingTop: '15%',
     paddingRight: 40,
     paddingBottom: 40,
     paddingLeft: 40,
@@ -59,46 +50,69 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     position: 'relative',
   },
+  page2: {
+    paddingTop: 40,
+    paddingRight: 40,
+    paddingBottom: 40,
+    paddingLeft: 40,
+    fontFamily: 'Helvetica',
+    backgroundColor: '#ffffff',
+    position: 'relative',
+  },
+
   header: {
-    marginBottom: 25,
-    paddingBottom: 15,
+    marginBottom: 30,
+    padding: 20,
     borderBottomWidth: 2,
-    borderBottomColor: COLORS.primary,
+    borderBottomColor: colors.primary,
     flexDirection: 'column',
     alignItems: 'center',
+    justifyContent: 'center',
     textAlign: 'center',
+    backgroundColor: '#f9f9f9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    width: '100%',
   },
-  logo: { width: 70, height: 70, marginBottom: 10 },
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 15,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
   companyName: {
     fontSize: FONT_SIZES.xxlarge,
     fontWeight: 'bold',
-    color: COLORS.primary,
-    marginBottom: 3,
+    color: colors.primary,
+    marginBottom: 10,
     textAlign: 'center',
+    letterSpacing: 0.5,
   },
   companyDetails: {
     fontSize: FONT_SIZES.medium,
-    color: COLORS.textLight,
-    lineHeight: 1.5,
+    color: colors.textLight,
+    lineHeight: 1.6,
     textAlign: 'center',
+    marginBottom: 5,
   },
-  sectionContainer: { marginBottom: 20 },
-  sectionTitle: {
-    fontSize: FONT_SIZES.xlarge,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    marginBottom: 10,
-    paddingBottom: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  infoContainer: {
-    padding: 15,
-    backgroundColor: COLORS.lightBg,
-    borderRadius: 4,
+  clientInfo: {
+    marginBottom: 25,
+    padding: 20,
+    flexDirection: 'column',
     alignItems: 'center',
+    textAlign: 'center',
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  value: { fontSize: FONT_SIZES.medium, color: COLORS.textDark },
   table: { width: '100%' },
   tableHeader: {
     flexDirection: 'row',
@@ -182,6 +196,9 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     paddingTop: 5
   },
+   sectionTitle: {
+    marginBottom: 10,
+  },
   footer: {
     position: 'absolute',
     bottom: 30,
@@ -211,25 +228,51 @@ const styles = StyleSheet.create({
 const Header = ({ company }) => (
   <View style={styles.header}>
     {company?.logo && <Image style={styles.logo} src={`/storage/${company.logo}`} />}
-    <Text style={styles.companyName}>{company?.company_name || 'Company Name'}</Text>
-    <Text style={styles.companyDetails}>
-      {company?.company_address || 'Address'}\nPhone: {company?.company_contact_no || 'N/A'}\nEmail: {company?.company_email || 'N/A'}
+    <Text style={styles.companyName}>
+      {company?.company_name || 'Company Name'}
     </Text>
+    <View style={{ width: '100%', alignItems: 'center' }}>  {/* Added width and alignItems */}
+      <Text style={styles.companyDetails}>
+        {company?.company_address || 'Address'}
+      </Text>
+      <Text style={styles.companyDetails}>
+        Contact: {company?.company_contact_no || 'N/A'} | Email: {company?.company_email || 'N/A'}
+      </Text>
+    </View>
   </View>
 );
 
 const ClientInfo = ({ client, challan, serviceCharge, hasPrices }) => (
-  <View style={styles.infoContainer}>
-    <Text style={styles.sectionTitle}>Deliver To:</Text>
-    <Text style={[styles.value, { fontSize: FONT_SIZES.large, fontWeight: 'bold' }]}>{client?.client_name}</Text>
-    <Text style={styles.value}>{client?.client_address}</Text>
-    <Text style={styles.value}>Phone: {client?.client_phone}</Text>
-    <Text style={styles.value}>Email: {client?.client_email}</Text>
-    <Text style={styles.value}>Site Name: {client?.site_name}</Text>
-    <Text style={styles.value}>Dated: {challan?.date}</Text>
-    {hasPrices && <Text style={styles.value}>Service Charge: {serviceCharge}%</Text>}
+  <View style={styles.clientInfo}>
+    <Text style={[styles.companyName, { fontSize: FONT_SIZES.xlarge, marginBottom: 15 }]}>
+      Estimate
+    </Text>
+    <View style={{ width: '100%' }}>
+      <Text style={styles.companyDetails}>
+        <Text style={{ fontWeight: 'bold' }}>Client:</Text> {client?.client_name}
+      </Text>
+      <Text style={styles.companyDetails}>
+        <Text style={{ fontWeight: 'bold' }}>Address:</Text> {client?.client_address}
+      </Text>
+      <Text style={styles.companyDetails}>
+        <Text style={{ fontWeight: 'bold' }}>Contact:</Text> {client?.client_phone} | {client?.client_email}
+      </Text>
+      <Text style={styles.companyDetails}>
+        <Text style={{ fontWeight: 'bold' }}>Site Type:</Text> {client?.site_name}
+      </Text>
+      <Text style={[styles.companyDetails, { marginTop: 10 }]}>
+        <Text style={{ fontWeight: 'bold' }}>Date:</Text>
+        {new Date(challan?.created_at).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })}
+      </Text>
+      {hasPrices && <Text style={styles.companyDetails}>Service Charge: {serviceCharge}%</Text>}
+    </View>
   </View>
 );
+
 
 const ItemsTable = ({ items, hasPrices }) => (
   <View style={styles.sectionContainer}>

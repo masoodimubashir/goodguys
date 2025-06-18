@@ -17,13 +17,13 @@ const FONT_SIZES = {
   medium: 9,
   large: 10,
   xlarge: 12,
-  xxlarge: 20,
+  xxlarge: 30,
   title: 28,
 };
 
 const styles = StyleSheet.create({
   page1: {
-    paddingTop: '35%',
+    paddingTop: '15%',
     paddingRight: 40,
     paddingBottom: 40,
     paddingLeft: 40,
@@ -51,72 +51,57 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    marginBottom: 25,
-    paddingBottom: 15,
+    marginBottom: 30,
+    padding: 20,
     borderBottomWidth: 2,
     borderBottomColor: colors.primary,
     flexDirection: 'column',
-    alignItems: 'center',
+    alignItems: 'center',  // This should center children horizontally
+    justifyContent: 'center',  // Add this to center vertically in container
     textAlign: 'center',
+    backgroundColor: '#f9f9f9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    width: '100%',  // Ensure full width
   },
-  logo: { width: 70, height: 70, marginBottom: 10 },
+  logo: {
+    width: 120,  // Slightly reduced
+    height: 120,
+    marginBottom: 15,
+    borderRadius: 60,  // Perfect circle
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
   companyName: {
     fontSize: FONT_SIZES.xxlarge,
     fontWeight: 'bold',
     color: colors.primary,
-    marginBottom: 3,
+    marginBottom: 10,  // Reduced margin
     textAlign: 'center',
+    letterSpacing: 0.5,  // Added letter spacing
   },
   companyDetails: {
     fontSize: FONT_SIZES.medium,
     color: colors.textLight,
-    lineHeight: 1.5,
+    lineHeight: 1.6,  // Increased line height
     textAlign: 'center',
+    marginBottom: 5,  // Consistent margin
   },
-  companyDetails: {
-    fontSize: 9,
-    color: colors.textLight,
-    lineHeight: 1.4
-  },
-  invoiceTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: colors.secondary,
-    textAlign: 'right'
-  },
-  invoiceInfo: {
-    marginBottom: 20,
-    padding: 15,
-    backgroundColor: colors.lightBg,
-    borderRadius: 4,
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  },
-  column: {
-    width: '48%'
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4
-  },
-  label: {
-    fontSize: 9,
-    color: colors.textLight,
-    fontWeight: 'bold'
-  },
-  value: {
-    fontSize: 9,
-    color: colors.textDark
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: colors.primary,
-    marginBottom: 10,
-    paddingBottom: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border
+  clientInfo: {
+    marginBottom: 25,
+    padding: 20,  // Added padding
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    backgroundColor: '#f9f9f9',  // Matching header style
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   table: {
     width: '100%',
@@ -128,6 +113,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 5
   },
+
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
@@ -135,7 +121,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 5,
     minHeight: 25,
-    fontSize: 10
+    fontSize: 10,
+    alignItems: 'center' // ADD THIS LINE - centers all content vertically
   },
   col1: { width: '8%', fontSize: 8, paddingRight: 3, color: 'white' },
   col2: { width: '20%', fontSize: 8, paddingRight: 3, color: 'white' },
@@ -145,12 +132,13 @@ const styles = StyleSheet.create({
   col3: { width: '20%', fontSize: 8, paddingRight: 3, color: 'white' }, // Increased description width
 
 
-  dataCol1: { width: '8%', fontSize: 8, paddingRight: 3 },
-  dataCol2: { width: '20%', fontSize: 8, paddingRight: 3 },
-  dataCol4: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'left' },
-  dataCol5: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'left' },
-  dataCol6: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'left' },
-  dataCol3: { width: '20%', fontSize: 8, paddingRight: 3, textAlign: 'left' }, // Match header
+  // For your data columns, just add textAlignVertical:
+  dataCol1: { width: '8%', fontSize: 8, paddingRight: 3, textAlignVertical: 'center' },
+  dataCol2: { width: '20%', fontSize: 8, paddingRight: 3, textAlignVertical: 'center' },
+  dataCol4: { width: '10%', fontSize: 8, paddingRight: 3, textAlign: 'left', textAlignVertical: 'center' },
+  dataCol5: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'left', textAlignVertical: 'center' },
+  dataCol6: { width: '12%', fontSize: 8, paddingRight: 3, textAlign: 'left', textAlignVertical: 'center' },
+  dataCol3: { width: '20%', fontSize: 8, paddingRight: 3, textAlign: 'left', textAlignVertical: 'center' },
 
   totalsSection: {
     width: '100%',
@@ -251,6 +239,9 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     paddingTop: 5
   },
+  sectionTitle: {
+    marginBottom: 10,
+  },
   footer: {
     position: 'absolute',
     bottom: 30,
@@ -320,32 +311,49 @@ const Header = ({ company }) => (
   <View style={styles.header}>
     {company?.logo && <Image style={styles.logo} src={`/storage/${company.logo}`} />}
     <Text style={styles.companyName}>
-      Company Name: {company?.company_name || 'Company Name'}</Text>
-    <Text style={styles.companyDetails}>
-      Comapny Address: {company?.company_address || 'Address'}
+      {company?.company_name || 'Company Name'}
     </Text>
-    <Text style={styles.companyDetails}>
-      Contact No: {company?.company_contact_no || 'Address'}
-    </Text>
-    <Text style={styles.companyDetails}>
-      Email: {company?.company_email || 'Address'}
-    </Text>
+    <View style={{ width: '100%', alignItems: 'center' }}>  {/* Added width and alignItems */}
+      <Text style={styles.companyDetails}>
+        {company?.company_address || 'Address'}
+      </Text>
+      <Text style={styles.companyDetails}>
+        Contact: {company?.company_contact_no || 'N/A'} | Email: {company?.company_email || 'N/A'}
+      </Text>
+    </View>
   </View>
 );
 
 const ClientInfo = ({ client, data }) => (
   <View style={styles.clientInfo}>
-    <Text style={styles.companyName}>Estimate</Text>
-    <Text style={[styles.companyDetails]}>
-      Client Name: {client?.client_name}
+    <Text style={[styles.companyName, { fontSize: FONT_SIZES.xlarge, marginBottom: 15 }]}>
+      Quotation
     </Text>
-    <Text style={styles.companyDetails}>Client Address: {client?.client_address}</Text>
-    <Text style={styles.companyDetails}>Phone: {client?.client_phone}</Text>
-    <Text style={styles.companyDetails}>Email: {client?.client_email}</Text>
-    <Text style={styles.companyDetails}>Type: {client?.site_name}</Text>
-    <Text style={styles.companyDetails}>Dated: {new Date(data?.created_at).toLocaleDateString()}</Text>
+    <View style={{ width: '100%' }}>
+      <Text style={styles.companyDetails}>
+        <Text style={{ fontWeight: 'bold' }}>Client:</Text> {client?.client_name}
+      </Text>
+      <Text style={styles.companyDetails}>
+        <Text style={{ fontWeight: 'bold' }}>Address:</Text> {client?.client_address}
+      </Text>
+      <Text style={styles.companyDetails}>
+        <Text style={{ fontWeight: 'bold' }}>Contact:</Text> {client?.client_phone} | {client?.client_email}
+      </Text>
+      <Text style={styles.companyDetails}>
+        <Text style={{ fontWeight: 'bold' }}>Site Type:</Text> {client?.site_name}
+      </Text>
+      <Text style={[styles.companyDetails, { marginTop: 10 }]}>
+        <Text style={{ fontWeight: 'bold' }}>Date:</Text> {new Date(data?.created_at).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })}
+      </Text>
+    </View>
   </View>
 );
+
+
 
 const BankDetails = ({ bankAccount }) => {
   if (!bankAccount) return null;
@@ -372,18 +380,12 @@ const BankDetails = ({ bankAccount }) => {
           </View>
         </View>
         <View style={styles.bankDetailsColumn}>
-          <View style={styles.bankInfoItem}>
-            <Text style={styles.bankInfoLabel}>Branch Code:</Text>
-            <Text style={styles.bankInfoValue}>{bankAccount.branch_code}</Text>
-          </View>
+         
           <View style={styles.bankInfoItem}>
             <Text style={styles.bankInfoLabel}>UPI ID:</Text>
             <Text style={styles.bankInfoValue}>{bankAccount.upi_address}</Text>
           </View>
-          <View style={styles.bankInfoItem}>
-            <Text style={styles.bankInfoLabel}>SWIFT Code:</Text>
-            <Text style={styles.bankInfoValue}>{bankAccount.swift_code}</Text>
-          </View>
+        
           <View style={styles.bankInfoItem}>
             <Text style={styles.bankInfoLabel}>Tax Number:</Text>
             <Text style={styles.bankInfoValue}>{bankAccount.tax_number}</Text>
@@ -460,7 +462,8 @@ export const ProformaPdf = ({ client, CompanyProfile, BankProfile, data }) => {
                 <Text style={styles.col4}>Quantity</Text>
                 <Text style={styles.col5}>Price</Text>
                 <Text style={styles.col6}>Total</Text>
-                <Text style={styles.col3}>Description/Dimensions</Text>
+                <Text style={styles.col3}>Description</Text>
+                <Text style={styles.col3}>Dimensions</Text>
               </View>
 
               {/* Table Rows for Items */}
@@ -485,22 +488,21 @@ export const ProformaPdf = ({ client, CompanyProfile, BankProfile, data }) => {
                     <Text style={styles.dataCol6}>{isVisible ? total.toFixed(2) : '—'}</Text>
                     <Text style={styles.dataCol3}>
                       {item.description ? <>{item.description}</> : 'NA'}
-
-                      {dimensions.length > 0 && (
-                        <Text>
+                    </Text>
+                    {
+                      dimensions.length > 0 ? (
+                        <Text style={styles.dataCol3}>
                           {dimensions.map((d, i) => (
-                            <>
+                            <React.Fragment key={`dim-${i}`}>
+                              {d.type}: {d.value}{d.si}
                               {'\n'}
-                              <Text key={i}>
-                                {d.type}: {d.value}{d.si}
-                                {i < dimensions.length - 1 ? ', ' : ''}
-                              </Text>
-                            </>
-
+                            </React.Fragment>
                           ))}
                         </Text>
-                      )}
-                    </Text>
+                      ) : (
+                        <Text style={styles.dataCol3}>NA</Text>
+                      )
+                    }
                   </View>
                 );
               })}

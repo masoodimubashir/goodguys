@@ -356,7 +356,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                         <li className="nav-item" role="presentation">
                             <button className="nav-link d-flex align-items-center gap-1 active" data-bs-toggle="tab" data-bs-target="#purchase-items-tab" type="button" role="tab">
                                 <Activity size={16} />
-                                Ledger
+                                Payment
                             </button>
                         </li>
                         <li className="nav-item" role="presentation">

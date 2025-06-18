@@ -9,7 +9,7 @@ import { useState } from "react";
 import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
 
 export default function CreateModule({ fields = [] }) {
-    
+
     const [touched, setTouched] = useState({
         module_name: false,
         count: false,
@@ -167,7 +167,7 @@ export default function CreateModule({ fields = [] }) {
                     </div>
                 </div>
 
-               
+
 
                 <div className="row">
                     <div className="col-12">
@@ -232,22 +232,7 @@ export default function CreateModule({ fields = [] }) {
                                             <InputError message={errors.count} />
                                         </div>
 
-                                        {/* Description */}
-                                        <div className="col-12 mb-4">
-                                            <InputLabel htmlFor="description" value="Module Description" />
-                                            <TextInput
-                                                id="description"
-                                                type="text"
-                                                value={data.description}
-                                                onChange={(e) => {
-                                                    setTouched(prev => ({ ...prev, description: true }));
-                                                    setData('description', e.target.value);
-                                                }}
-                                                onBlur={() => setTouched(prev => ({ ...prev, description: true }))}
-                                                placeholder="Enter Description"
-                                            />
-                                            <InputError message={errors.description} />
-                                        </div>
+
 
                                         {/* Attributes */}
                                         <div className="col-12 mb-3">
@@ -271,7 +256,7 @@ export default function CreateModule({ fields = [] }) {
                                                     <div className="col-md-5 mb-2">
                                                         <CreatableSelect
                                                             options={fieldOptions}
-                                                           
+
                                                             onChange={(selected) => {
                                                                 const touchedAttributes = [...(touched.attributes || [])];
                                                                 touchedAttributes[index] = touchedAttributes[index] || {};
@@ -415,6 +400,23 @@ export default function CreateModule({ fields = [] }) {
                                                     {errors.fields}
                                                 </div>
                                             )}
+                                        </div>
+
+                                        {/* Description */}
+                                        <div className="col-12 mb-4">
+                                            <InputLabel htmlFor="description" value="Module Description" />
+                                            <TextInput
+                                                id="description"
+                                                type="text"
+                                                value={data.description}
+                                                onChange={(e) => {
+                                                    setTouched(prev => ({ ...prev, description: true }));
+                                                    setData('description', e.target.value);
+                                                }}
+                                                onBlur={() => setTouched(prev => ({ ...prev, description: true }))}
+                                                placeholder="Enter Description"
+                                            />
+                                            <InputError message={errors.description} />
                                         </div>
 
                                         {/* Submit */}

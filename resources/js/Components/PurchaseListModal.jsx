@@ -8,14 +8,13 @@ export const PurchaseListModal = ({
     onHide,
     vendors,
     isEditing,
-    initialData = null,
     setPurchaseItems,
     setFilteredItems,
     client
 }) => {
 
-    // Initialize form with useForm
-    const { data, setData, post, put, processing, errors, reset } = useForm({
+
+    const { data, setData, post, processing, errors, reset } = useForm({
         vendor_id: '',
         vendor_name: '',
         client_id: client?.id,
@@ -28,18 +27,14 @@ export const PurchaseListModal = ({
 
     const [previewUrl, setPreviewUrl] = useState(null);
 
-    // Initialize form with initialData when provided (for editing)
+    // Reset form when modal shows/hides
     useEffect(() => {
-        if (initialData) {
-            setData(initialData);
-            if (initialData.bill_url) {
-                setPreviewUrl(initialData.bill_url);
-            }
-        } else {
+        if (show) {
+
             reset();
             setPreviewUrl(null);
         }
-    }, [show, initialData]);
+    }, [show]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -48,44 +43,42 @@ export const PurchaseListModal = ({
             setPreviewUrl(URL.createObjectURL(file));
         }
     };
-
     const handleSubmit = (e) => {
+
         e.preventDefault();
 
         const formData = new FormData();
-        for (const key in data) {
-            if (data[key] !== null) {
-                formData.append(key, data[key]);
-            }
-        }
+        Object.entries(data).forEach(([key, value]) => {
+            if (value !== null) formData.append(key, value);
+        });
 
-        const url = isEditing && initialData?.id
-            ? `/purchase-list/${initialData.id}`
-            : '/purchase-list';
-
-        const method = isEditing ? put : post;
-
-        method(url, formData, {
+        post('/purchase-list', formData, {
             preserveScroll: true,
             onSuccess: (page) => {
-                onHide();
-                reset();
+
+
                 if (page.props.purchase_items) {
                     setPurchaseItems(page.props.purchase_items);
                     setFilteredItems(page.props.purchase_items);
                 }
+
+                if (page.props.message) {
+                    ShowMessage('success', page.props.message);
+                }
             },
-            onerror: (errors) => {
-                ShowMessage('error', 'An error occurred while saving the purchase list.');
+            onError: (errors) => {
+                ShowMessage('error', errors?.message || 'Operation failed');
             }
         });
+
+        reset();
+        setPreviewUrl(null);
+        onHide();
     };
 
     return (
         <Modal show={show} onHide={onHide} backdrop="static" size="lg" centered>
-            <Form onSubmit={handleSubmit} encType='multipart/form-data'>
-                
-
+            <Form onSubmit={handleSubmit} encType="multipart/form-data">
                 <Modal.Body className="p-4">
                     <div className="row">
                         <div className="col-md-6">
@@ -102,7 +95,9 @@ export const PurchaseListModal = ({
                                 >
                                     <option value="">Select Party</option>
                                     {vendors.map(vendor => (
-                                        <option key={vendor.id} value={vendor.id}>{vendor.vendor_name}</option>
+                                        <option key={vendor.id} value={vendor.id}>
+                                            {vendor.vendor_name}
+                                        </option>
                                     ))}
                                 </Form.Select>
                                 <Form.Control.Feedback type="invalid">{errors.vendor_id}</Form.Control.Feedback>
@@ -175,38 +170,28 @@ export const PurchaseListModal = ({
                             </Form.Group>
                         </div>
 
-                        <div className="col-md-12">
-                            <Form.Group className="">
+                        <div className="col-12">
+                            <Form.Group>
                                 <Form.Label>Bill Description</Form.Label>
                                 <Form.Control
                                     as="textarea"
-                                    type="text"
                                     value={data.bill_description}
                                     onChange={(e) => setData('bill_description', e.target.value)}
                                     isInvalid={!!errors.bill_description}
                                 />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.bill_description}
-                                </Form.Control.Feedback>
+                                <Form.Control.Feedback type="invalid">{errors.bill_description}</Form.Control.Feedback>
                             </Form.Group>
                         </div>
                     </div>
                 </Modal.Body>
                 <Modal.Footer className="border-0">
-                    <Button variant="light" onClick={onHide} disabled={processing}>
+                     <Button variant="light" onClick={onHide} disabled={processing}>
                         Cancel
                     </Button>
-                    <Button
-                        type="submit"
-                        variant="primary"
-                        disabled={processing}
-                    >
+                    <Button type="submit" variant="primary" disabled={processing}>
                         {processing ? (
-                            <>
-                                <span className="spinner-border spinner-border-sm " role="status" aria-hidden="true"></span>
-                                
-                            </>
-                        ) : isEditing ? 'Update' : 'Create'}
+                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                        ) : 'Create'}
                     </Button>
                 </Modal.Footer>
             </Form>

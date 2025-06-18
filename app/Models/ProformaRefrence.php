@@ -9,11 +9,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ProformaRefrence extends Model
 {
 
+    public $timestamps = false;
+
     protected $fillable = [
         'proforma_number',
         'is_converted_to_invoice',
         'client_id',
+        'created_at',
     ];
+
+
+    protected $casts = [
+        'created_at' => 'datetime',
+    ];
+
+
 
    /**
     * Get all of the proformas for the ProformaRefrence

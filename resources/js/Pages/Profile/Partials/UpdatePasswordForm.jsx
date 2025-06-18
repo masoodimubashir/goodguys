@@ -7,7 +7,7 @@ import { useRef } from 'react';
 import Swal from 'sweetalert2';
 
 export default function UpdatePasswordForm() {
-    
+
     const passwordInput = useRef();
     const currentPasswordInput = useRef();
 
@@ -113,7 +113,6 @@ export default function UpdatePasswordForm() {
 
 
 
-                                    <InputError message={errors.password} />
                                 </div>
 
 
@@ -138,6 +137,7 @@ export default function UpdatePasswordForm() {
                                         message={errors.password_confirmation}
                                         className="mt-2"
                                     />
+                                    <InputError message={errors.password} />
 
                                 </div>
                                 <div className="col-12 mt-4">

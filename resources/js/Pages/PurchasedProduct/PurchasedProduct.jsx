@@ -1,11 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, Table, Badge, Form, InputGroup, Row, Col, Collapse, Pagination } from 'react-bootstrap';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import { IndianRupee, Percent, Calculator, Search, User, ChevronDown, ChevronUp, FileText, ArrowDown, ArrowUp, CreditCard } from 'lucide-react';
+import { usePage } from '@inertiajs/react';
+import { ShowMessage } from '@/Components/ShowMessage';
 
-export default function PurchasedProduct({ vendor, clientAccounts, purchaseListsPagination }) {
+export default function PurchasedProduct({ vendor, clientAccounts }) {
 
+    const { flash } = usePage().props;
 
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedClient, setExpandedClient] = useState(null);
@@ -43,6 +46,17 @@ export default function PurchasedProduct({ vendor, clientAccounts, purchaseLists
 
         return { clientSummaries: summaries, grandTotals: totals };
     }, [clientAccounts]);
+
+    useEffect(() => {
+        if (flash?.message) {
+            ShowMessage('success', flash.message);
+            // Clear the flash message after showing it
+        }
+        if (flash?.error) {
+            ShowMessage('error', flash.error);
+            // Clear the flash message after showing it
+        }
+    }, [flash]);
 
     // Filter and paginate clients
     const filteredClients = useMemo(() => {
@@ -269,7 +283,7 @@ export default function PurchasedProduct({ vendor, clientAccounts, purchaseLists
                                                                             <span>Total Purchases:</span>
                                                                             <strong>₹{total_purchases.toLocaleString('en-IN')}</strong>
                                                                         </div>
-                                                                      
+
                                                                         <div className="d-flex justify-content-between mb-2">
                                                                             <span>Total Returns:</span>
                                                                             <strong className="text-danger">₹{total_returns.toLocaleString('en-IN')}</strong>

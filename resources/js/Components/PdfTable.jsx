@@ -50,7 +50,7 @@ export default function PdfTable({ client, CompanyProfile, BankProfile }) {
     const handleDeleteItem = (id, type) => {
         Swal.fire({
             title: 'Are you sure?',
-            text: `This will permanently delete the ${type.toLowerCase()}`,
+            text: `This will permanently delete the Estimate`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -61,10 +61,10 @@ export default function PdfTable({ client, CompanyProfile, BankProfile }) {
                 const routeName = type === 'Invoice' ? 'invoice.destroy' : 'proforma.destroy';
                 router.delete(route(routeName, { id }), {
                     onSuccess: () => {
-                        Swal.fire('Deleted!', `${type} has been deleted.`, 'success');
+                        Swal.fire('Deleted!', `Estimate has been deleted.`, 'success');
                     },
                     onError: () => {
-                        Swal.fire('Failed!', `Failed to delete the ${type.toLowerCase()}.`, 'error');
+                        Swal.fire('Failed!', `Failed to delete the Estimate.`, 'error');
                     }
                 });
             }
@@ -223,7 +223,7 @@ export default function PdfTable({ client, CompanyProfile, BankProfile }) {
                                                         <ProformaPdf client={client} CompanyProfile={CompanyProfile} data={entry} BankProfile={BankProfile} />
                                                     )
                                                 }
-                                                fileName={`${entry.type.toLowerCase()}-${entry.reference_number}.pdf`}
+                                                fileName={`${client.client_name}-${entry.type === 'Invoice' ? 'quotation' : 'estimate'}.pdf`}
                                                 className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
                                             >
                                                 {({ loading }) => (
@@ -246,7 +246,7 @@ export default function PdfTable({ client, CompanyProfile, BankProfile }) {
                         ) : (
                             <tr>
                                 <td colSpan="5" className="text-center py-4 text-muted">
-                                    No invoices or proformas found
+                                    No data found
                                 </td>
                             </tr>
                         )}

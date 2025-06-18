@@ -58,7 +58,7 @@ class AdminInvoiceController extends Controller
             $data = $request->validated();
 
             $invoice_refrence = InvoiceRefrence::create([
-                'invoice_number' => uniqid('INV-'),
+                'invoice_number' => uniqid('Quo-'),
                 'client_id' => $data['client_id'],
             ]);
 
@@ -154,6 +154,8 @@ class AdminInvoiceController extends Controller
 
         try {
             $data = $request->validated();
+
+            dd($data);
 
             $invoice = InvoiceRefrence::findOrFail($id);
 
@@ -261,9 +263,11 @@ class AdminInvoiceController extends Controller
         DB::beginTransaction();
 
         try {
+
             $proforma_ref = ProformaRefrence::with([
                 'proformas.proformaModule',
                 'client' => fn($query) => $query->with('serviceCharge'),
+                
             ])->findOrFail($id);
 
             // Mark proforma as converted
@@ -275,6 +279,7 @@ class AdminInvoiceController extends Controller
             $invoice = InvoiceRefrence::create([
                 'invoice_number' => uniqid('INV-'),
                 'client_id' => $proforma_ref->client_id,
+                'created_at' => $proforma_ref->created_at,
             ]);
 
             // Group proforma items by module
@@ -282,6 +287,7 @@ class AdminInvoiceController extends Controller
 
             // Process each module (product)
             foreach ($groupedItems as $moduleId => $items) {
+                
                 $module = $items->first()->proformaModule;
 
                 // Create InvoiceModule (equivalent to ProformaModule)

@@ -41,7 +41,7 @@ class AdminClientVednorsController extends Controller
         ]));
 
         return redirect()->route('client-vendor.show', $vendor->id )
-            ->with('message', 'Vendor created successfully');
+            ->with('message', 'Party created successfully');
     }
 
     /**
@@ -126,7 +126,7 @@ class AdminClientVednorsController extends Controller
             'updated_by' => auth()->user()->id,
         ]));
 
-        return redirect()->route('client-vendor.show', $vendor->id)->with('message', 'Vendor updated successfully');
+        return redirect()->route('client-vendor.show', $vendor->id)->with('message', 'Party updated successfully');
     }
 
     /**

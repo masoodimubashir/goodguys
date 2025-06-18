@@ -26,6 +26,7 @@ class UpdateInvoiceRequest extends FormRequest
             'client_id' => ['required', 'exists:clients,id'],
             'client_name' => ['required', 'string'],
             'client_address' => ['required', 'string'],
+            'created_at' => ['required', 'date'],
             'module_name' => ['required', 'integer'],
             'show_all_prices' => ['required', 'boolean'],
             'products' => ['required', 'array', 'min:1'],

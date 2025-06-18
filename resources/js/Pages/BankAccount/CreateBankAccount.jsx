@@ -180,10 +180,10 @@ const BankAccountForm = ({ bankAccount = null, clientId }) => {
                                                 <InputError message={errors.tax_number} className="invalid-feedback" />
                                             </div>
                                            <div className='mt-2'>
-                                                <InputLabel htmlFor="company_stamp_image" value="Company Stamp Image" />
+                                                <InputLabel htmlFor="company_stamp_image" value="Company Stamp Image (JPG)" />
                                                 <input
                                                     type="file"
-                                                    id="company_stamp_image"
+                                                    id="company_stamp_imag"
                                                     className={`form-control`}
                                                     onChange={(e) => handleFileChange('company_stamp_image', e)}
                                                     accept="image/*"
@@ -202,7 +202,7 @@ const BankAccountForm = ({ bankAccount = null, clientId }) => {
 
                                         <div className="col-md-6">
                                             <div className='mt-2'>
-                                                <InputLabel htmlFor="signature_image" value="Signature Image" />
+                                                <InputLabel htmlFor="signature_image" value="Signature Image (JPG)" />
                                                 <input
                                                     type="file"
                                                     id="signature_image"
@@ -221,7 +221,7 @@ const BankAccountForm = ({ bankAccount = null, clientId }) => {
                                                 <InputError message={errors.signature_image} className="invalid-feedback" />
                                             </div>
                                                <div className='mt-2'>
-                                                <InputLabel htmlFor="qr_code_image" value="QR Code Image" />
+                                                <InputLabel htmlFor="qr_code_image" value="QR Code Imag (JPG)" />
                                                 <input
                                                     type="file"
                                                     id="qr_code_image"

@@ -21,7 +21,7 @@ class Invoice extends Model
         'is_price_visible',
         'product_id',
         'invoice_refrence_id',
-        'invoice_module_id'
+        'invoice_module_id',
 
     ]; 
 
@@ -30,7 +30,6 @@ class Invoice extends Model
         'price' => 'integer',
         'tax' => 'integer',
         'service_charge' => 'integer',
-        'due_date' => 'datetime',
     ];
 
 

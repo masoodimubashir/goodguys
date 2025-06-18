@@ -29,6 +29,7 @@ class UpdateProformaRequest extends FormRequest
             'site_name'         => 'required|string|max:255',
             'service_charge'    => 'nullable|numeric|min:0',
             'show_all_prices'   => 'required|boolean',
+            'created_at' => 'required|date',
 
             'products'          => 'required|array|min:1',
             'products.*.module_id' => 'nullable|integer|exists:proforma_modules,id',

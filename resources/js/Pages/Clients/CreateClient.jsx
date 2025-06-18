@@ -68,11 +68,10 @@ export default function CreateClient() {
 
                 <div className="col-12">
                     <div className="card shadow-sm border-0">
-                        <div className="card-header bg-white border-bottom">
-                            <h4 className="mb-0">Create New Client</h4>
-                        </div>
+                       
                         <div className="card-body">
                             <form className="app-form" onSubmit={handleSubmit}>
+                                
                                 <div className="row g-4">
                                     <ClientTypeSelector
                                         selectedType={data.client_type}
@@ -221,13 +220,13 @@ function FormFields({ data, errors, onChange }) {
             <div className="col-md-3">
                 <InputLabel
                     htmlFor="site_name"
-                    value={isServiceType ? "Enter Site Name" : "Enter Project Title"}
+                    value={isServiceType ? "Enter Site Name" : "Enter Project Type"}
                 />
                 <TextInput
                     className="form-control"
                     id="site_name"
                     name="site_name"
-                    placeholder={isServiceType ? "Enter Site Name" : "Enter Project Title"}
+                    placeholder={isServiceType ? "Enter Site Name" : "Enter Project Type"}
                     value={data.site_name}
                     onChange={onChange}
                 />

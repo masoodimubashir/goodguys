@@ -393,7 +393,6 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                 onHide={() => setShowPurchaseListModal(false)}
                 vendors={vendors}
                 isEditing={!!currentPurchaseList}
-                initialData={currentPurchaseList}
                 setPurchaseItems={setPurchaseItems}
                 setFilteredItems={setFilteredItems}
                 client={client}

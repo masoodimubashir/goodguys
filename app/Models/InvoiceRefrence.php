@@ -9,9 +9,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class InvoiceRefrence extends Model
 {
 
+    public $timestamps = false;
+
     protected $fillable = [
         'invoice_number',
         'client_id',
+        'created_by',
+        'updated_by',
+        'created_at',
+        'updated_at',
+    ];
+
+
+    protected $casts = [
+        'created_at' => 'datetime',
     ];
 
 

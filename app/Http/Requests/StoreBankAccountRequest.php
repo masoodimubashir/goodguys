@@ -22,15 +22,15 @@ class StoreBankAccountRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'qr_code_image' => 'required|file|mimes:jpeg|max:2048',
+            'qr_code_image' => 'required|file|mimes:jpg|max:2048',
             'bank_name' => 'required|string|max:100',
             'ifsc_code' => 'required|string|max:32',
             'holder_name' => 'required|string|max:100',
             'account_number' => 'required|string|max:32',
             'upi_number' => 'required|sometimes|string|max:32',
             'upi_address' => 'required|string|max:250',
-            'signature_image' =>  'required|file|mimes:jpeg|max:2048',
-            'company_stamp_image' => 'required|file|mimes:jpeg|max:2048',
+            'signature_image' =>  'required|file|mimes:jpg|max:2048',
+            'company_stamp_image' => 'required|file|mimes:jpg|max:2048',
             'tax_number' => 'required|string|max:32',
         ];
     }
