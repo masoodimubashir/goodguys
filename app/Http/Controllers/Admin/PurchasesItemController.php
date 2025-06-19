@@ -39,14 +39,14 @@ class PurchasesItemController extends Controller
 
         $data = $request->validated();
 
-        $data['total'] = ($data['qty'] * $data['price']) * $data['multiplier'];
+        $data['total'] = ($data['qty'] * $data['amount']) * $data['multiplier'];
 
         PurchasedItem::create(array_merge($data, [
             'client_id' => $data['client_id'],
             'unit_type' => $data['unit_type'],
             'narration' => $data['narration'],
             'description' => $data['description'],
-            'price' => $data['price'],
+            'price' => $data['amount'],
             'total' => $data['total'],
             'multiplier' => $data['multiplier'],
             'created_by' => auth()->id(),
@@ -59,7 +59,7 @@ class PurchasesItemController extends Controller
             'unit_type' => $data['unit_type'],
             'narration' => $data['narration'],
             'description' => $data['description'],
-            'price' => $data['price'],
+            'price' => $data['amount'],
             'total' => $data['total'],
             'multiplier' => $data['multiplier'],
             'created_by' => auth()->id(),
@@ -111,6 +111,8 @@ class PurchasesItemController extends Controller
     {
 
         $purchasedItem = PurchasedItem::findOrFail($id);
+
+        dd($purchasedItem);
 
         $purchasedItem->delete();
 

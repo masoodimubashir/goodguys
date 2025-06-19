@@ -322,7 +322,7 @@ const Header = ({ company }) => (
 const ClientInfo = ({ client, data }) => (
   <View style={styles.clientInfo}>
     <Text style={[styles.companyName, { fontSize: FONT_SIZES.xlarge, marginBottom: 15 }]}>
-      Estimate
+      Quotation
     </Text>
     <View style={{ width: '100%' }}>
       <Text style={styles.companyDetails}>

@@ -25,11 +25,11 @@ class StorePurchasedItemRequest extends FormRequest
             'client_id'   => 'required|exists:clients,id',
             'description' => 'required|string|max:255',
             'qty'         => 'required|integer|min:1',
-            'price'       => 'required|numeric|min:0',
+            'amount'       => 'required|numeric|min:0',
             'narration'   => 'nullable|string',
             'created_at' => 'required|date',
             'multiplier'  => 'required|numeric|min:1',
-            'unit_type'   => 'required|string|max:255',
+            'unit_type'   => 'nullable|string|max:255',
         ];
     }
 }

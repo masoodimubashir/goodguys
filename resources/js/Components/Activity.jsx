@@ -150,16 +150,7 @@ const ActivityTab = ({ activities, client, }) => {
                         {filteredActivities.length} activities
                     </Badge>
                 </div>
-                <div className="d-flex gap-2">
-                    <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => setNewActivity(prev => ({ ...prev, show: true }))}
-                        disabled={newActivity.show}
-                    >
-                        <Plus size={16} /> Add Entry
-                    </Button>
-                </div>
+               
             </div>
 
             {/* Search and Filter Section */}
@@ -251,122 +242,7 @@ const ActivityTab = ({ activities, client, }) => {
                 </thead>
 
                 <tbody>
-                    {/* New Activity Row */}
-                    {newActivity.show && (
-                        <tr className="table-warning bounce-in">
-                            <td>
-
-                                <Form.Control
-                                    size="sm"
-                                    type="text"
-                                    placeholder="Description"
-                                    value={newActivity.description}
-                                    onChange={(e) => handleNewActivityChange('description', e.target.value)}
-                                    required
-                                />
-
-                                <Form.Control
-                                    size="sm"
-                                    type="date"
-                                    className="mt-2"
-                                    value={newActivity.created_at}
-                                    onChange={(e) => handleNewActivityChange('created_at', e.target.value)}
-                                    required
-                                />
-                            </td>
-                            <td>
-                                <Form.Control
-                                    size="sm"
-                                    type="text"
-                                    value={newActivity.unit_type}
-                                    onChange={(e) => handleNewActivityChange('unit_type', e.target.value)}
-                                    required
-                                />
-                            </td>
-                            <td>
-                                <Form.Control
-                                    size="sm"
-                                    type="number"
-                                    min="1"
-                                    placeholder="Quantity"
-                                    value={newActivity.qty}
-                                    onChange={(e) => handleNewActivityChange('qty', e.target.value)}
-                                    required
-                                />
-                            </td>
-                            <td>
-                                <Form.Control
-                                    size="sm"
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="Amount"
-                                    value={newActivity.price}
-                                    onChange={(e) => handleNewActivityChange('price', e.target.value)}
-                                    required
-                                />
-                            </td>
-                            <td>
-                                <Form.Control
-                                    size="sm"
-                                    type="number"
-                                    min="1"
-                                    placeholder="Multiplier"
-                                    value={newActivity.multiplier}
-                                    onChange={(e) => handleNewActivityChange('multiplier', e.target.value)}
-                                    required
-                                />
-                            </td>
-                            <td>
-                                {newActivity.qty > 0 ?
-                                    (parseFloat(newActivity.price) || 0) *
-                                    (parseInt(newActivity.qty) || 1) *
-                                    (parseInt(newActivity.multiplier) || 1) :
-                                    (parseFloat(newActivity.price) || 0)}
-                            </td>
-                            <td>
-                                <Form.Control
-                                    size="sm"
-                                    as="textarea"
-                                    rows={2}
-                                    placeholder="Narration"
-                                    value={newActivity.narration}
-                                    onChange={(e) => handleNewActivityChange('narration', e.target.value)}
-                                    required
-                                />
-
-                            </td>
-                            <td>
-                                <div className="d-flex gap-1">
-                                    <Button
-                                        size="sm"
-                                        variant="success"
-                                        onClick={createActivity}
-                                        disabled={isCreating ||
-                                            !newActivity.description ||
-                                            !newActivity.price ||
-                                            !newActivity.narration ||
-                                            !newActivity.qty ||
-                                            !newActivity.multiplier ||
-                                            !newActivity.unit_type ||
-                                            !newActivity.narration ||
-                                            !newActivity.created_at
-
-                                        }
-                                    >
-                                    <Save size={14} />
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline-secondary"
-                                    onClick={() => setNewActivity(prev => ({ ...prev, show: false }))}
-                                >
-                                    <XCircle size={14} />
-                                </Button>
-                            </div>
-                        </td>
-                        </tr>
-                    )}
+                    
 
                 {/* Existing Activities */}
                 {paginatedActivities.map((activity) => {

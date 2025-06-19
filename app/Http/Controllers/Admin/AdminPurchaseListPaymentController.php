@@ -8,8 +8,9 @@ use App\Http\Requests\UpdatePurchaseListPaymentForm;
 use App\Models\Activity;
 use App\Models\PurchasedItem;
 use App\Models\PurchaseListPayment;
+use App\Models\Vendor;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AdminPurchaseListPaymentController extends Controller
@@ -38,48 +39,53 @@ class AdminPurchaseListPaymentController extends Controller
 
         try {
 
+            DB::beginTransaction();
+
             $data = $request->validated();
+
+            $vendor = Vendor::find($data['vendor_id']);
 
             PurchaseListPayment::create([
                 'vendor_id' => $data['vendor_id'],
                 'client_id' => $data['client_id'],
                 'amount' => $data['amount'],
                 'narration' => $data['narration'],
-                'transaction_date' =>  Carbon::parse($data['transaction_date'])->setTimeFromTimeString(now()->format('H:i:s')),
+                'transaction_date' =>  Carbon::parse($data['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
                 'created_by' => auth()->user()->id,
-                'created_at' =>  Carbon::parse($data['transaction_date'])->setTimeFromTimeString(now()->format('H:i:s'))
+                'created_at' =>  Carbon::parse($data['created_at'])->setTimeFromTimeString(now()->format('H:i:s'))
             ]);
 
             PurchasedItem::create([
                 'client_id' => $data['client_id'],
-                'unit_type' => $data['unit_type'],
                 'narration' => $data['narration'],
-                'description' => $data['narration'],
+                'description' => $vendor->vendor_name,
                 'price' => $data['amount'],
                 'total' => $data['amount'],
                 'multiplier' => 1,
                 'created_by' => auth()->id(),
                 'payment_flow' => false,
-                'created_at' =>  Carbon::parse($data['transaction_date'])->setTimeFromTimeString(now()->format('H:i:s'))
+                'created_at' =>  Carbon::parse($data['created_at'])->setTimeFromTimeString(now()->format('H:i:s'))
 
             ]);
 
             Activity::create([
                 'client_id' => $data['client_id'],
-                'unit_type' => $data['unit_type'],
                 'narration' => $data['narration'],
-                'description' => $data['narration'],
+                'description' =>  $vendor->vendor_name,
                 'price' => $data['amount'],
                 'total' => $data['amount'],
                 'multiplier' => 1,
                 'created_by' => auth()->id(),
                 'payment_flow' => false,
-                'created_at' =>  Carbon::parse($data['transaction_date'])->setTimeFromTimeString(now()->format('H:i:s'))
+                'created_at' =>  Carbon::parse($data['created_at'])->setTimeFromTimeString(now()->format('H:i:s'))
             ]);
+
+            DB::commit();
 
             return redirect()->back()->with('message', 'Purchase created successfully');
         } catch (\Exception $e) {
             Log::error($e->getMessage());
+            DB::rollback();
             return redirect()->back()->with('error', 'Failed! Something went Wrong');
         }
     }

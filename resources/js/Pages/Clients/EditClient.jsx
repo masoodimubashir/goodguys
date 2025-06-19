@@ -90,13 +90,13 @@ export default function EditClient({ client }) {
                 <div className="mb-3">
                   <InputLabel
                     htmlFor="site_name"
-                    value={isServiceClient ? "Enter Site Name" : "Enter Project Title"}
+                    value={isServiceClient ? "Enter Site Name" : "Enter Product Type"}
                   />
                   <TextInput
                     className="form-control"
                     id="site_name"
                     name="site_name"
-                    placeholder={isServiceClient ? "Enter Site Name" : "Enter Project Title"}
+                    placeholder={isServiceClient ? "Enter Site Name" : "Enter Product Type"}
                     value={data.site_name}
                     onChange={e => setData('site_name', e.target.value)}
                   />

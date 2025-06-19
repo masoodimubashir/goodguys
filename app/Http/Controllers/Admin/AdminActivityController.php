@@ -32,11 +32,10 @@ class AdminActivityController extends Controller
     public function store(StoreActivityRequest $request)
     {
         try {
-            
+
             $data = $request->validated();
 
-
-             Activity::create([
+            Activity::create([
                 'client_id' => $data['client_id'],
                 'unit_type' => $data['unit_type'],
                 'description' => $data['description'],
@@ -50,8 +49,7 @@ class AdminActivityController extends Controller
                 'payment_flow' => false,
             ]);
 
-            return redirect()->back()->with('success', 'Activity created successfully');
-
+            return redirect()->back()->with('message', 'Activity created successfully');
 
         } catch (\Exception $e) {
             Log::error($e->getMessage());

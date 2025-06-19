@@ -26,8 +26,7 @@ class StorePurchaseListPaymentForm extends FormRequest
             'client_id' => 'required|exists:clients,id',
             'amount' => 'required|integer',
             'narration' => 'required|string|max:255',
-            'transaction_date' => 'required|date',
-            'unit_type' => 'required|string|max:255',
+            'created_at' => 'required|date',
         ];
     }
 }

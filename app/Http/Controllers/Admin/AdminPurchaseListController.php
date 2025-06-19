@@ -79,7 +79,6 @@ class AdminPurchaseListController extends Controller
 
             $validated = $request->validated();
 
-
             if ($request->hasFile('bill')) {
                 $validated['bill'] = $request->file('bill')->store('purchase-lists', 'public');
             }

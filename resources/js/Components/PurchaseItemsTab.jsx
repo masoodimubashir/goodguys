@@ -13,10 +13,12 @@ import {
     IndianRupee,
     Text,
     Save,
-    Minus
+    Minus,
+    Trash2
 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import { ShowMessage } from './ShowMessage';
+import Swal from 'sweetalert2';
 
 const PurchaseItemsTab = ({
     filteredItems,
@@ -149,9 +151,40 @@ const PurchaseItemsTab = ({
         });
         setVendorSearchTerm('');
         setSelectedVendor(null);
-       
+
     };
 
+
+    const handleDeleteItem = (itemId) => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText:
+                'Yes, delete it!',
+            cancelButtonText: 'No, cancel!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(route('purchased-item.destroy', itemId), {
+                    preserveScroll: true,
+                    onSuccess: (page) => {
+                        if (page.props.purchase_items) {
+                            setPurchaseItems(page.props.purchase_items);
+                            setFilteredItems(page.props.purchase_items);
+                        }
+                        ShowMessage('success', 'Item deleted successfully');
+                    },
+                    onError: (errors) => {
+                        const errorMsg = Object.values(errors).join('\n');
+                        ShowMessage('error', errorMsg || 'Failed to delete item');
+                    }
+                });
+            }
+        });
+    }
 
 
     return (
@@ -163,13 +196,7 @@ const PurchaseItemsTab = ({
                     </Badge>
                 </div>
                 <div className="d-flex gap-2">
-                    <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => setNewItem(prev => ({ ...prev, show: true }))}
-                    >
-                        <Plus size={16} /> Add Entry
-                    </Button>
+
                     <Button
                         variant="success"
                         size="sm"
@@ -347,27 +374,38 @@ const PurchaseItemsTab = ({
 
                             {/* Unit Type: Always enabled in both cases */}
                             <td>
-                                <Form.Control
-                                    size="sm"
-                                    type="text"
-                                    placeholder="Unit type"
-                                    value={newItem.unit_type}
-                                    onChange={(e) => handleNewItemChange('unit_type', e.target.value)}
-                                    required
-                                />
+
+                                {
+                                    !isVendorSelected && (
+
+                                        <Form.Control
+                                            size="sm"
+                                            type="text"
+                                            placeholder="Unit type"
+                                            value={newItem.unit_type}
+                                            onChange={(e) => handleNewItemChange('unit_type', e.target.value)}
+                                            required
+                                        />
+                                    )
+                                }
+
                             </td>
 
                             {/* Quantity: ENABLED ONLY when vendor IS selected */}
                             <td>
-                                <Form.Control
-                                    size="sm"
-                                    type="number"
-                                    min="1"
-                                    placeholder="Quantity"
-                                    value={newItem.qty}
-                                    onChange={(e) => handleNewItemChange('qty', e.target.value)}
-                                    disabled={isVendorSelected}
-                                />
+                                {
+                                    !isVendorSelected && (
+                                        <Form.Control
+                                            size="sm"
+                                            type="number"
+                                            min="1"
+                                            placeholder="Quantity"
+                                            value={newItem.qty}
+                                            onChange={(e) => handleNewItemChange('qty', e.target.value)}
+                                            disabled={isVendorSelected}
+                                        />
+                                    )
+                                }
                             </td>
 
                             {/* Price: ENABLED ONLY when vendor IS selected */}
@@ -385,14 +423,18 @@ const PurchaseItemsTab = ({
 
                             {/* Multiplier: ENABLED ONLY when vendor IS selected */}
                             <td>
-                                <Form.Control
-                                    size="sm"
-                                    type="text"
-                                    placeholder="Multiplier"
-                                    value={newItem.multiplier || 1}
-                                    onChange={(e) => handleNewItemChange('multiplier', e.target.value)}
-                                    disabled={isVendorSelected}
-                                />
+
+                                {
+                                    !isVendorSelected && <Form.Control
+                                        size="sm"
+                                        type="text"
+                                        placeholder="Multiplier"
+                                        value={newItem.multiplier || 1}
+                                        onChange={(e) => handleNewItemChange('multiplier', e.target.value)}
+                                        disabled={isVendorSelected}
+                                    />
+                                }
+
                             </td>
 
                             {/* Total: Calculated, always visible */}
@@ -546,6 +588,14 @@ const PurchaseItemsTab = ({
                                     <span>{item.narration}</span>
                                 </td>
                                 <td>
+                                    <Button
+                                        variant="link"
+                                        className="text-danger p-0"
+                                        onClick={() => handleDeleteItem(item.id)}
+                                        title="Delete item"
+                                    >
+                                        <Trash2 size={16} />
+                                    </Button>
                                 </td>
                             </tr>
                         );
