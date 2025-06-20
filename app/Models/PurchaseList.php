@@ -37,18 +37,6 @@ class PurchaseList extends Model
         return $this->hasMany(PurchasedProduct::class);
     }
 
-
-    /**
-     * Get all of the challanRefrences for the PurchaseList
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function challanRefrences(): HasMany
-    {
-        return $this->hasMany(ChallanRefrence::class);
-    }
-
-
     /**
      * Get the client that owns the PurchaseList
      *

@@ -7,14 +7,19 @@ use App\Http\Requests\StorePurchaseListRequest;
 use App\Http\Requests\UpdatePurchaseListRequest;
 use App\Models\Activity;
 use App\Models\ClientAccount;
+use App\Models\PaymentDeleteRefrence;
 use App\Models\PurchaseList;
 use App\Models\PurchaseListPayment;
 use App\Models\Vendor;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Illuminate\Support\Str;
 
 class AdminPurchaseListController extends Controller
 {
@@ -101,10 +106,38 @@ class AdminPurchaseListController extends Controller
             ]);
 
             return redirect()->back()->with('message', 'Purchase list created successfully');
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
 
+            Log::error('Error creating purchase list: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to create purchase list');
         }
+    }
+
+
+    // Add this method to handle file downloads
+    public function downloadBill(PurchaseList $purchaseList)
+    {
+        // Check if file exists
+        if (!Storage::disk('public')->exists($purchaseList->bill)) {
+            abort(404);
+        }
+
+        // Get the original file extension
+        $extension = pathinfo($purchaseList->bill, PATHINFO_EXTENSION);
+
+        // Create filename using vendor name and original extension
+        $fileName = Str::slug($purchaseList->vendor->vendor_name) . '.' . $extension;
+
+        // Get file details
+        $filePath = Storage::disk('public')->path($purchaseList->bill);
+        $mimeType = Storage::disk('public')->mimeType($purchaseList->bill);
+
+        $headers = [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ];
+
+        return response()->file($filePath, $headers);
     }
 
 
@@ -156,8 +189,6 @@ class AdminPurchaseListController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    // app/Http/Controllers/Admin/AdminPurchaseListController.php
-
     public function update(UpdatePurchaseListRequest $request, PurchaseList $purchaseList)
     {
         try {
@@ -194,16 +225,32 @@ class AdminPurchaseListController extends Controller
     public function destroy($id)
     {
         try {
-            $purchaseList = PurchaseList::findOrFail($id);
+
+            DB::beginTransaction();
+
+            $purchaseList = PurchaseList::with('vendor')->findOrFail($id);
+
             // Delete the bill file if it exists
-            if ($purchaseList->bill) {
+            if ($purchaseList->bill && Storage::disk('public')->exists($purchaseList->bill)) {
                 Storage::disk('public')->delete($purchaseList->bill);
             }
+
             $purchaseList->delete();
 
-            return redirect()->back()->with('message', 'Purchase list deleted successfully');
+            DB::commit();
+
+            return redirect()->route('clients.show', $purchaseList->client_id)
+                ->with('message', 'Purchase list deleted successfully');
+        } catch (ModelNotFoundException $e) {
+            DB::rollBack();
+            Log::error('Purchase list not found: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Purchase list not found');
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to delete purchase list');
+            DB::rollBack();
+            Log::error('Error deleting entry');
+            return redirect()->back()
+                ->with('error', 'Failed to delete purchase list. Please try again.');
         }
     }
 }

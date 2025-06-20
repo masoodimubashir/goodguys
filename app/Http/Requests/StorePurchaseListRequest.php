@@ -26,7 +26,7 @@ class StorePurchaseListRequest extends FormRequest
             'list_name' => 'required|string|max:255',
             'vendor_id' => 'required|exists:vendors,id',
             'purchase_date' => 'required|date',
-            'bill' => 'nullable|file|mimes:jpeg,png,pdf|max:2048',
+            'bill' => 'nullable|file|mimes:jpg,jpeg,pdf|max:2048',
             'bill_total' => 'required|integer|min:0',
             'bill_description' => 'nullable|string|max:1000',
         ];

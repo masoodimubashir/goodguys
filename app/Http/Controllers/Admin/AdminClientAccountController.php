@@ -7,13 +7,13 @@ use App\Http\Requests\StoreClientAccountRequest;
 use App\Models\Activiity;
 use App\Models\Activity;
 use App\Models\ClientAccount;
+use App\Models\PaymentDeleteRefrence;
 use App\Models\PurchasedItem;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Container\Attributes\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log as FacadesLog;
+use Illuminate\Support\Facades\Log;
 
 class AdminClientAccountController extends Controller
 {
@@ -45,7 +45,7 @@ class AdminClientAccountController extends Controller
 
                 $payment_flow = $validatedData['payment_flow'] === true ? 1 : 0;
 
-                ClientAccount::create([
+                $client = ClientAccount::create([
                     "client_id" => $validatedData["client_id"],
                     "payment_type" => $validatedData["payment_type"],
                     "amount" => $validatedData["amount"],
@@ -54,7 +54,7 @@ class AdminClientAccountController extends Controller
                     'payment_flow' => $payment_flow,
                 ]);
 
-                PurchasedItem::create([
+                $purchase = PurchasedItem::create([
                     'client_id' => $validatedData["client_id"],
                     'description' => $validatedData["payment_type"],
                     'qty' => 1,
@@ -65,6 +65,13 @@ class AdminClientAccountController extends Controller
                     'multiplier' => 1,
                     'created_at' => Carbon::parse($validatedData['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
                     'payment_flow' => $payment_flow
+                ]);
+
+                PaymentDeleteRefrence::create([
+                    'purchased_item_id' => $purchase->id,
+                    'refrence_id' => $client->id,
+                    'refrence_type' => ClientAccount::class,
+
                 ]);
 
                 Activity::create([
@@ -83,7 +90,7 @@ class AdminClientAccountController extends Controller
 
             return redirect()->back()->with('message', 'Payment Done');
         } catch (Exception $e) {
-            FacadesLog::error($e->getMessage());
+            Log::error($e->getMessage());
             return redirect()->back()->with('error', 'Something went wrong');
         }
     }

@@ -1,23 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Head, usePage, useForm as useInertiaForm, router, Link, useForm } from '@inertiajs/react';
+import { Head, usePage, useForm as useInertiaForm, router, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
 import PdfTable from '@/Components/PdfTable';
-import CostIncurredTab from '@/Components/CostIncurredTab';
-import $ from 'jquery';
-import 'datatables.net';
-import 'datatables.net-responsive';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import { ClientInfoCard } from '@/Components/ClientInfoCard';
-import { BankAccountCard } from '@/Components/BankAccountCard';
-import { FileText, Activity, BarChart3, IndianRupee, Eye, EyeOff, RefreshCw, ActivityIcon, Plus } from 'lucide-react';
+import { FileText, Activity, BarChart3, Eye, EyeOff, RefreshCw, ActivityIcon } from 'lucide-react';
 import ProjectDocumentTab from '@/Components/ProjectDocumentTab';
 import PurchaseItemsTab from '@/Components/PurchaseItemsTab';
 import { PurchaseListModal } from '@/Components/PurchaseListModal';
 import ClientAccountModal from '@/Components/ClientAccountModal';
-import Swal from 'sweetalert2';
 import 'react-datepicker/dist/react-datepicker.css';
-import { Button, Card, Col, Form, InputGroup, Modal, Row, Table } from 'react-bootstrap';
+import { Button, Card, Col, Dropdown, Form, InputGroup, Modal, Row, Table } from 'react-bootstrap';
 import PurchaseListTab from '@/Components/PurchaseListTab';
 import ActivityTab from '@/Components/Activity';
 import { PaymentModal } from '@/Components/PaymentModal';
@@ -96,6 +90,30 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
         }).format(amount || 0);
     };
 
+    // Filter items based on search term and date range
+    useEffect(() => {
+        let results = purchaseItems;
+
+        // Apply search filter
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            results = results.filter(item =>
+                item.unit_type?.toLowerCase()?.includes(term) ||
+                item.description?.toLowerCase().includes(term),
+            );
+        }
+
+        // Apply date range filter if both dates are selected
+        if (startDate && endDate) {
+            results = results.filter(item => {
+                const itemDate = new Date(item.created_at);
+                return itemDate >= startDate && itemDate <= endDate;
+            });
+        }
+
+        setFilteredItems(results);
+    }, [searchTerm, dateRange, purchaseItems]);
+
 
     const calculateAnalytics = () => {
 
@@ -152,29 +170,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
         }));
     };
 
-    // Filter items based on search term and date range
-    useEffect(() => {
-        let results = purchaseItems;
 
-        // Apply search filter
-        if (searchTerm) {
-            const term = searchTerm.toLowerCase();
-            results = results.filter(item =>
-                item.unit_type?.toLowerCase()?.includes(term) ||
-                item.description?.toLowerCase().includes(term),
-            );
-        }
-
-        // Apply date range filter if both dates are selected
-        if (startDate && endDate) {
-            results = results.filter(item => {
-                const itemDate = new Date(item.created_at);
-                return itemDate >= startDate && itemDate <= endDate;
-            });
-        }
-
-        setFilteredItems(results);
-    }, [searchTerm, dateRange, purchaseItems]);
 
 
 
@@ -340,26 +336,25 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
 
 
                 <div className="d-flex flex-wrap justify-content-end align-items-center mt-2 mb-3 gap-2">
-                    <Button variant="outline-success" size="sm" onClick={() => openPurchaseListModal()}>
-                        <i className="ti ti-shopping-cart me-1"></i> Party Purchase
-                    </Button>
-
-                    <Link href={route('challan.show', client?.id)} className="btn btn-outline-dark btn-sm">
-                        <i className="ti ti-file-invoice me-1"></i> View Challans
-                    </Link>
-
-                    <Button variant="outline-info" size="sm" onClick={() => openClientAccountModal()}>
-                        <i className="ti ti-building-bank me-1"></i>Client Payment
-                    </Button>
-
-                    <Button
-                        variant="primary"
-                        onClick={() => setshowPaymentModal(true)}
-                       className="btn btn-outline-dark btn-sm"
-                    >
-                        <Plus size={16} className="me-1" />
-                        Payment
-                    </Button>
+                    <Dropdown>
+                        <Dropdown.Toggle variant="primary" size="sm" className="d-flex align-items-center shadow-sm">
+                            <i className="ti ti-menu-2 me-2"></i> Actions
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu>
+                            <Dropdown.Item onClick={() => openPurchaseListModal()}>
+                                <i className="ti ti-receipt me-2"></i> Create Bill
+                            </Dropdown.Item>
+                            <Dropdown.Item href={route('challan.show', client?.id)}>
+                                <i className="ti ti-truck-delivery me-2"></i> Challans
+                            </Dropdown.Item>
+                            <Dropdown.Item onClick={() => openClientAccountModal()}>
+                                <i className="ti ti-wallet me-2"></i> Client Payments
+                            </Dropdown.Item>
+                            <Dropdown.Item onClick={() => setshowPaymentModal(true)}>
+                                <i className="ti ti-cash me-2"></i> Payments
+                            </Dropdown.Item>
+                        </Dropdown.Menu>
+                    </Dropdown>
                 </div>
 
                 {/* Tabs Section */}
@@ -442,6 +437,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                     <div className="tab-pane fade " id="vendor-tab" role="tabpanel">
                         <PurchaseListTab
                             client={client}
+                            handleEditAccount={(purchase_list) => openPurchaseListModal(purchase_list)}
                             clientVendors={client_vendors}
                         />
                     </div>

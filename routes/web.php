@@ -76,6 +76,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Route For Purchase List
     Route::resource('purchase-list', AdminPurchaseListController::class);
+    Route::get('/purchase-list/{purchaseList}/download', [AdminPurchaseListController::class, 'downloadBill'])
+        ->name('purchase-list.download');
 
     // Route For Cost Incurred
     Route::resource('cost-incurreds', AdminCostIncurredController::class);
@@ -118,7 +120,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Route For Activity
     Route::resource('activity', AdminActivityController::class);
-    
 });
 
 

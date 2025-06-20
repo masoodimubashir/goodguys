@@ -55,6 +55,7 @@ class AdminProformaController extends Controller
 
             $data = $request->validated();
 
+
             // Step 1: Create Proforma Reference
             $proformaRefrence = ProformaRefrence::create([
                 'proforma_number' => uniqid('Est-'),
@@ -151,6 +152,8 @@ class AdminProformaController extends Controller
     public function update(UpdateProformaRequest $request, $id)
     {
         $data = $request->validated();
+
+        dd($data);
 
         // Find the existing proforma reference
         $proformaReference = ProformaRefrence::findOrFail($id);

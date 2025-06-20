@@ -5,26 +5,16 @@ import { ShowMessage } from '@/Components/ShowMessage';
 import Modal from 'react-bootstrap/Modal';
 import PurchaseListTab from '@/Components/PurchaseListTab';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
-import {
-    Card, Table, Button, Row, Form, Tabs, Tab, InputGroup,
-    Col
-} from 'react-bootstrap';
-import {
-    FileText, Package, Eye, EyeOff,
-    RefreshCw, BarChart3,
-    ShoppingBag,
-    ActivityIcon
-} from 'lucide-react';
+import { Card, Table, Button, Row, Form, Tabs, Tab, InputGroup, Col, Dropdown } from 'react-bootstrap';
+import { FileText, Package, Eye, EyeOff, RefreshCw, BarChart3, ShoppingBag, ActivityIcon } from 'lucide-react';
 import { ClientInfoCard } from '@/Components/ClientInfoCard';
-import { BankAccountCard } from '@/Components/BankAccountCard';
 import { PurchaseListModal } from '@/Components/PurchaseListModal';
-import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import ProjectDocumentTab from '@/Components/ProjectDocumentTab';
-import Swal from 'sweetalert2';
 import PurchaseItemsTab from '@/Components/PurchaseItemsTab';
 import ClientAccountModal from '@/Components/ClientAccountModal';
 import ActivityTab from '@/Components/Activity';
+import { PaymentModal } from '@/Components/PaymentModal';
 
 export default function ShowServiceClient({ client, vendors = [], client_vendors = [], purchase_items, activities = [] }) {
     // State management
@@ -36,6 +26,9 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
     const [editedItems, setEditedItems] = useState({});
     const [showAnalytics, setShowAnalytics] = useState(true);
     const [animatingCards, setAnimatingCards] = useState(new Set());
+
+    const [showPaymentModal, setshowPaymentModal] = useState(false);
+
 
     const [searchTerm, setSearchTerm] = useState('');
     const [dateRange, setDateRange] = useState([null, null]);
@@ -327,17 +320,25 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             )}
 
             <div className="d-flex flex-wrap justify-content-end align-items-center mt-2 mb-3 gap-2">
-                <Button variant="outline-success" size="sm" onClick={() => openPurchaseListModal()}>
-                    <i className="ti ti-shopping-cart me-1"></i> Party Purchase
-                </Button>
-
-                <Link href={route('challan.show', client?.id)} className="btn btn-outline-dark btn-sm">
-                    <i className="ti ti-file-invoice me-1"></i> View Challans
-                </Link>
-
-                <Button variant="outline-info" size="sm" onClick={() => openClientAccountModal()}>
-                    <i className="ti ti-building-bank me-1"></i>Payment
-                </Button>
+                <Dropdown>
+                    <Dropdown.Toggle variant="primary" size="sm" className="d-flex align-items-center shadow-sm">
+                        <i className="ti ti-menu-2 me-2"></i> Actions
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                        <Dropdown.Item onClick={() => openPurchaseListModal()}>
+                            <i className="ti ti-receipt me-2"></i> Bills
+                        </Dropdown.Item>
+                        <Dropdown.Item href={route('challan.show', client?.id)}>
+                            <i className="ti ti-truck-delivery me-2"></i> Challans
+                        </Dropdown.Item>
+                        <Dropdown.Item onClick={() => openClientAccountModal()}>
+                            <i className="ti ti-wallet me-2"></i> Client Payments
+                        </Dropdown.Item>
+                        <Dropdown.Item onClick={() => setshowPaymentModal(true)}>
+                            <i className="ti ti-cash me-2"></i> Payments
+                        </Dropdown.Item>
+                    </Dropdown.Menu>
+                </Dropdown>
             </div>
 
 
@@ -388,11 +389,21 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
             </Tabs>
 
+            <PaymentModal
+                show={showPaymentModal}
+                onHide={() => setshowPaymentModal(false)}
+                client_vendors={client_vendors}
+                setPurchaseItems={setPurchaseItems}
+                setFilteredItems={setFilteredItems}
+                client={client}
+            />
+
             <PurchaseListModal
                 show={showPurchaseListModal}
                 onHide={() => setShowPurchaseListModal(false)}
                 vendors={vendors}
                 isEditing={!!currentPurchaseList}
+                initialData={currentPurchaseList}
                 setPurchaseItems={setPurchaseItems}
                 setFilteredItems={setFilteredItems}
                 client={client}

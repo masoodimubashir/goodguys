@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { Badge, Button, InputGroup, Form, Table, Pagination } from 'react-bootstrap';
 import {
     Plus,
@@ -45,6 +45,9 @@ const PurchaseItemsTab = ({
     setPurchaseItems,
     setFilteredItems,
 }) => {
+
+    const { user } = usePage().props.auth;
+
 
 
     const [isCreating, setIsCreating] = useState(false);
@@ -318,7 +321,11 @@ const PurchaseItemsTab = ({
                                 Narration
                             </div>
                         </th>
-                        <th>Actions</th>
+                        {
+                            user.role === 'admin' && (
+                                <th>Actions</th>
+                            )
+                        }
                     </tr>
                 </thead>
 
@@ -487,8 +494,6 @@ const PurchaseItemsTab = ({
                     )}
                     {paginatedItems.map((item) => {
                         const isEditing = editingItemId === item.id;
-                        // const [localVendorSearch, setLocalVendorSearch] = useState(item.vendor_name || '');
-                        // const [localShowSuggestions, setLocalShowSuggestions] = useState(false);
 
                         return (
                             <tr key={item.id} className="align-middle">
@@ -587,16 +592,23 @@ const PurchaseItemsTab = ({
                                 <td>
                                     <span>{item.narration}</span>
                                 </td>
-                                <td>
-                                    <Button
-                                        variant="link"
-                                        className="text-danger p-0"
-                                        onClick={() => handleDeleteItem(item.id)}
-                                        title="Delete item"
-                                    >
-                                        <Trash2 size={16} />
-                                    </Button>
-                                </td>
+                                {
+                                    user.role === 'admin' && (
+                                        <td>
+                                            <Button
+                                                variant="link"
+                                                className="text-danger p-0"
+                                                onClick={() => handleDeleteItem(item.id)}
+                                                title="Delete item"
+                                            >
+                                                <Trash2 size={16} />
+                                            </Button>
+                                        </td>
+
+                                    )
+
+                                }
+
                             </tr>
                         );
                     })}

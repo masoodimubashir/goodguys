@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreReturnListrequest;
 use App\Http\Requests\UpdateReturnListrequest;
 use App\Models\Activity;
+use App\Models\PaymentDeleteRefrence;
 use App\Models\PurchasedItem;
 use App\Models\ReturnList;
 use Carbon\Carbon;
@@ -42,7 +43,7 @@ class AdminReturnListController extends Controller
 
             $validated = $request->validated();
 
-            ReturnList::create(array_merge($validated, [
+            $return = ReturnList::create(array_merge($validated, [
                 'created_by' => auth()->id(),
             ]));
 
@@ -61,7 +62,7 @@ class AdminReturnListController extends Controller
             ]);
 
 
-            PurchasedItem::create( [
+            $purchase = PurchasedItem::create([
                 'client_id' => $validated['client_id'],
                 'unit_type' => $validated['item_name'],
                 'narration' => $validated['narration'],
@@ -71,6 +72,13 @@ class AdminReturnListController extends Controller
                 'multiplier' => 1,
                 'created_by' => auth()->id(),
                 'created_at' => Carbon::parse($validated['return_date'])->setTimeFromTimeString(now()->format('H:i:s')),
+            ]);
+
+            PaymentDeleteRefrence::create([
+                'purchased_item_id' => $purchase->id,
+                'refrence_id' => $return->id,
+                'refrence_type' => ReturnList::class,
+
             ]);
 
             DB::commit();

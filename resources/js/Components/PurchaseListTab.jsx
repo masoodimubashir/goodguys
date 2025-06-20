@@ -1,16 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Link } from '@inertiajs/react';
-import { CreditCard, Edit, Eye, Link2, Pen, Trash, View } from 'lucide-react';
+import { Link, router } from '@inertiajs/react';
+import { CreditCard, Download, Edit, Eye, FileText, Image, Link2, Pen, Trash, Trash2, View } from 'lucide-react';
 import React from 'react';
 import { Button, Table, Tooltip } from 'react-bootstrap';
+import Swal from 'sweetalert2';
 
 const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
 
-
-
-    const getFileExtension = (filename) => {
-        return filename.split('.').pop().toLowerCase();
-    };
+    
 
 
     return (
@@ -18,7 +15,7 @@ const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
         <>
 
 
-            <Table bordered size='md' ref={tableRef} className="table table-striped text-start align-middle">
+            <Table bordered responsive size='md' ref={tableRef} className="table table-striped text-start align-middle">
                 <thead>
                     <tr>
                         <th className="text-start align-middle">Party Name</th>
@@ -30,7 +27,8 @@ const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
                 </thead>
                 <tbody>
                     {clientVendors.map(entry => {
-                        const fileExtension = entry.bill ? getFileExtension(entry.bill) : null;
+
+
 
                         return (
                             <tr key={`purchase-list-${entry.id}`} className="align-middle">
@@ -38,9 +36,9 @@ const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
 
                                 <td className="text-start align-middle">
 
-                                        <Link className='text-primary' href={route('purchase-list.index', ({ client_id: client?.id, vendor_id: entry.id }))}>
-                                            {entry.vendor_name}
-                                        </Link>
+                                    <Link className='text-primary' href={route('purchase-list.index', ({ client_id: client?.id, vendor_id: entry.id }))}>
+                                        {entry.vendor_name}
+                                    </Link>
 
                                     <small className="text-muted"> <br />
                                         {new Date(entry.created_at).toLocaleDateString('en-IN', {
@@ -65,10 +63,14 @@ const PurchaseListTab = ({ client, clientVendors, tableRef }) => {
                                     {entry.description}
                                 </td>
 
-                                <td className="text-start align-middle">
+                                <td className="text-start align-middle ">
+
                                     <Link href={route('purchase-list.index', ({ client_id: client?.id, vendor_id: entry.id }))}>
-                                        <Pen className='text-success' size={25} />
+                                        <Pen className='text-success' size={20} />
                                     </Link>
+
+                                   
+
                                 </td>
                             </tr>
                         );

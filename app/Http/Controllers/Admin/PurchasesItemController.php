@@ -7,8 +7,13 @@ use App\Http\Requests\StorePurchasedItemRequest;
 use App\Http\Requests\UpdatePurchasedItemRequest;
 use App\Models\Activity;
 use App\Models\Client;
+use App\Models\ClientAccount;
+use App\Models\PaymentDeleteRefrence;
 use App\Models\PurchasedItem;
+use App\Models\PurchaseListPayment;
+use App\Models\ReturnList;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class PurchasesItemController extends Controller
@@ -41,7 +46,7 @@ class PurchasesItemController extends Controller
 
         $data['total'] = ($data['qty'] * $data['amount']) * $data['multiplier'];
 
-        PurchasedItem::create(array_merge($data, [
+        $purchase = PurchasedItem::create(array_merge($data, [
             'client_id' => $data['client_id'],
             'unit_type' => $data['unit_type'],
             'narration' => $data['narration'],
@@ -53,6 +58,13 @@ class PurchasesItemController extends Controller
             'payment_flow' => false,
             'created_at' => $data['created_at']
         ]));
+
+        PaymentDeleteRefrence::create([
+            'purchased_item_id' => $purchase->id,
+            'refrence_id' => $purchase->id,
+            'refrence_type' => PurchasedItem::class,
+
+        ]);
 
         Activity::create([
             'client_id' => $data['client_id'],
@@ -109,12 +121,22 @@ class PurchasesItemController extends Controller
      */
     public function destroy($id)
     {
+        DB::transaction(function () use ($id) {
+            // Find the purchased item with its polymorphic relationship
+            $purchasedItem = PurchasedItem::with('payemntDeleteRefrence')->findOrFail($id);
 
-        $purchasedItem = PurchasedItem::findOrFail($id);
+            $class = $purchasedItem->payemntDeleteRefrence->refrence_type;
 
-        dd($purchasedItem);
+            if ($class === ClientAccount::class) {
+                ClientAccount::find($purchasedItem->payemntDeleteRefrence->refrence_id)->delete();
+            } else if ($class === PurchaseListPayment::class) {
+                PurchaseListPayment::find($purchasedItem->payemntDeleteRefrence->refrence_id)->delete();
+            } else if ($class === ReturnList::class) {
+                ReturnList::find($purchasedItem->payemntDeleteRefrence->refrence_id)->delete();
+            }
 
-        $purchasedItem->delete();
+            $purchasedItem->delete();
+        });
 
         return redirect()->back()->with('message', 'Item deleted successfully');
     }

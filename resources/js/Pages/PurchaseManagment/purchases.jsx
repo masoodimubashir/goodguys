@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import {
- Plus, ChevronDown, ChevronRight,
+    Plus, ChevronDown, ChevronRight,
     ShoppingCart, Package, RotateCcw, IndianRupee, Calendar,
     FileText, Activity, BarChart3, XCircle, Eye, EyeOff,
     Download, Receipt, Banknote, TrendingUp,
     Wallet,
-    Save
+    Save,
+    Image,
+    Trash2
 } from 'lucide-react';
 import { Card, Table, Form, Button, Badge, ProgressBar, Row, Col, Tooltip, OverlayTrigger } from 'react-bootstrap';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
 import { Link, router } from '@inertiajs/react';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
+import Swal from 'sweetalert2';
 
 const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
 
@@ -33,7 +36,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
     // Calculate payment totals
     const totalPayments = purchaseListPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
     const payableAmount = totalPurchases - totalReturns;
-    const remainingBalance = payableAmount  - totalPayments;
+    const remainingBalance = payableAmount - totalPayments;
 
     const paymentProgress = payableAmount > 0 ?
         (totalPayments / payableAmount) * 100 :
@@ -270,7 +273,32 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
         }
     };
 
+    const handleDeleteItem = (itemId) => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText:
+                'Yes, delete it!',
+            cancelButtonText: 'No, cancel!'
+        }).then((result) => {
+            if (result.isConfirmed) {
 
+                router.delete(route('purchase-list.destroy', itemId), {
+                    preserveScroll: true,
+                    onSuccess: (page) => {
+                    },
+                    onError: (errors) => {
+                        const errorMsg = Object.values(errors).join('\n');
+                        ShowMessage('error', errorMsg || 'Failed to delete item');
+                    }
+                });
+            }
+        });
+    }
 
     return (
         <AuthenticatedLayout>
@@ -300,7 +328,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                 Analytics
                             </Button>
                         </CustomTooltip>
-                        
+
                     </div>
 
                 </div>
@@ -415,7 +443,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                         <thead className="table-light">
                             <tr>
                                 <th style={{ width: '40px' }}></th>
-                                    <th>Bill Proof</th>
 
                                 <th>
                                     <div className="d-flex align-items-center gap-2">
@@ -435,6 +462,8 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                         Bill Total
                                     </div>
                                 </th>
+                                <th>Actions</th>
+
 
                             </tr>
                         </thead>
@@ -465,39 +494,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                         : <ChevronRight size={16} />
                                                     }
                                                 </Button>
-                                            </td>
-                                            <td>
-                                                <div className="position-relative">
-                                                    {
-                                                        purchase.bill ? <img
-                                                            src={`/storage/${purchase.bill}`}
-                                                            alt="Bill Proof"
-                                                            className="rounded"
-                                                            style={{ width: '50px', height: '50px', objectFit: 'cover' }}
-                                                        />
-                                                        : 'NA'
-                                                    }
-
-                                                    <div
-                                                        className="position-absolute top-0 start-0 d-flex align-items-center justify-content-center rounded"
-                                                        style={{
-                                                            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                                                            opacity: 0,
-                                                            transition: 'opacity 0.2s ease',
-                                                            height: '50px',
-                                                            width: '50px'
-                                                        }}
-                                                        onMouseEnter={(e) => e.target.style.opacity = 1}
-                                                        onMouseLeave={(e) => e.target.style.opacity = 0}
-                                                    >
-                                                        <a
-                                                            href={`/storage/${purchase.bill}`}
-                                                            download={`bill-${purchase.id}.jpg`}
-                                                        >
-                                                            <Download size={20} className='' />
-                                                        </a>
-                                                    </div>
-                                                </div>
                                             </td>
                                             <td>
                                                 <div>
@@ -536,8 +532,56 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                     </small>
                                                 </div>
                                             </td>
+                                            <td>
+                                                {purchase.bill && (
+                                                    <div className="d-flex align-items-center gap-2">
+                                                        <Button
+                                                            variant="outline-primary"
+                                                            size="sm"
+                                                            className="d-flex align-items-center gap-1"
+                                                            onClick={() => {
+                                                                // Handle both new previews and existing files
+                                                                const url = purchase.bill.startsWith('http')
+                                                                    ? purchase.bill
+                                                                    : `/storage/${purchase.bill}`;
+                                                                window.open(url, '_blank');
+                                                            }}
+                                                        >
+                                                            {purchase.bill.endsWith('.pdf') ? (
+                                                                <FileText size={14} />
+                                                            ) : (
+                                                                <Image size={14} />
+                                                            )}
+                                                        </Button>
+                                                        <Button
+                                                            variant="outline-secondary"
+                                                            size="sm"
+                                                            className="d-flex align-items-center gap-1"
+                                                            onClick={() => {
+                                                                // Trigger download instead of just viewing
+                                                                const url = purchase.bill.startsWith('http')
+                                                                    ? purchase.bill
+                                                                    : `/purchase-list/${purchase.id}/download`;
+                                                                window.open(url, '_blank');
+                                                            }}
+                                                        >
+                                                            <Download size={14} />
+                                                        </Button>
 
+                                                    </div>
+                                                )}
+                                                <Button
+                                                    variant="link"
+                                                    className="text-danger p-0 ms-4"
+                                                    onClick={() => handleDeleteItem(purchase.id)}
+                                                    title="Delete item"
+                                                >
+                                                    <>
+                                                        <Trash2 size={20} />
+                                                    </>
 
+                                                </Button>
+                                            </td>
                                         </tr>
 
                                         {isExpanded && (
@@ -996,7 +1040,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                             <div className="text-muted">
                                                 <Banknote size={32} className="mb-2 opacity-50" />
                                                 <p className="mb-0">No payments recorded</p>
-                                                <small>Click "Add Payment" to record a new payment</small>
                                             </div>
                                         </td>
                                     </tr>

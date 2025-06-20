@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PurchasedItem extends Model
 {
@@ -32,4 +33,17 @@ class PurchasedItem extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+
+    /**
+     * Get the payemntDeleteRefrence associated with the PaymentDeleteRefrence
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function payemntDeleteRefrence(): HasOne
+    {
+        return $this->hasOne(PaymentDeleteRefrence::class);
+    }
+
+   
 }
