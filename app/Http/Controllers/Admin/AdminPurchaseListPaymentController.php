@@ -91,7 +91,7 @@ class AdminPurchaseListPaymentController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('message', 'Purchase created successfully');
+            return redirect()->back()->with('message', 'Payment created successfully');
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             DB::rollback();

@@ -533,54 +533,58 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                 </div>
                                             </td>
                                             <td>
-                                                {purchase.bill && (
-                                                    <div className="d-flex align-items-center gap-2">
-                                                        <Button
-                                                            variant="outline-primary"
-                                                            size="sm"
-                                                            className="d-flex align-items-center gap-1"
-                                                            onClick={() => {
-                                                                // Handle both new previews and existing files
-                                                                const url = purchase.bill.startsWith('http')
-                                                                    ? purchase.bill
-                                                                    : `/storage/${purchase.bill}`;
-                                                                window.open(url, '_blank');
-                                                            }}
-                                                        >
-                                                            {purchase.bill.endsWith('.pdf') ? (
-                                                                <FileText size={14} />
-                                                            ) : (
-                                                                <Image size={14} />
-                                                            )}
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline-secondary"
-                                                            size="sm"
-                                                            className="d-flex align-items-center gap-1"
-                                                            onClick={() => {
-                                                                // Trigger download instead of just viewing
-                                                                const url = purchase.bill.startsWith('http')
-                                                                    ? purchase.bill
-                                                                    : `/purchase-list/${purchase.id}/download`;
-                                                                window.open(url, '_blank');
-                                                            }}
-                                                        >
-                                                            <Download size={14} />
-                                                        </Button>
+                                                <div className="d-flex align-items-center gap-2">
 
-                                                    </div>
-                                                )}
-                                                <Button
-                                                    variant="link"
-                                                    className="text-danger p-0 ms-4"
-                                                    onClick={() => handleDeleteItem(purchase.id)}
-                                                    title="Delete item"
-                                                >
-                                                    <>
-                                                        <Trash2 size={20} />
-                                                    </>
+                                                    {purchase.bill && (
+                                                        <>
+                                                            <Button
+                                                                variant="outline-primary"
+                                                                size="sm"
+                                                                className="d-flex align-items-center gap-1"
+                                                                onClick={() => {
+                                                                    // Handle both new previews and existing files
+                                                                    const url = purchase.bill.startsWith('http')
+                                                                        ? purchase.bill
+                                                                        : `/storage/${purchase.bill}`;
+                                                                    window.open(url, '_blank');
+                                                                }}
+                                                            >
+                                                                {purchase.bill.endsWith('.pdf') ? (
+                                                                    <FileText size={14} />
+                                                                ) : (
+                                                                    <Image size={14} />
+                                                                )}
+                                                            </Button>
+                                                            <Button
+                                                                variant="outline-secondary"
+                                                                size="sm"
+                                                                className="d-flex align-items-center gap-1"
+                                                                onClick={() => {
+                                                                    // Trigger download instead of just viewing
+                                                                    const url = purchase.bill.startsWith('http')
+                                                                        ? purchase.bill
+                                                                        : `/purchase-list/${purchase.id}/download`;
+                                                                    window.open(url, '_blank');
+                                                                }}
+                                                            >
+                                                                <Download size={14} />
+                                                            </Button>
+                                                        </>
 
-                                                </Button>
+                                                    )}
+                                                    <Button
+                                                        variant="link"
+                                                        className="text-danger p-0"
+                                                        onClick={() => handleDeleteItem(purchase.id)}
+                                                        title="Delete item"
+                                                    >
+                                                        <>
+                                                            <Trash2 size={20} />
+                                                        </>
+
+                                                    </Button>
+                                                </div>
+
                                             </td>
                                         </tr>
 
@@ -923,7 +927,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                             Narration
                                         </div>
                                     </th>
-                                    <th>Created At</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -972,9 +975,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                     payment.narration || 'No description'
                                                 )}
                                             </td>
-                                            <td>
-                                                {new Date(payment.created_at).toLocaleString()}
-                                            </td>
+                                        
 
                                         </tr>
                                     );

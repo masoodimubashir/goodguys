@@ -240,7 +240,7 @@ class AdminPurchaseListController extends Controller
             DB::commit();
 
             return redirect()->route('clients.show', $purchaseList->client_id)
-                ->with('message', 'Purchase list deleted successfully');
+                ->with('message', 'bill deleted successfully');
         } catch (ModelNotFoundException $e) {
             DB::rollBack();
             Log::error('Purchase list not found: ' . $e->getMessage());

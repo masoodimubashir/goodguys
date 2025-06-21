@@ -12,8 +12,10 @@ use App\Models\PaymentDeleteRefrence;
 use App\Models\PurchasedItem;
 use App\Models\PurchaseListPayment;
 use App\Models\ReturnList;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class PurchasesItemController extends Controller
@@ -42,44 +44,54 @@ class PurchasesItemController extends Controller
     public function store(StorePurchasedItemRequest $request)
     {
 
-        $data = $request->validated();
+        try {
 
-        $data['total'] = ($data['qty'] * $data['amount']) * $data['multiplier'];
+            DB::beginTransaction();
 
-        $purchase = PurchasedItem::create(array_merge($data, [
-            'client_id' => $data['client_id'],
-            'unit_type' => $data['unit_type'],
-            'narration' => $data['narration'],
-            'description' => $data['description'],
-            'price' => $data['amount'],
-            'total' => $data['total'],
-            'multiplier' => $data['multiplier'],
-            'created_by' => auth()->id(),
-            'payment_flow' => false,
-            'created_at' => $data['created_at']
-        ]));
+            $data = $request->validated();
 
-        PaymentDeleteRefrence::create([
-            'purchased_item_id' => $purchase->id,
-            'refrence_id' => $purchase->id,
-            'refrence_type' => PurchasedItem::class,
+            $data['total'] = ($data['qty'] * $data['amount']) * $data['multiplier'];
 
-        ]);
+            $purchase = PurchasedItem::create(array_merge($data, [
+                'client_id' => $data['client_id'],
+                'unit_type' => $data['unit_type'],
+                'narration' => $data['narration'],
+                'description' => $data['description'],
+                'price' => $data['amount'],
+                'total' => $data['total'],
+                'multiplier' => $data['multiplier'],
+                'created_by' => auth()->id(),
+                'payment_flow' => false,
+                'created_at' => $data['created_at']
+            ]));
 
-        Activity::create([
-            'client_id' => $data['client_id'],
-            'unit_type' => $data['unit_type'],
-            'narration' => $data['narration'],
-            'description' => $data['description'],
-            'price' => $data['amount'],
-            'total' => $data['total'],
-            'multiplier' => $data['multiplier'],
-            'created_by' => auth()->id(),
-            'payment_flow' => false,
-            'created_at' => $data['created_at']
-        ]);
+            PaymentDeleteRefrence::create([
+                'purchased_item_id' => $purchase->id,
+                'refrence_id' => $purchase->id,
+                'refrence_type' => PurchasedItem::class,
 
-        return redirect()->back()->with('message', 'Item created successfully');
+            ]);
+
+            Activity::create([
+                'client_id' => $data['client_id'],
+                'unit_type' => $data['unit_type'],
+                'narration' => $data['narration'],
+                'description' => $data['description'],
+                'price' => $data['amount'],
+                'total' => $data['total'],
+                'multiplier' => $data['multiplier'],
+                'created_by' => auth()->id(),
+                'payment_flow' => false,
+                'created_at' => $data['created_at']
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('message', 'Payment created..');
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to create payment');
+        }
     }
 
     /**
@@ -122,22 +134,28 @@ class PurchasesItemController extends Controller
     public function destroy($id)
     {
         DB::transaction(function () use ($id) {
-            // Find the purchased item with its polymorphic relationship
-            $purchasedItem = PurchasedItem::with('payemntDeleteRefrence')->findOrFail($id);
 
-            $class = $purchasedItem->payemntDeleteRefrence->refrence_type;
+            try {
+                // Find the purchased item with its polymorphic relationship
+                $purchasedItem = PurchasedItem::with('payemntDeleteRefrence')->findOrFail($id);
 
-            if ($class === ClientAccount::class) {
-                ClientAccount::find($purchasedItem->payemntDeleteRefrence->refrence_id)->delete();
-            } else if ($class === PurchaseListPayment::class) {
-                PurchaseListPayment::find($purchasedItem->payemntDeleteRefrence->refrence_id)->delete();
-            } else if ($class === ReturnList::class) {
-                ReturnList::find($purchasedItem->payemntDeleteRefrence->refrence_id)->delete();
+                $class = $purchasedItem->payemntDeleteRefrence->refrence_type;
+
+                if ($class === ClientAccount::class) {
+                    ClientAccount::find($purchasedItem->payemntDeleteRefrence->refrence_id)->delete();
+                } else if ($class === PurchaseListPayment::class) {
+                    PurchaseListPayment::find($purchasedItem->payemntDeleteRefrence->refrence_id)->delete();
+                } else if ($class === ReturnList::class) {
+                    ReturnList::find($purchasedItem->payemntDeleteRefrence->refrence_id)->delete();
+                }
+
+                $purchasedItem->delete();
+
+                return redirect()->back()->with('message', 'Payment deleted...');
+            } catch (Exception $e) {
+                Log::error($e->getMessage());
+                return redirect()->back()->with('error', 'Failed to delete payment');
             }
-
-            $purchasedItem->delete();
         });
-
-        return redirect()->back()->with('message', 'Item deleted successfully');
     }
 }

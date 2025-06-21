@@ -90,7 +90,7 @@ export const PaymentModal = ({
 
     // Calculate total for custom entries
     const calculateTotal = () => {
-        return (parseFloat(data.amount) || 0) * (parseInt(data.qty) || 1 * (parseInt(data.multiplier) || 1));
+        return (parseFloat(data.amount)) * (parseInt(data.qty) * (parseInt(data.multiplier)));
     };
 
     // Reset form when modal opens
@@ -118,7 +118,7 @@ export const PaymentModal = ({
             ? '/purchased-item'
             : '/purchase-list-payments';
 
-        const method =  post;
+        const method = post;
 
         method(url, {
             preserveScroll: true,
@@ -203,9 +203,7 @@ export const PaymentModal = ({
                                 <Form.Label>Amount</Form.Label>
                                 <Form.Control
                                     type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="0.00"
+                                    min="1"
                                     value={data.amount}
                                     onChange={(e) => setData('amount', e.target.value)}
                                     isInvalid={!!errors.amount}

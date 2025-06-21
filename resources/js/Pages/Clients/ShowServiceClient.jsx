@@ -326,7 +326,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
                         <Dropdown.Item onClick={() => openPurchaseListModal()}>
-                            <i className="ti ti-receipt me-2"></i> Bills
+                            <i className="ti ti-receipt me-2"></i> Create Bill
                         </Dropdown.Item>
                         <Dropdown.Item href={route('challan.show', client?.id)}>
                             <i className="ti ti-truck-delivery me-2"></i> Challans
@@ -335,7 +335,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                             <i className="ti ti-wallet me-2"></i> Client Payments
                         </Dropdown.Item>
                         <Dropdown.Item onClick={() => setshowPaymentModal(true)}>
-                            <i className="ti ti-cash me-2"></i> Payments
+                            <i className="ti ti-cash me-2"></i> Add Payment
                         </Dropdown.Item>
                     </Dropdown.Menu>
                 </Dropdown>
