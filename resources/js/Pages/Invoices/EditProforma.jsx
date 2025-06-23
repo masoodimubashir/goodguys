@@ -3,8 +3,6 @@ import { useForm, Link } from "@inertiajs/react";
 import { Container, Card, Row, Col, Form, Button, Accordion } from "react-bootstrap";
 
 export default function EditProforma({ proforma, modules, inventories }) {
-
-
     const { data, setData, put, processing, errors } = useForm({
         id: proforma.id,
         client_id: proforma.client_id,
@@ -17,10 +15,27 @@ export default function EditProforma({ proforma, modules, inventories }) {
         products: [],
     });
 
+    // Dimension type options for custom items
+    const dimensionTypes = [
+        { value: "width", label: "Width" },
+        { value: "height", label: "Height" },
+        { value: "depth", label: "Depth" },
+        { value: "length", label: "Length" },
+        { value: "thickness", label: "Thickness" }
+    ];
+
+    // SI unit options for custom items
+    const siUnits = [
+        { value: "mm", label: "Millimeter (mm)" },
+        { value: "cm", label: "Centimeter (cm)" },
+        { value: "m", label: "Meter (m)" },
+        { value: "in", label: "Inch (in)" },
+        { value: "ft", label: "Foot (ft)" }
+    ];
+
     // Initialize form with existing proforma data
     useEffect(() => {
         if (proforma && proforma.proformas) {
-            // Group items by module
             const modulesMap = {};
 
             proforma.proformas.forEach(item => {
@@ -31,25 +46,38 @@ export default function EditProforma({ proforma, modules, inventories }) {
                         items: []
                     };
                 }
+
+                // Parse dimensions from additional_description
+                let itemDimensions = [];
+                try {
+                    if (item.additional_description && item.additional_description !== "[]") {
+                        const parsed = JSON.parse(item.additional_description);
+                        if (Array.isArray(parsed)) {
+                            itemDimensions = parsed.map(dim => ({
+                                type: dim.type || "",
+                                value: dim.value || "",
+                                si: dim.si || ""
+                            }));
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error parsing dimensions:", error);
+                }
+
                 modulesMap[item.proforma_module_id].items.push({
                     id: item.id,
-                    source: "custom", // Default to custom since we don't have source in the data
-                    source_id: null,
+                    source: item.source || "custom",
+                    source_id: item.source_id || null,
                     name: item.item_name,
                     description: item.description || "",
                     price: item.price || 0,
                     quantity: item.count || 0,
-                    item_dimensions: parseItemDimensions(item.additional_description),
+                    item_dimensions: itemDimensions,
                     is_price_visible: item.is_price_visible || true
                 });
             });
 
-            const formattedProducts = Object.values(modulesMap).map(module => ({
-                module_id: module.module_id,
-                module_name: module.module_name,
-                items: module.items
-            }));
-
+            const formattedProducts = Object.values(modulesMap);
             setData({
                 ...data,
                 products: formattedProducts,
@@ -57,18 +85,6 @@ export default function EditProforma({ proforma, modules, inventories }) {
             });
         }
     }, [proforma]);
-
-    // Parse item dimensions from JSON string
-    const parseItemDimensions = (dimensionsJson) => {
-        try {
-            if (!dimensionsJson || dimensionsJson === "[]") return [];
-            const dimensions = JSON.parse(dimensionsJson);
-            return Array.isArray(dimensions) ? dimensions : [];
-        } catch (error) {
-            console.error("Error parsing dimensions:", error);
-            return [];
-        }
-    };
 
     // Toggle all prices visibility
     const toggleAllPricesVisibility = (isVisible) => {
@@ -182,8 +198,11 @@ export default function EditProforma({ proforma, modules, inventories }) {
                     price: selected.selling_price || 0,
                     quantity: selected.count || 0,
                     item_dimensions: (selected.item_dimensions || []).map(dim => {
-                        const [type, value, si] = dim.split(",");
-                        return { type, value, si };
+                        if (typeof dim === 'string') {
+                            const [type, value, si] = dim.split(",");
+                            return { type, value, si };
+                        }
+                        return dim; // if already an object
                     }),
                 };
             }
@@ -198,12 +217,15 @@ export default function EditProforma({ proforma, modules, inventories }) {
                     price: selected.selling_price || 0,
                     quantity: selected.count || 0,
                     item_dimensions: (selected.fields || []).map(dim => {
-                        const parts = dim.split(",");
-                        return {
-                            type: parts[0] || "",
-                            value: parts[1] || "",
-                            si: parts[2] || ""
-                        };
+                        if (typeof dim === 'string') {
+                            const parts = dim.split(",");
+                            return {
+                                type: parts[0] || "",
+                                value: parts[1] || "",
+                                si: parts[2] || ""
+                            };
+                        }
+                        return dim; // if already an object
                     }),
                 };
             }
@@ -290,9 +312,7 @@ export default function EditProforma({ proforma, modules, inventories }) {
                 <h4 className="text-center text-primary mb-5 fw-bold">Edit Estimate</h4>
 
                 <Form onSubmit={handleSubmit}>
-
                     <Row className="mb-4 g-3">
-
                         <Col md={4}>
                             <Form.Group>
                                 <Form.Control
@@ -510,53 +530,102 @@ export default function EditProforma({ proforma, modules, inventories }) {
                                                     </Form.Group>
                                                 </Col>
 
+                                                {/* Dimensions Section */}
                                                 <Col md={12}>
                                                     <h6 className="mt-3 mb-2">Dimensions</h6>
-                                                    {item.item_dimensions.map((dim, dimIndex) => (
-                                                        <Row key={dimIndex} className="g-2 mb-2">
-                                                            <Col md={3}>
-                                                                <Form.Control
-                                                                    size="sm"
-                                                                    placeholder="Type"
-                                                                    type="text"
-                                                                    value={dim.type}
-                                                                    onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "type", e.target.value)}
-                                                                    disabled={item.source !== "custom"}
-                                                                />
-                                                            </Col>
-                                                            <Col md={3}>
-                                                                <Form.Control
-                                                                    size="sm"
-                                                                    placeholder="Value"
-                                                                    type="text"
-                                                                    value={dim.value}
-                                                                    onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "value", e.target.value)}
-                                                                    disabled={item.source !== "custom"}
-                                                                />
-                                                            </Col>
-                                                            <Col md={3}>
-                                                                <Form.Control
-                                                                    size="sm"
-                                                                    placeholder="SI Unit"
-                                                                    type="text"
-                                                                    value={dim.si}
-                                                                    onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "si", e.target.value)}
-                                                                    disabled={item.source !== "custom"}
-                                                                />
-                                                            </Col>
-                                                            {item.source === "custom" && (
+                                                    {item.item_dimensions.map((dim, dimIndex) => {
+                                                        // Check if this is a newly added dimension (empty or just created)
+                                                        const isNewDimension = !dim.type && !dim.si && !dim.value;
+
+                                                        // Standard options
+                                                        const standardTypes = ["width", "height", "depth", "length", "thickness"];
+                                                        const standardUnits = ["mm", "cm", "m", "in", "ft"];
+
+                                                        // Determine if we should show selects or inputs
+                                                        const showTypeSelect = isNewDimension || standardTypes.includes(dim.type);
+                                                        const showUnitSelect = isNewDimension || standardUnits.includes(dim.si);
+
+                                                        return (
+                                                            <Row key={dimIndex} className="g-2 mb-2">
+                                                                {/* Dimension Type */}
                                                                 <Col md={3}>
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline-danger"
-                                                                        onClick={() => removeDimension(productIndex, itemIndex, dimIndex)}
-                                                                    >
-                                                                        <i className="ti ti-trash"></i> Remove
-                                                                    </Button>
+                                                                    {item.source === "custom" ? (
+                                                                        showTypeSelect ? (
+                                                                            <Form.Select
+                                                                                size="sm"
+                                                                                value={dim.type || ""}
+                                                                                onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "type", e.target.value)}
+                                                                            >
+                                                                                <option value="">Select Type</option>
+                                                                                <option value="width">Width</option>
+                                                                                <option value="height">Height</option>
+                                                                                <option value="depth">Depth</option>
+                                                                                <option value="length">Length</option>
+                                                                                <option value="thickness">Thickness</option>
+                                                                            </Form.Select>
+                                                                        ) : (
+                                                                            <Form.Control
+                                                                                size="sm"
+                                                                                type="text"
+                                                                                value={dim.type}
+                                                                                onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "type", e.target.value)}
+                                                                            />
+                                                                        )
+                                                                    ) : (
+                                                                        <Form.Control
+                                                                            size="sm"
+                                                                            type="text"
+                                                                            value={dim.type}
+                                                                            readOnly
+                                                                        />
+                                                                    )}
                                                                 </Col>
-                                                            )}
-                                                        </Row>
-                                                    ))}
+
+                                                                {/* Dimension Value */}
+                                                                <Col md={3}>
+                                                                    <Form.Control
+                                                                        size="sm"
+                                                                        placeholder="Value"
+                                                                        type="text"
+                                                                        value={dim.value}
+                                                                        onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "value", e.target.value)}
+                                                                        disabled={item.source !== "custom"}
+                                                                    />
+                                                                </Col>
+
+                                                                {/* SI Unit - Always show select for new dimensions or standard units */}
+                                                                <Col md={3}>
+
+                                                                    <Form.Select
+                                                                        size="sm"
+                                                                        value={dim.si || ""}
+                                                                        onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "si", e.target.value)}
+                                                                    >
+                                                                        <option value="">Select Unit</option>
+                                                                        <option value="mm">Millimeter (mm)</option>
+                                                                        <option value="cm">Centimeter (cm)</option>
+                                                                        <option value="m">Meter (m)</option>
+                                                                        <option value="in">Inch (in)</option>
+                                                                        <option value="ft">Foot (ft)</option>
+                                                                    </Form.Select>
+                                                                        
+                                                                </Col>
+
+                                                                {item.source === "custom" && (
+                                                                    <Col md={3}>
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="outline-danger"
+                                                                            onClick={() => removeDimension(productIndex, itemIndex, dimIndex)}
+                                                                        >
+                                                                            <i className="ti ti-trash"></i> Remove
+                                                                        </Button>
+                                                                    </Col>
+                                                                )}
+                                                            </Row>
+                                                        );
+                                                    })}
+
                                                     {item.source === "custom" && (
                                                         <Button
                                                             variant="outline-primary"

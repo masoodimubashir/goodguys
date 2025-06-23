@@ -26,7 +26,7 @@ class UpdateModuleRequest extends FormRequest
             'count' => 'required|integer|min:1',
             'selling_price' => 'required|integer|min:1',
             'buying_price' => 'required|integer|min:1',
-            'description' => 'required|string|max:1000',
+            'description' => 'nullable|string|max:1000',
             'fields' => 'required|array|min:1',
             'fields.*.field_name' => 'required|string|max:255',
             'fields.*.si_unit' => 'required|string|max:50',

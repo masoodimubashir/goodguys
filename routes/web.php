@@ -98,7 +98,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('/challan', AdminChallanController::class);
     Route::get('create/challanpdf/{id}', [AdminChallanController::class, 'createChallanPdf'])->name('create.challanpdf');
 
-
     // Route For Vendor Model
     Route::resource('/client-vendor', AdminClientVednorsController::class);
 
@@ -110,7 +109,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Route For Project Documents
     Route::resource('/project-document', ProjectDocumentController::class);
-
 
     // Client Account
     Route::resource('/client-account', AdminClientAccountController::class);

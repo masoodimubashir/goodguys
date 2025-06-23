@@ -346,10 +346,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                     <div>
                                                         <h6 className="-50 mb-1">Total Bill Amount</h6>
                                                         <h6 className="mb-0 fw-bold">{formatCurrency(analytics.totalPurchases)}</h6>
-                                                        <small className="-75">
-                                                            <TrendingUp size={12} className="me-1" />
-                                                            Avg: {formatCurrency(analytics.averagePurchaseAmount)}
-                                                        </small>
+                                                        
                                                     </div>
                                                     <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
                                                         <Receipt size={28} className="" />
@@ -366,10 +363,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                     <div>
                                                         <h6 className="-50 mb-1">Total Returns</h6>
                                                         <h6 className="mb-0 fw-bold">{formatCurrency(analytics.totalReturns)}</h6>
-                                                        <small className="-75">
-                                                            <RotateCcw size={12} className="me-1" />
-                                                            {analytics.returnRate.toFixed(1)}% Return Rate
-                                                        </small>
+                                                        
                                                     </div>
                                                     <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
                                                         <Package size={28} className="" />
@@ -415,9 +409,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                 className="progress-animated"
                                                                 style={{ height: '4px' }}
                                                             />
-                                                            <small className="-75">
-                                                                {analytics.paymentProgress.toFixed(1)}% Paid
-                                                            </small>
+                                                           
                                                         </div>
                                                     </div>
                                                     <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">

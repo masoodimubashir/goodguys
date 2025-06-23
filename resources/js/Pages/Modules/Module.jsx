@@ -78,7 +78,7 @@ export default function Module({ modules: initialModules }) {
     };
 
     const breadcrumbs = [
-        { href: '/module', label: 'Back', active: true }
+        { href: '/module', label: 'Modules', active: true }
     ];
 
     return (

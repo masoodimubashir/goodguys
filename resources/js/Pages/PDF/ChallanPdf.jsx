@@ -225,6 +225,11 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     paddingTop: 10,
   },
+  fullPageImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
 });
 
 const Header = ({ company }) => (
@@ -247,7 +252,7 @@ const Header = ({ company }) => (
 const ClientInfo = ({ client, challan, serviceCharge, hasPrices }) => (
   <View style={styles.clientInfo}>
     <Text style={[styles.companyName, { fontSize: FONT_SIZES.xlarge, marginBottom: 15 }]}>
-      Estimate
+      Challan
     </Text>
     <View style={{ width: '100%' }}>
       <Text style={styles.companyDetails}>
@@ -309,7 +314,7 @@ const ItemsTable = ({ items, hasPrices }) => (
   </View>
 );
 
-const ChallanPdf = ({ company_profile, challan, client, bankAccount }) => {
+const ChallanPdf = ({ company_profile, challan, client, bankAccount, bills }) => {
   const currentDate = new Date().toLocaleDateString();
   const formattedDate = challan?.created_at ? new Date(challan.created_at).toLocaleDateString() : currentDate;
 
@@ -375,7 +380,7 @@ const ChallanPdf = ({ company_profile, challan, client, bankAccount }) => {
                   </View>
                   <View style={styles.totalsRow}>
                     <Text style={styles.totalsLabel}>Account Total:</Text>
-                    <Text style={styles.totalsValue}>{inTotal.toFixed(2)}</Text>
+                    <Text style={styles.totalsValue}>{inTotal}</Text>
                   </View>
                   <View style={[styles.totalsRow, { backgroundColor: COLORS.accent }]}>
                     <Text style={[styles.totalsLabel, { color: 'white' }]}>Total Spend:</Text><Text style={[styles.totalsValue, { color: 'white' }]}>{spends}</Text>
@@ -396,6 +401,10 @@ const ChallanPdf = ({ company_profile, challan, client, bankAccount }) => {
           </Page>
         );
       })}
+
+
+        {Bills({ bills })}
+
 
       {/* Bank Details and Signature Page */}
       <Page size="A4" style={styles.lastpage}>
@@ -484,3 +493,19 @@ const SignatureSection = ({ bankAccount }) => (
     </View>
   </View>
 );
+
+
+const Bills = ({ bills }) => {
+  if (!bills || bills.length === 0) return null;
+
+  // Only show image formats
+  const imageBills = bills.filter((bill) =>
+    bill.toLowerCase().endsWith('.jpg')
+  );
+
+  return imageBills.map((bill, index) => (
+    <Page key={`bill-page-${index}`} size="A4" orientation="portrait">
+      <Image src={`/storage/${bill}`} style={styles.fullPageImage} />
+    </Page>
+  ));
+};

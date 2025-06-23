@@ -109,12 +109,12 @@ export default function PdfTable({ client, CompanyProfile, BankProfile }) {
                         >
                             Create Quotition
                         </Link> */}
-                      <Link
+                        <Link
                             href={route('proforma.create', { client_id: client.id })}
                             className="btn btn-sm btn-primary d-flex align-items-center gap-2"
                         >
                             Create Estimate
-                        </Link>
+                        </Link>
                     </div>
                 </div>
 
@@ -123,7 +123,6 @@ export default function PdfTable({ client, CompanyProfile, BankProfile }) {
                         <tr>
                             <th className="text-start">Date</th>
                             <th className="text-start">Type</th>
-                            <th className="text-start">Reference</th>
                             <th className="text-start">Status</th>
                             <th className="text-end">Actions</th>
                         </tr>
@@ -141,12 +140,7 @@ export default function PdfTable({ client, CompanyProfile, BankProfile }) {
                                                     year: 'numeric'
                                                 })}
                                             </span>
-                                            <small className="text-muted">
-                                                {new Date(entry.created_at).toLocaleTimeString("en-US", {
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                            </small>
+
                                         </div>
                                     </td>
 
@@ -156,9 +150,7 @@ export default function PdfTable({ client, CompanyProfile, BankProfile }) {
                                         </span>
                                     </td>
 
-                                    <td className="text-start">
-                                        <span className="font-monospace">{entry.reference_number}</span>
-                                    </td>
+
 
                                     <td className="text-start">
                                         {entry.type === 'Proforma' && (
@@ -204,17 +196,17 @@ export default function PdfTable({ client, CompanyProfile, BankProfile }) {
                                                             <Edit size={16} />
                                                         </Link>
 
-                                                        <button
-                                                            onClick={() => handleDeleteItem(entry.id, entry.type)}
-                                                            className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
-                                                        >
-                                                            <Trash2 size={16} />
-                                                        </button>
+
                                                     </>
 
                                                 )
                                             }
-
+                                            <button
+                                                onClick={() => handleDeleteItem(entry.id, entry.type)}
+                                                className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
                                             <PDFDownloadLink
                                                 document={
                                                     entry.type === 'Invoice' ? (
@@ -233,7 +225,7 @@ export default function PdfTable({ client, CompanyProfile, BankProfile }) {
                                                         ) : (
                                                             <>
                                                                 <Download size={16} />
-                                                                
+
                                                             </>
                                                         )}
                                                     </>

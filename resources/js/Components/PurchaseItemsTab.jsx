@@ -19,6 +19,7 @@ import {
 import DatePicker from 'react-datepicker';
 import { ShowMessage } from './ShowMessage';
 import Swal from 'sweetalert2';
+import Tooltip from './Tooltip';
 
 const PurchaseItemsTab = ({
     filteredItems,
@@ -496,7 +497,7 @@ const PurchaseItemsTab = ({
                         const isEditing = editingItemId === item.id;
 
                         return (
-                            <tr key={item.id} className="align-middle">
+                            <tr key={item.id} className="align-center">
                                 <td>
                                     <Button
                                         variant="link"
@@ -576,7 +577,11 @@ const PurchaseItemsTab = ({
                                 </td>
                                 <td>
                                     <span className="fw-bold text-primary">
-                                        {formatCurrency(item.price)} {item.payment_flow === 1 ? <Plus size={13} /> : <Minus size={13} />}
+                                        {item.payment_flow === 1 ? (
+                                            <Plus size={13} />
+                                        ) : item.payment_flow === 0 ? (
+                                            <Minus size={13} />
+                                        ) : <Plus size={13} />} {formatCurrency(item.price)}
                                     </span>
                                 </td>
                                 <td>
@@ -586,7 +591,11 @@ const PurchaseItemsTab = ({
                                 </td>
                                 <td>
                                     <span className="fw-bold text-success">
-                                        {formatCurrency(item.total)}  {item.payment_flow === 1 ? <Plus size={13} /> : <Minus size={13} />}
+                                        {item.payment_flow === 1 ? (
+                                            <Plus size={13} />
+                                        ) : item.payment_flow === 0 ? (
+                                            <Minus size={13} />
+                                        ) : <Plus size={13} />}  {formatCurrency(item.total)}
                                     </span>
                                 </td>
                                 <td>
@@ -595,14 +604,18 @@ const PurchaseItemsTab = ({
                                 {
                                     user.role === 'admin' && (
                                         <td>
-                                            <Button
-                                                variant="link"
-                                                className="text-danger p-0"
-                                                onClick={() => handleDeleteItem(item.id)}
-                                                title="Delete item"
-                                            >
-                                                <Trash2 size={16} />
-                                            </Button>
+                                            <Tooltip text="Edit item">
+                                                <Button
+                                                    variant="link"
+                                                    className="text-danger p-0"
+                                                    onClick={() => handleDeleteItem(item.id)}
+                                                    title="Delete item"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </Button>
+                                            </Tooltip>
+
+
                                         </td>
 
                                     )

@@ -121,9 +121,6 @@ export default function CreateProforma({ client, modules, inventories }) {
 
     // Handle item selection from inventory/module
     const handleItemSelect = (productIndex, itemIndex, sourceId) => {
-
-
-
         const newProducts = [...data.products];
         const parsedId = parseInt(sourceId);
         const item = newProducts[productIndex].items[itemIndex];
@@ -147,7 +144,6 @@ export default function CreateProforma({ client, modules, inventories }) {
             }
         } else if (item.source === "module") {
             const selected = modules.find((m) => m.id === parsedId);
-
             if (selected) {
                 const price = selected.selling_price || 0;
                 newProducts[productIndex].items[itemIndex] = {
@@ -174,7 +170,6 @@ export default function CreateProforma({ client, modules, inventories }) {
 
     // Handle dimension changes
     const handleDimensionChange = (productIndex, itemIndex, dimIndex, field, value) => {
-
         const newProducts = [...data.products];
         newProducts[productIndex].items[itemIndex].item_dimensions[dimIndex][field] = value;
         setData("products", newProducts);
@@ -232,7 +227,6 @@ export default function CreateProforma({ client, modules, inventories }) {
 
                 <Form onSubmit={handleSubmit}>
                     <Row className="mb-4 g-3">
-
                         <Col md={4}>
                             <Form.Group>
                                 <Form.Control
@@ -456,14 +450,27 @@ export default function CreateProforma({ client, modules, inventories }) {
                                                     {item.item_dimensions.map((dim, dimIndex) => (
                                                         <Row key={dimIndex} className="g-2 mb-2">
                                                             <Col md={3}>
-                                                                <Form.Control
-                                                                    size="sm"
-                                                                    placeholder="Type"
-                                                                    type="text"
-                                                                    value={dim.type}
-                                                                    onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "type", e.target.value)}
-                                                                    disabled={item.source !== "custom"}
-                                                                />
+                                                                {item.source === "custom" ? (
+                                                                    <Form.Select
+                                                                        size="sm"
+                                                                        value={dim.type}
+                                                                        onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "type", e.target.value)}
+                                                                    >
+                                                                        <option value="">Select Type</option>
+                                                                        <option value="width">Width</option>
+                                                                        <option value="height">Height</option>
+                                                                        <option value="depth">Depth</option>
+                                                                        <option value="length">Length</option>
+                                                                        <option value="thickness">Thickness</option>
+                                                                    </Form.Select>
+                                                                ) : (
+                                                                    <Form.Control
+                                                                        size="sm"
+                                                                        type="text"
+                                                                        value={dim.type}
+                                                                        readOnly
+                                                                    />
+                                                                )}
                                                             </Col>
                                                             <Col md={3}>
                                                                 <Form.Control
@@ -476,14 +483,27 @@ export default function CreateProforma({ client, modules, inventories }) {
                                                                 />
                                                             </Col>
                                                             <Col md={3}>
-                                                                <Form.Control
-                                                                    size="sm"
-                                                                    placeholder="SI Unit"
-                                                                    type="text"
-                                                                    value={dim.si}
-                                                                    onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "si", e.target.value)}
-                                                                    disabled={item.source !== "custom"}
-                                                                />
+                                                                {item.source === "custom" ? (
+                                                                    <Form.Select
+                                                                        size="sm"
+                                                                        value={dim.si}
+                                                                        onChange={(e) => handleDimensionChange(productIndex, itemIndex, dimIndex, "si", e.target.value)}
+                                                                    >
+                                                                        <option value="">Select Unit</option>
+                                                                        <option value="mm">Millimeter (mm)</option>
+                                                                        <option value="cm">Centimeter (cm)</option>
+                                                                        <option value="m">Meter (m)</option>
+                                                                        <option value="in">Inch (in)</option>
+                                                                        <option value="ft">Foot (ft)</option>
+                                                                    </Form.Select>
+                                                                ) : (
+                                                                    <Form.Control
+                                                                        size="sm"
+                                                                        type="text"
+                                                                        value={dim.si}
+                                                                        readOnly
+                                                                    />
+                                                                )}
                                                             </Col>
                                                             {item.source === "custom" && (
                                                                 <Col md={3}>

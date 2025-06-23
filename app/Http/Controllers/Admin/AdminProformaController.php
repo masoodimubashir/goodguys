@@ -153,8 +153,6 @@ class AdminProformaController extends Controller
     {
         $data = $request->validated();
 
-        dd($data);
-
         // Find the existing proforma reference
         $proformaReference = ProformaRefrence::findOrFail($id);
 
@@ -246,14 +244,19 @@ class AdminProformaController extends Controller
             $proforma_module_ids = Proforma::where('proforma_refrence_id', $proformaReference->id)->pluck('proforma_module_id');
 
             foreach ($proforma_module_ids as $module_id) {
-                ProformaModule::find($module_id)->delete();
+
+                $ref = ProformaModule::find($module_id);
+
+                if ($ref) {
+                    $ref->delete();
+                }
             }
 
             $proformaReference->delete();
 
             DB::commit();
 
-            return redirect()->back()->with('message', 'Estimate and all related data deleted successfully');
+            return redirect()->back()->with('message', 'Estimate deleted');
         } catch (ModelNotFoundException $e) {
             DB::rollBack();
             Log::error($e->getMessage());

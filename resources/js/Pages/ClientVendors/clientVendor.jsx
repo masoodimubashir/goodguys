@@ -47,10 +47,7 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
         } else {
             const filtered = paginatedData.data.filter(vendor =>
                 vendor?.vendor_name.toLowerCase().includes(term) ||
-                (vendor?.contact_number && vendor.contact_number.toLowerCase().includes(term)) ||
-                (vendor?.email && vendor?.email.toLowerCase().includes(term)) ||
-                (vendor?.address && vendor?.address.toLowerCase().includes(term)) ||
-                (vendor?.description && vendor?.description.toLowerCase().includes(term))
+                (vendor?.email && vendor?.email.toLowerCase().includes(term))
             );
             setFilteredData(filtered);
         }
@@ -123,7 +120,7 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
                         <input
                             type="text"
                             className="form-control"
-                            placeholder="Search Parties..."
+                            placeholder="Search your party by name or email..."
                             value={searchTerm}
                             onChange={handleSearch}
                         />
@@ -152,7 +149,14 @@ export default function clientVendor({ vendors: initialPaginatedData }) {
                                         <td>{vendor.email || <span className="text-muted">N/A</span>}</td>
                                         <td>{vendor.address || <span className="text-muted">N/A</span>}</td>
                                         <td>{vendor.description || <span className="text-muted">N/A</span>}</td>
-                                        <td>{new Date(vendor.created_at).toLocaleString()}</td>
+                                        <td>
+                                            {new Date(vendor.created_at).toLocaleDateString('en-IN', {
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric'
+                                            })}
+
+                                        </td>
                                         <td>
                                             <div className="d-flex align-items-center justify-items-center">
                                                 <Link className="dropdown-item" href={route('client-vendor.edit', vendor.id)} title="Edit">

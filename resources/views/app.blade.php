@@ -13,10 +13,11 @@
     @viteReactRefresh   
 
 
-    {{-- <script type="module" src="{{ asset('build/assets/app-B4CoH6gZ.js) }}"></script> --}}
+    {{-- <script type="module" src="{{ asset('build/assets/app-qL8kf_dE.js') }}"></script> --}}
+    {{-- <link rel="stylesheet" href="{{ asset('build/assets/app-BaQ7370p.css') }}"> --}}
+
 
     {{-- <link rel="stylesheet" href="{{ asset('build/assets/app-P2nxT-ty.js') }}"> --}}
-    {{-- <link rel="stylesheet" href="{{ asset('build/assets/app-BaQ7370p.css') }}"> --}}
 
     @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"]) 
 
@@ -31,5 +32,4 @@
 
 
 </body>
-
 </html>

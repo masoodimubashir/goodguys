@@ -12,6 +12,7 @@ use App\Models\CompanyProfile;
 use App\Models\Inventory;
 use App\Models\Module;
 use App\Models\PurchasedItem;
+use App\Models\PurchaseList;
 use App\Models\PurchaseListPayment;
 use App\Models\ServiceCharge;
 use App\Models\Vendor;
@@ -85,7 +86,10 @@ class AdminClientsController extends Controller
 
         $clientVendorIds = $client->purchaseLists->pluck('vendor_id')->unique();
 
-        $clientVendors = Vendor::whereIn('id', $clientVendorIds)->orderBy('vendor_name')->get();
+        $clientVendors = Vendor::whereIn('id', $clientVendorIds)
+            ->orderBy('vendor_name')
+            ->get();
+
 
         $purchase_items = PurchasedItem::where('client_id', $client->id)
             ->orderBy('created_at', 'desc')
@@ -94,7 +98,7 @@ class AdminClientsController extends Controller
         $activities = Activity::where('client_id', $client->id)
             ->orderBy('created_at', 'desc')
             ->get();
-      
+
 
         if ($client->client_type === 'Service Client') {
 
@@ -104,8 +108,10 @@ class AdminClientsController extends Controller
                 'vendors' => Vendor::orderBy('vendor_name')->get(),
                 'purchase_items' => $purchase_items,
                 'BankProfile' => BankAccount::first(),
-                'activities' => $activities
+                'activities' => $activities,
+            
             ]);
+        
         } else {
 
             return Inertia::render('Clients/ShowProductClient', [
@@ -117,8 +123,8 @@ class AdminClientsController extends Controller
                 'purchase_items' => $purchase_items,
                 'BankProfile' => BankAccount::first(),
                 'client_vendors' => $clientVendors,
-                'activities' => $activities
-
+                'activities' => $activities,
+             
             ]);
         }
     }

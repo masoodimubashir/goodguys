@@ -2,7 +2,8 @@ import { useForm } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
 import { ShowMessage } from './ShowMessage';
-import { Trash2, ChevronDown, ChevronRight, FileText, Image, Download } from 'lucide-react';
+import { Trash2, Eye } from 'lucide-react';
+import Tooltip from './Tooltip';
 
 export const PurchaseListModal = ({
     show,
@@ -17,6 +18,7 @@ export const PurchaseListModal = ({
     const [showVendorSuggestions, setShowVendorSuggestions] = useState(false);
     const [filteredVendors, setFilteredVendors] = useState(vendors);
     const [isNewDescription, setIsNewDescription] = useState(false);
+    const [formSubmitted, setFormSubmitted] = useState(false);
     const vendorInputRef = useRef(null);
     const fileInputRef = useRef(null);
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -57,15 +59,25 @@ export const PurchaseListModal = ({
     // Reset form when modal shows/hides
     useEffect(() => {
         if (show) {
-            reset();
-            setVendorSearchTerm('');
+            const hasErrors = Object.keys(errors).length > 0;
+            setFormSubmitted(false);
+
+            // Only reset the form and search if there are no validation errors
+            if (!hasErrors) {
+                reset();
+                setVendorSearchTerm('');
+                setIsNewDescription(false);
+            } else {
+                // On error, keep previously typed vendor name
+                setVendorSearchTerm(data.vendor_name || '');
+            }
+
             setShowVendorSuggestions(false);
-            setIsNewDescription(false);
             setPreviewUrl(null);
             setFilteredVendors(vendors);
             setData('client_id', client?.id || '');
         }
-    }, [show, client]);
+    }, [show, client, errors]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -109,11 +121,25 @@ export const PurchaseListModal = ({
     };
 
     const handleSubmit = (e) => {
-        
         e.preventDefault();
+        setFormSubmitted(true);
+
+        // Client-side validation
+        if (!isNewDescription && !data.vendor_id) {
+            return;
+        }
+
+        if (isNewDescription && !vendorSearchTerm.trim()) {
+            return;
+        }
+
+        // Ensure description is synced with vendorSearchTerm when using custom entry
+        if (isNewDescription) {
+            const trimmedDescription = vendorSearchTerm.trim();
+            setData('description', trimmedDescription);
+        }
 
         const formData = new FormData();
-
         Object.entries(data).forEach(([key, value]) => {
             if (value !== null && value !== undefined && value !== '') {
                 formData.append(key, value);
@@ -135,10 +161,6 @@ export const PurchaseListModal = ({
                 reset();
                 ShowMessage('success', page.props.message);
             },
-            onError: (errors) => {
-                console.error('Form submission errors:', errors);
-                ShowMessage('error', 'Please fix the errors in the form');
-            }
         });
     };
 
@@ -147,14 +169,14 @@ export const PurchaseListModal = ({
         setData({
             ...data,
             price: value,
-            total: (value * parseFloat(data.qty) * parseFloat(data.multiplier)).toFixed(2)
+            total: (value * (data.qty) * (data.multiplier))
         });
     };
 
     const getFileIcon = () => {
         if (!previewUrl && !data.bill_url) return null;
         const fileName = previewUrl ? fileInputRef.current?.files[0]?.name : data.bill_url;
-        return fileName?.endsWith('.pdf') ? <FileText size={14} /> : <Image size={14} />;
+        return <Eye size={18} title="View" />;
     };
 
     return (
@@ -175,8 +197,10 @@ export const PurchaseListModal = ({
                                         onKeyDown={handleVendorKeyDown}
                                         onClick={() => setShowVendorSuggestions(true)}
                                         onBlur={() => setTimeout(() => setShowVendorSuggestions(false), 200)}
-                                        isInvalid={!!errors.vendor_id}
-                                        required
+                                        isInvalid={(formSubmitted && !isNewDescription && !data.vendor_id) || 
+                                                   (formSubmitted && isNewDescription && !vendorSearchTerm.trim()) || 
+                                                   !!errors.vendor_id || 
+                                                   !!errors.description}
                                     />
                                     {showVendorSuggestions && (
                                         <div className="position-absolute bg-white border mt-1 w-100 shadow-sm z-3"
@@ -201,7 +225,9 @@ export const PurchaseListModal = ({
                                         </div>
                                     )}
                                     <Form.Control.Feedback type="invalid">
-                                        {errors.vendor_id || errors.description}
+                                        {(formSubmitted && !isNewDescription && !data.vendor_id) ? "party name is required" : 
+                                         (formSubmitted && isNewDescription && !vendorSearchTerm.trim()) ? "this field is required" :
+                                         errors.vendor_id || errors.description}
                                     </Form.Control.Feedback>
                                 </div>
                             </Form.Group>
@@ -234,7 +260,6 @@ export const PurchaseListModal = ({
                                             value={data.list_name}
                                             onChange={(e) => setData('list_name', e.target.value)}
                                             isInvalid={!!errors.list_name}
-                                            required
                                         />
                                         <Form.Control.Feedback type="invalid">
                                             {errors.list_name}
@@ -250,7 +275,6 @@ export const PurchaseListModal = ({
                                             value={data.purchase_date}
                                             onChange={(e) => setData('purchase_date', e.target.value)}
                                             isInvalid={!!errors.purchase_date}
-                                            required
                                         />
                                         <Form.Control.Feedback type="invalid">
                                             {errors.purchase_date}
@@ -263,12 +287,10 @@ export const PurchaseListModal = ({
                                         <Form.Label>Bill Total</Form.Label>
                                         <Form.Control
                                             type="number"
-                                            step="0.01"
                                             min="0"
                                             value={data.bill_total}
                                             onChange={(e) => setData('bill_total', parseFloat(e.target.value) || 0)}
                                             isInvalid={!!errors.bill_total}
-                                            required
                                         />
                                         <Form.Control.Feedback type="invalid">
                                             {errors.bill_total}
@@ -292,52 +314,37 @@ export const PurchaseListModal = ({
 
                                         {(previewUrl || data.bill_url) && (
                                             <div className="mt-2 d-flex align-items-center gap-2">
-                                                <Button
-                                                    variant="outline-primary"
-                                                    size="sm"
-                                                    className="d-flex align-items-center gap-1"
-                                                    onClick={() => {
-                                                        if (previewUrl) {
-                                                            window.open(previewUrl, '_blank');
-                                                        } else {
-                                                            window.open(`/storage/${data.bill_url}`, '_blank');
-                                                        }
-                                                    }}
-                                                >
-                                                    {getFileIcon()}
-                                                    View
-                                                </Button>
-                                                <Button
-                                                    variant="outline-secondary"
-                                                    size="sm"
-                                                    className="d-flex align-items-center gap-1"
-                                                    onClick={() => {
-                                                        if (previewUrl) {
-                                                            const link = document.createElement('a');
-                                                            link.href = previewUrl;
-                                                            link.download = fileInputRef.current.files[0].name;
-                                                            link.click();
-                                                        } else {
-                                                            window.open(`/purchase-list/${data.id}/download`, '_blank');
-                                                        }
-                                                    }}
-                                                >
-                                                    <Download size={14} />
-                                                    Download
-                                                </Button>
-                                                <Button
-                                                    variant="danger"
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        setData('bill', null);
-                                                        setPreviewUrl(null);
-                                                        if (fileInputRef.current) {
-                                                            fileInputRef.current.value = '';
-                                                        }
-                                                    }}
-                                                >
-                                                    <Trash2 size={14} />
-                                                </Button>
+                                                <Tooltip text={'View'}>
+                                                    <Button
+                                                        variant="outline-primary"
+                                                        size="sm"
+                                                        className="d-flex align-items-center gap-1"
+                                                        onClick={() => {
+                                                            if (previewUrl) {
+                                                                window.open(previewUrl, '_blank');
+                                                            } else {
+                                                                window.open(`/storage/${data.bill_url}`, '_blank');
+                                                            }
+                                                        }}
+                                                    >
+                                                        {getFileIcon()}
+                                                    </Button>
+                                                </Tooltip>
+                                                <Tooltip text="Delete">
+                                                    <Button
+                                                        variant="danger"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            setData('bill', null);
+                                                            setPreviewUrl(null);
+                                                            if (fileInputRef.current) {
+                                                                fileInputRef.current.value = '';
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </Button>
+                                                </Tooltip>
                                             </div>
                                         )}
                                     </Form.Group>
@@ -367,7 +374,6 @@ export const PurchaseListModal = ({
                                         <Form.Control
                                             type="number"
                                             min="1"
-                                            step="1"
                                             value={data.qty}
                                             onChange={(e) => {
                                                 const value = parseInt(e.target.value) || 1;
@@ -378,7 +384,6 @@ export const PurchaseListModal = ({
                                                 });
                                             }}
                                             isInvalid={!!errors.qty}
-                                            required
                                         />
                                         <Form.Control.Feedback type="invalid">
                                             {errors.qty}
@@ -392,7 +397,6 @@ export const PurchaseListModal = ({
                                         <Form.Control
                                             type="number"
                                             min="1"
-                                            step="0.1"
                                             value={data.multiplier}
                                             onChange={(e) => {
                                                 const value = parseFloat(e.target.value) || 1;
@@ -403,7 +407,6 @@ export const PurchaseListModal = ({
                                                 });
                                             }}
                                             isInvalid={!!errors.multiplier}
-                                            required
                                         />
                                         <Form.Control.Feedback type="invalid">
                                             {errors.multiplier}
@@ -417,11 +420,9 @@ export const PurchaseListModal = ({
                                         <Form.Control
                                             type="number"
                                             min="0"
-                                            step="0.01"
                                             value={data.price}
                                             onChange={handlePriceChange}
                                             isInvalid={!!errors.price}
-                                            required
                                         />
                                         <Form.Control.Feedback type="invalid">
                                             {errors.price}
@@ -452,7 +453,6 @@ export const PurchaseListModal = ({
                                             value={data.created_at}
                                             onChange={(e) => setData('created_at', e.target.value)}
                                             isInvalid={!!errors.created_at}
-                                            required
                                         />
                                         <Form.Control.Feedback type="invalid">
                                             {errors.created_at}

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->decimal('selling_price', 10, 2);
             $table->decimal('buying_price', 10, 2);
             $table->json('fields');
-            $table->string('description');
+            $table->string('description')->nullable();
             $table->unsignedTinyInteger('created_by')->nullable();
             $table->unsignedTinyInteger('updated_by')->nullable();
             $table->timestamps();

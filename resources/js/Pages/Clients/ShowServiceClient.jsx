@@ -16,9 +16,10 @@ import ClientAccountModal from '@/Components/ClientAccountModal';
 import ActivityTab from '@/Components/Activity';
 import { PaymentModal } from '@/Components/PaymentModal';
 
-export default function ShowServiceClient({ client, vendors = [], client_vendors = [], purchase_items, activities = [] }) {
+export default function ShowServiceClient({ client, vendors = [], client_vendors = [], purchase_items, activities = [], }) {
     // State management
     const flash = usePage().props.flash;
+    
 
     const [activeTab, setActiveTab] = useState('purchase-items');
     const [purchaseItems, setPurchaseItems] = useState(purchase_items || []);
@@ -77,7 +78,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
         service_charge: client.service_charge?.service_charge || 0,
         challan: [],
         challan_number: '',
-        challan_date: '',
+        challan_date: new Date().toISOString().split('T')[0],
         is_price_visible: true,
     });
 
@@ -322,7 +323,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
             <div className="d-flex flex-wrap justify-content-end align-items-center mt-2 mb-3 gap-2">
                 <Dropdown>
                     <Dropdown.Toggle variant="primary" size="sm" className="d-flex align-items-center shadow-sm">
-                        <i className="ti ti-menu-2 me-2"></i> Actions
+                        Actions
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
                         <Dropdown.Item onClick={() => openPurchaseListModal()}>

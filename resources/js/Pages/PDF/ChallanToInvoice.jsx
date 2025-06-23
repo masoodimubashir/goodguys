@@ -241,7 +241,7 @@ const ClientInfo = ({ client, serviceCharge, hasPrices }) => (
 
   <View style={styles.clientInfo}>
     <Text style={[styles.companyName, { fontSize: FONT_SIZES.xlarge, marginBottom: 15 }]}>
-      Estimate
+      Quotation
     </Text>
     <View style={{ width: '100%' }}>
       <Text style={styles.companyDetails}>
@@ -312,15 +312,15 @@ const ItemsTable = ({ items, hasPrices }) => (
   </View>
 );
 
-const ChallanToInvoice = ({ company_profile, data, client, bankAccount }) => {
+const ChallanToInvoice = ({ company_profile, data, client, bankAccount, bills }) => {
 
 
   const currentDate = new Date().toLocaleDateString();
-  
+
   const formattedDate = currentDate;
 
   const serviceCharge = parseFloat(data?.service_charge) || 0;
-  
+
   const rawItems = data?.items || [];
 
   const tableData = rawItems.filter((item, index, self) => {
@@ -388,7 +388,7 @@ const ChallanToInvoice = ({ company_profile, data, client, bankAccount }) => {
 
       <Page size="A4" style={[styles.page1, { justifyContent: 'center' }]}>
         <Header company={company_profile} />
-        <ClientInfo client={client}  serviceCharge={serviceCharge} hasPrices={hasPrices} />
+        <ClientInfo client={client} serviceCharge={serviceCharge} hasPrices={hasPrices} />
       </Page>
 
 
@@ -428,6 +428,8 @@ const ChallanToInvoice = ({ company_profile, data, client, bankAccount }) => {
         );
       })}
 
+
+      {Bills({ bills })}
 
 
       {/* Bank Details and Signature Page */}
@@ -521,4 +523,20 @@ const wrapBy5Words = (text) => {
     lines.push(words.slice(i, i + 5).join(' '));
   }
   return lines.join('\n');
+};
+
+
+const Bills = ({ bills }) => {
+  if (!bills || bills.length === 0) return null;
+
+  // Only show image formats
+  const imageBills = bills.filter((bill) =>
+    bill.toLowerCase().endsWith('.jpg')
+  );
+
+  return imageBills.map((bill, index) => (
+    <Page key={`bill-page-${index}`} size="A4" orientation="portrait">
+      <Image src={`/storage/${bill}`} style={styles.fullPageImage} />
+    </Page>
+  ));
 };

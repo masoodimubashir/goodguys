@@ -221,7 +221,7 @@ const BankAccountForm = ({ bankAccount = null, clientId }) => {
                                                 <InputError message={errors.signature_image} className="invalid-feedback" />
                                             </div>
                                                <div className='mt-2'>
-                                                <InputLabel htmlFor="qr_code_image" value="QR Code Imag (JPG)" />
+                                                <InputLabel htmlFor="qr_code_image" value="QR Code Image (JPG)" />
                                                 <input
                                                     type="file"
                                                     id="qr_code_image"

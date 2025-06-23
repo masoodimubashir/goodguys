@@ -100,10 +100,10 @@ class AdminInvoiceController extends Controller
 
             DB::commit();
             return redirect()->route('clients.show', [$invoice_refrence->client_id])
-                ->with('message', 'Proforma Created Successfully');
+                ->with('message', 'Quotation Created Successfully');
         } catch (Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Failed to Create Proforma: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to Create Quotation: ' . $e->getMessage());
         }
     }
 
@@ -137,8 +137,8 @@ class AdminInvoiceController extends Controller
                 'inventories' => $inventories,
             ]);
         } catch (ModelNotFoundException $e) {
-            Log::error('Invoice not found', ['exception' => $e->getMessage()]);
-            return redirect()->back()->with('error', 'Invoice not found');
+            Log::error('Quotation not found', ['exception' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Quotation not found');
         } catch (Exception $e) {
 
             return redirect()->back()->with('error', 'Something went wrong');
@@ -229,7 +229,7 @@ class AdminInvoiceController extends Controller
             DB::commit();
 
             return redirect()->route('clients.show', [$invoice->client_id])
-                ->with('message', 'Invoice Updated Successfully');
+                ->with('message', 'Quotation Updated Successfully');
         } catch (Exception $e) {
             DB::rollBack();
             return redirect()->back()
@@ -243,17 +243,38 @@ class AdminInvoiceController extends Controller
      */
     public function destroy($id)
     {
+
         try {
 
-            $invoice = InvoiceRefrence::findOrFail($id);
+            DB::beginTransaction();
 
-            $invoice->delete();
+            $invoice_ref = InvoiceRefrence::findOrFail($id);
 
-            return redirect()->back()->with('message', 'Invoice deleted.');
-        } catch (ModelNotFoundException  $e) {
-            return redirect()->back() > with('error', 'Invoice not found');
+            $invoice_module_id = Invoice::where('invoice_refrence_id', $invoice_ref->id)->pluck('invoice_module_id');
+
+
+            foreach ($invoice_module_id as $module_id) {
+                $ref = InvoiceModule::find($module_id);
+                if ($ref) {
+                    $ref->delete();
+                }
+            }
+
+
+            $invoice_ref->delete();
+
+            DB::commit();
+
+            return redirect()->back()->with('message', 'Quotation deleted..');
+        } catch (ModelNotFoundException $e) {
+            DB::rollBack();
+            Log::error($e->getMessage());
+
+            return redirect()->back()->with('error', 'Quotation not found');
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to delete Invoice');
+            Log::error($e->getMessage());
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to delete Quotation: ' . $e->getMessage());
         }
     }
 
@@ -267,8 +288,9 @@ class AdminInvoiceController extends Controller
             $proforma_ref = ProformaRefrence::with([
                 'proformas.proformaModule',
                 'client' => fn($query) => $query->with('serviceCharge'),
-                
+
             ])->findOrFail($id);
+
 
             // Mark proforma as converted
             $proforma_ref->update([
@@ -277,7 +299,7 @@ class AdminInvoiceController extends Controller
 
             // Create new invoice reference
             $invoice = InvoiceRefrence::create([
-                'invoice_number' => uniqid('INV-'),
+                'invoice_number' => uniqid('QUO-'),
                 'client_id' => $proforma_ref->client_id,
                 'created_at' => $proforma_ref->created_at,
             ]);
@@ -287,7 +309,7 @@ class AdminInvoiceController extends Controller
 
             // Process each module (product)
             foreach ($groupedItems as $moduleId => $items) {
-                
+
                 $module = $items->first()->proformaModule;
 
                 // Create InvoiceModule (equivalent to ProformaModule)

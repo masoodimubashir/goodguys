@@ -83,7 +83,7 @@ class AdminReturnListController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('message', 'Return list created successfully');
+            return redirect()->route('clients.show', $validated['client_id'])->with('message', 'Return list created successfully');
         } catch (\Exception $e) {
             Log::error('Error creating return list: ' . $e->getMessage());
             DB::rollBack();

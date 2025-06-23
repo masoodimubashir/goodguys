@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import React, { useState } from 'react';
-import { Button, Card, Table, Badge, Form, Modal, Row, Col, ProgressBar } from 'react-bootstrap';
+import { Button, Card, Table, Badge, Form, Modal, Row, Col, ProgressBar, Pagination } from 'react-bootstrap';
 import { Trash2, FileText, Edit, Calendar, CreditCard } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import ChallanPdf from '../PDF/ChallanPdf';
@@ -10,17 +10,15 @@ import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import Swal from 'sweetalert2';
 import { ClientInfoCard } from '@/Components/ClientInfoCard';
 
-const ViewChallans = ({ client, company_profile, bankAccount }) => {
-
+const ViewChallans = ({ client, company_profile, bankAccount, bills }) => {
     const [selectedChallans, setSelectedChallans] = useState([]);
-  
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10); // You can adjust this number
 
     // Calculate client statistics
     const clientStats = {
-
         totalChallans: client.challan_refrences.length,
-      
-
         spends: client.challan_refrences.reduce((sum, ref) => {
             const items = ref.challans || [];
             // Filter out credited items
@@ -38,7 +36,6 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                 if (unitType === 'in') {
                     inTotal += value;
                 }
-
             });
 
             // Calculate service charge on outTotal only
@@ -51,10 +48,16 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
 
             return sum + balance;
         }, 0),
-
-
     };
 
+    // Pagination logic
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentChallans = client.challan_refrences.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(client.challan_refrences.length / itemsPerPage);
+
+    // Handle page change
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
     // Handle checkbox selection
     const handleCheckboxChange = (challanId) => {
@@ -65,12 +68,14 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
         );
     };
 
-    // Select all/deselect all
+    // Select all/deselect all for current page
     const handleSelectAll = (e) => {
         if (e.target.checked) {
-            setSelectedChallans(client.challan_refrences.map(ref => ref.id));
+            const pageChallanIds = currentChallans.map(ref => ref.id);
+            setSelectedChallans(prev => [...new Set([...prev, ...pageChallanIds])]);
         } else {
-            setSelectedChallans([]);
+            const pageChallanIds = currentChallans.map(ref => ref.id);
+            setSelectedChallans(prev => prev.filter(id => !pageChallanIds.includes(id)));
         }
     };
 
@@ -129,8 +134,6 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
 
     const data = prepareInvoiceData();
 
-
-
     const handleDelete = (id) => {
         Swal.fire({
             title: 'Are you sure?',
@@ -145,9 +148,7 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                 router.delete(route('challan.destroy', id));
             }
         })
-
     };
-
 
     const breadcrumbs = [
         { href: `/clients/${client.id}`, label: 'Back', active: false },
@@ -158,13 +159,10 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
         <AuthenticatedLayout>
             <Head title={`${client.client_name} - Challans`} />
             <div className="container-fluid py-4">
-
-                <BreadCrumbHeader
-                    breadcrumbs={breadcrumbs}
-                />
+                <BreadCrumbHeader breadcrumbs={breadcrumbs} />
+                
                 {/* Client Information Card */}
                 <Row className="mb-4">
-
                     <ClientInfoCard client={client} />
                     <Col md={6}>
                         <Card className="border-0 shadow-sm">
@@ -183,42 +181,36 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                     </Col>
                 </Row>
 
-              
                 {/* Challans Table */}
                 <div>
                     <div className="d-flex justify-content-between align-items-center">
-                        <h6>Challan Selected
-                            ({selectedChallans.length})
-                        </h6>
+                        <h6>Challan Selected ({selectedChallans.length})</h6>
                         <div className="d-flex gap-2 mb-2">
                             {selectedChallans.length > 0 && (
-                                <>
-
-                                    <PDFDownloadLink
-                                        document={
-                                            <ChallanToInvoice
-                                                company_profile={company_profile}
-                                                data={data}
-                                                client={client}
-                                                bankAccount={bankAccount}
-                                            />
-                                        }
-                                        fileName={`${client.client_name}.pdf`}
-                                    >
-                                        {({ loading }) => (
-                                            <Button variant="secondary" disabled={loading} size='sm'>
-                                                <FileText size={16} className="me-2" />
-                                                {loading ? 'Generating...' : 'Download Invoice'}
-                                            </Button>
-                                        )}
-                                    </PDFDownloadLink>
-                                </>
+                                <PDFDownloadLink
+                                    document={
+                                        <ChallanToInvoice
+                                            company_profile={company_profile}
+                                            data={data}
+                                            client={client}
+                                            bankAccount={bankAccount}
+                                            bills={bills}
+                                        />
+                                    }
+                                    fileName={`${client.client_name}.pdf`}
+                                >
+                                    {({ loading }) => (
+                                        <Button variant="secondary" disabled={loading} size='sm'>
+                                            <FileText size={16} className="me-2" />
+                                            {loading ? 'Generating...' : 'Download Invoice'}
+                                        </Button>
+                                    )}
+                                </PDFDownloadLink>
                             )}
-
                         </div>
                     </div>
 
-                    <Table hover responsive size='sm' bordered >
+                    <Table hover responsive size='sm' bordered>
                         <thead>
                             <tr>
                                 <th>
@@ -226,8 +218,8 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                                         type="checkbox"
                                         onChange={handleSelectAll}
                                         checked={
-                                            selectedChallans.length > 0 &&
-                                            selectedChallans.length === client.challan_refrences.length
+                                            currentChallans.length > 0 &&
+                                            currentChallans.every(ref => selectedChallans.includes(ref.id))
                                         }
                                     />
                                 </th>
@@ -238,12 +230,9 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                             </tr>
                         </thead>
                         <tbody>
-
-                            {client.challan_refrences.map((ref) => {
+                            {currentChallans.map((ref) => {
                                 const items = ref.challans || [];
-
                                 const isInvoiced = ref.invoice_id !== null;
-
 
                                 return (
                                     <tr key={ref.id}>
@@ -257,27 +246,17 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                                                 />
                                             )}
                                         </td>
-                                        <td>
-                                            {ref.challan_number}
-
-                                        </td>
+                                        <td>{ref.challan_number}</td>
                                         <td>{new Date(ref.created_at).toLocaleDateString()}</td>
-
                                         <td className="text-end">{items.length}</td>
-
                                         <td className="text-center">
                                             <div className="d-flex justify-content-center gap-2">
-
-                                                {/* <Link href={route('challan.edit', ref.id)}>
-                                                    <Edit size={20} />
-                                                </Link> */}
-
-                                                <Trash2 size={20} className="text-danger" title="Delete"
-                                                    onClick={() => {
-                                                        handleDelete(ref.id);
-                                                    }}
+                                                <Trash2 
+                                                    size={20} 
+                                                    className="text-danger" 
+                                                    title="Delete"
+                                                    onClick={() => handleDelete(ref.id)}
                                                 />
-
                                                 <PDFDownloadLink
                                                     document={
                                                         <ChallanPdf
@@ -285,6 +264,7 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                                                             challan={ref}
                                                             client={client}
                                                             bankAccount={bankAccount}
+                                                            bills={bills}
                                                         />
                                                     }
                                                     fileName={`${client.client_name}.pdf`}
@@ -300,9 +280,42 @@ const ViewChallans = ({ client, company_profile, bankAccount }) => {
                             })}
                         </tbody>
                     </Table>
+
+                    {/* Pagination */}
+                    {client.challan_refrences.length > itemsPerPage && (
+                        <div className="d-flex justify-content-end mt-3">
+                            <Pagination>
+                                <Pagination.First 
+                                    onClick={() => paginate(1)} 
+                                    disabled={currentPage === 1} 
+                                />
+                                <Pagination.Prev 
+                                    onClick={() => paginate(currentPage - 1)} 
+                                    disabled={currentPage === 1} 
+                                />
+                                
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
+                                    <Pagination.Item
+                                        key={number}
+                                        active={number === currentPage}
+                                        onClick={() => paginate(number)}
+                                    >
+                                        {number}
+                                    </Pagination.Item>
+                                ))}
+                                
+                                <Pagination.Next 
+                                    onClick={() => paginate(currentPage + 1)} 
+                                    disabled={currentPage === totalPages} 
+                                />
+                                <Pagination.Last 
+                                    onClick={() => paginate(totalPages)} 
+                                    disabled={currentPage === totalPages} 
+                                />
+                            </Pagination>
+                        </div>
+                    )}
                 </div>
-
-
             </div>
         </AuthenticatedLayout>
     );

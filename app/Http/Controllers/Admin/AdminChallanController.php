@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;;
 
 use Inertia\Inertia;
+use Illuminate\Support\Str;
 
 class AdminChallanController extends Controller
 {
@@ -55,7 +56,7 @@ class AdminChallanController extends Controller
 
             // Create Challan Items
             $challanItems = [];
-            
+
             foreach ($validated['challan'] as $item) {
                 $challanItems[] = [
                     'challan_refrence_id' => $challanReference->id,
@@ -99,10 +100,16 @@ class AdminChallanController extends Controller
             'serviceCharge',
         ])->find($id);
 
+        $bills = PurchaseList::where('client_id', $id)
+            ->pluck('bill')
+            ->reject(fn($bill) => is_null($bill) || Str::endsWith($bill, '.pdf'))
+            ->values();
+
         return Inertia::render("Challan/ViewChallans", [
             'client' => $client,
             'bankAccount' => BankAccount::first(),
-            'company_profile' => CompanyProfile::first()
+            'company_profile' => CompanyProfile::first(),
+            'bills' => $bills,
         ]);
     }
 
@@ -194,12 +201,5 @@ class AdminChallanController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to delete Challan. Please try again.');
         }
-    }
-
-
-    public function createChallanPdf($id)
-    {
-
-        dd($id);
     }
 }

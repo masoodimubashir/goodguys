@@ -47,7 +47,7 @@ const ActivityTab = ({ activities, client, }) => {
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
             results = results.filter(activity =>
-                (activity.description?.toLowerCase().includes(term)) 
+                (activity.description?.toLowerCase().includes(term))
             );
         }
 
@@ -150,7 +150,7 @@ const ActivityTab = ({ activities, client, }) => {
                         {filteredActivities.length} activities
                     </Badge>
                 </div>
-               
+
             </div>
 
             {/* Search and Filter Section */}
@@ -242,123 +242,131 @@ const ActivityTab = ({ activities, client, }) => {
                 </thead>
 
                 <tbody>
-                    
 
-                {/* Existing Activities */}
-                {paginatedActivities.map((activity) => {
-                    const totalValue = (parseFloat(activity.price) || 0) *
-                        (parseInt(activity.qty) || 1) *
-                        (parseInt(activity.multiplier) || 1);
-                    const rowClass = activity.payment_flow === 1
-                        ? "table-success"
-                        : activity.payment_flow === 0
-                            ? "table-warning"
-                            : "";
 
-                    return (
-                        <tr key={activity.id} className={rowClass}>
-                            <td>
-                                <div>
-                                    <span className="fw-bold">{activity.description ?? 'NA'}</span>
-                                    <br />
-                                    <small className="text-muted">
-                                        {new Date(activity.created_at).toLocaleDateString('en-IN', {
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric'
-                                        })}
-                                    </small>
+                    {/* Existing Activities */}
+                    {paginatedActivities.map((activity) => {
+                        const totalValue = (parseFloat(activity.price) || 0) *
+                            (parseInt(activity.qty) || 1) *
+                            (parseInt(activity.multiplier) || 1);
+                        const rowClass = activity.payment_flow === 1
+                            ? "table-success"
+                            : activity.payment_flow === 0
+                                ? "table-warning"
+                                : "";
+
+                        return (
+                            <tr key={activity.id} className={rowClass}>
+                                <td>
+                                    <div>
+                                        <span className="fw-bold">{activity.description ?? 'NA'}</span>
+                                        <br />
+                                        <small className="text-muted">
+                                            {new Date(activity.created_at).toLocaleDateString('en-IN', {
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric'
+                                            })}
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span className="fw-medium">{activity.unit_type ?? 'NA'}</span>
+                                </td>
+                                <td>
+                                    <span className="fw-bold">{activity.qty > 1 ? activity.qty : 'NA'}</span>
+                                </td>
+                                <td>
+                                    <span className="fw-bold text-primary">
+                                        {activity.payment_flow === 1 ? (
+                                            <Plus size={13} />
+                                        ) : activity.payment_flow === 0 ? (
+                                            <Minus size={13} />
+                                        ) : <Plus size={13} />} {(activity.price)}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span className="fw-bold">
+                                        {activity.multiplier > 1 ? activity.multiplier : 'NA'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span className="fw-bold text-success">
+                                        {activity.payment_flow === 1 ? (
+                                            <Plus size={13} />
+                                        ) : activity.payment_flow === 0 ? (
+                                            <Minus size={13} />
+                                        ) : <Plus size={13} />} {activity.total || totalValue}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span>{activity.narration}</span>
+                                </td>
+                                <td></td>
+                            </tr>
+                        );
+                    })}
+
+                    {filteredActivities.length === 0 && !newActivity.show && (
+                        <tr>
+                            <td colSpan={8} className="text-center py-5">
+                                <div className="text-muted">
+                                    <Activity size={20} className="mb-3 opacity-50" />
+                                    <h5 className="mb-2">No Activities Found</h5>
+                                    {searchTerm || (startDate || endDate) ? (
+                                        <p>No activities match your search criteria</p>
+                                    ) : (
+                                        <p>No activities available</p>
+                                    )}
                                 </div>
                             </td>
-                            <td>
-                                <span className="fw-medium">{activity.unit_type ?? 'NA'}</span>
-                            </td>
-                            <td>
-                                <span className="fw-bold">{activity.qty > 1 ? activity.qty : 'NA'}</span>
-                            </td>
-                            <td>
-                                <span className="fw-bold text-primary">
-                                    {(activity.price)} {activity.payment_flow === 1 ? <Plus size={13}/> : <Minus size={13}/>}
-                                </span>
-                            </td>
-                            <td>
-                                <span className="fw-bold">
-                                    {activity.multiplier > 1 ? activity.multiplier : 'NA'}
-                                </span>
-                            </td>
-                            <td>
-                                <span className="fw-bold text-success">
-                                    {activity.total || totalValue} {activity.payment_flow === 1 ? <Plus size={13}/> : <Minus size={13}/>}
-                                </span>
-                            </td>
-                            <td>
-                                <span>{activity.narration}</span>
-                            </td>
-                            <td></td>
                         </tr>
-                    );
-                })}
+                    )}
+                </tbody>
+            </Table>
 
-                {filteredActivities.length === 0 && !newActivity.show && (
-                    <tr>
-                        <td colSpan={8} className="text-center py-5">
-                            <div className="text-muted">
-                                <Activity size={20} className="mb-3 opacity-50" />
-                                <h5 className="mb-2">No Activities Found</h5>
-                                {searchTerm || (startDate || endDate) ? (
-                                    <p>No activities match your search criteria</p>
-                                ) : (
-                                    <p>No activities available</p>
-                                )}
-                            </div>
-                        </td>
-                    </tr>
-                )}
-            </tbody>
-        </Table>
+            {/* Client-side Pagination */}
+            {
+                filteredActivities.length > 0 && (
+                    <div className="d-flex justify-content-between align-items-center mt-3">
+                        <div className="text-muted">
+                            Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
+                            {Math.min(currentPage * itemsPerPage, filteredActivities.length)} of{' '}
+                            {filteredActivities.length} entries
+                        </div>
+                        <div className="d-flex gap-2">
+                            <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                disabled={currentPage === 1}
+                                onClick={() => handlePageChange(currentPage - 1)}
+                            >
+                                <ChevronLeft size={14} />
+                            </Button>
 
-            {/* Client-side Pagination */ }
-    {
-        filteredActivities.length > 0 && (
-            <div className="d-flex justify-content-between align-items-center mt-3">
-                <div className="text-muted">
-                    Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-                    {Math.min(currentPage * itemsPerPage, filteredActivities.length)} of{' '}
-                    {filteredActivities.length} entries
-                </div>
-                <div className="d-flex gap-2">
-                    <Button
-                        variant="outline-secondary"
-                        size="sm"
-                        disabled={currentPage === 1}
-                        onClick={() => handlePageChange(currentPage - 1)}
-                    >
-                        <ChevronLeft size={14} />
-                    </Button>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                <Button
+                                    key={page}
+                                    variant={currentPage === page ? 'primary' : 'outline-secondary'}
+                                    size="sm"
+                                    onClick={() => handlePageChange(page)}
+                                >
+                                    {page}
+                                </Button>
+                            ))}
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                        <Button
-                            key={page}
-                            variant={currentPage === page ? 'primary' : 'outline-secondary'}
-                            size="sm"
-                            onClick={() => handlePageChange(page)}
-                        >
-                            {page}
-                        </Button>
-                    ))}
-
-                    <Button
-                        variant="outline-secondary"
-                        size="sm"
-                        disabled={currentPage === totalPages}
-                        onClick={() => handlePageChange(currentPage + 1)}
-                    >
-                        <ChevronRight size={14} />
-                    </Button>
-                </div>
-            </div>
-        )
-    }
+                            <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                disabled={currentPage === totalPages}
+                                onClick={() => handlePageChange(currentPage + 1)}
+                            >
+                                <ChevronRight size={14} />
+                            </Button>
+                        </div>
+                    </div>
+                )
+            }
         </div >
     );
 };

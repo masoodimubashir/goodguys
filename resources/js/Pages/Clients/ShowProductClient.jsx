@@ -21,6 +21,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
     // State management
     const flash = usePage().props.flash;
 
+
     const [purchaseItems, setPurchaseItems] = useState(purchase_items || []);
     const [filteredItems, setFilteredItems] = useState(purchase_items || []);
     const [editedItems, setEditedItems] = useState({});
@@ -338,7 +339,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                 <div className="d-flex flex-wrap justify-content-end align-items-center mt-2 mb-3 gap-2">
                     <Dropdown>
                         <Dropdown.Toggle variant="primary" size="sm" className="d-flex align-items-center shadow-sm">
-                            <i className="ti ti-menu-2 me-2"></i> Actions
+                            Actions
                         </Dropdown.Toggle>
                         <Dropdown.Menu>
                             <Dropdown.Item onClick={() => openPurchaseListModal()}>
@@ -521,21 +522,24 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                                     />
                                 </Form.Group>
                             </Col>
-                            <Col md={12}>
-                                <Form.Group controlId="serviceCharge">
-                                    <Form.Label>Service Charge (₹)</Form.Label>
-                                    <InputGroup>
-                                        <InputGroup.Text>₹</InputGroup.Text>
-                                        <Form.Control
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={challanForm.data.service_charge}
-                                            onChange={(e) => challanForm.setData('service_charge', e.target.value)}
-                                        />
-                                    </InputGroup>
-                                </Form.Group>
-                            </Col>
+
+                            {challanForm.data.service_charge !== 0 && (
+                                <Col md={12}>
+                                    <Form.Group controlId="serviceCharge">
+                                        <Form.Label>Service Charge (₹)</Form.Label>
+                                        <InputGroup>
+                                            <InputGroup.Text>₹</InputGroup.Text>
+                                            <Form.Control
+                                                type="number"
+                                                min="0"
+                                                value={challanForm.data.service_charge}
+                                                onChange={(e) => challanForm.setData('service_charge', e.target.value)}
+                                            />
+                                        </InputGroup>
+                                    </Form.Group>
+                                </Col>
+                            )}
+
                             <Col md={12}>
                                 <Form.Check
                                     type="switch"

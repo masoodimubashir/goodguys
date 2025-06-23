@@ -29,4 +29,11 @@ class StorePurchaseListPaymentForm extends FormRequest
             'created_at' => 'required|date',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'vendor_id.required' => 'party name is required.',
+        ];
+    }
 }

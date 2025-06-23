@@ -103,6 +103,7 @@ const ClientAccountModal = ({
                         <Form.Control.Feedback type="invalid">
                             {errors.payment_type}
                         </Form.Control.Feedback>
+
                     </Form.Group>
 
                     <Form.Group className="mb-3">
@@ -142,7 +143,7 @@ const ClientAccountModal = ({
 
                     <Form.Group className="mb-3">
                         <Form.Label>Amount</Form.Label>
-                        <InputGroup>
+                        <InputGroup hasValidation>
                             <InputGroup.Text>₹</InputGroup.Text>
                             <Form.Control
                                 type="number"
@@ -153,16 +154,19 @@ const ClientAccountModal = ({
                                 min="0"
                                 max={isReturnPayment ? balance : undefined}
                             />
+                            <Form.Control.Feedback type="invalid">
+                                {errors.amount}
+                            </Form.Control.Feedback>
                         </InputGroup>
-                        <Form.Control.Feedback type="invalid">
-                            {errors.amount}
-                        </Form.Control.Feedback>
+
                         {isReturnPayment && balance && (
                             <Form.Text className="text-muted">
                                 Maximum return amount: ₹{balance}
                             </Form.Text>
                         )}
                     </Form.Group>
+
+
 
                     <Form.Group className="mb-3">
                         <Form.Label>Narration</Form.Label>

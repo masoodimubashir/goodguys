@@ -90,7 +90,7 @@ export const PaymentModal = ({
 
     // Calculate total for custom entries
     const calculateTotal = () => {
-        return (parseFloat(data.amount)) * (parseInt(data.qty) * (parseInt(data.multiplier)));
+        return ((data.amount)) * ((data.qty) * ((data.multiplier)));
     };
 
     // Reset form when modal opens
@@ -180,7 +180,21 @@ export const PaymentModal = ({
                                         )}
                                     </>
                                 </div>
-                                <InputError message={errors.description} />
+
+                                <>
+                                    {
+
+                                        showCustomFields ?
+                                            <InputError message={errors.description} />
+
+                                            :
+                                            <InputError message={errors.vendor_id} />
+
+                                    }
+
+                                </>
+
+
                             </Form.Group>
                         </div>
                         {/* Date Field - Always shown */}
@@ -261,7 +275,7 @@ export const PaymentModal = ({
                                         <Form.Label>Total</Form.Label>
                                         <Form.Control
                                             type="text"
-                                            value={calculateTotal().toFixed(2)}
+                                            value={calculateTotal()}
                                             readOnly
                                         />
                                     </Form.Group>

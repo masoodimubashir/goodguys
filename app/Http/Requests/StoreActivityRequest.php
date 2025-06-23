@@ -24,7 +24,7 @@ class StoreActivityRequest extends FormRequest
         return [
             'client_id' => 'required|exists:clients,id',
             'unit_type' => 'nullable|string',
-            'description' => 'nullable|string',
+            'description' => 'required|string',
             'qty' => 'required|integer',
             'price' => 'required|integer',
             'narration' => 'nullable|string',

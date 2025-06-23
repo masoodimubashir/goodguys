@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('vendor_name');
             $table->bigInteger('contact_number');
-            $table->string('email')->unique();
+            $table->string('email')->nullable()->unique();
             $table->string('address');
             $table->string('description')->nullable();
             $table->tinyInteger('created_by')->nullable();

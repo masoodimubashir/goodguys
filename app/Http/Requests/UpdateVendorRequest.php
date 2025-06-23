@@ -25,7 +25,7 @@ class UpdateVendorRequest extends FormRequest
             'vendor_name' => 'required|string|max:255',
             'contact_number' => 'required|digits:10',
              'email' => [
-                'required',
+                'nullable',
                 'email',
                 'max:255',
             ],

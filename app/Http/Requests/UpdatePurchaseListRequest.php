@@ -26,7 +26,7 @@ class UpdatePurchaseListRequest extends FormRequest
             'list_name' => 'required|string|max:255',
             'vendor_id' => 'required|exists:vendors,id',
             'purchase_date' => 'required|date',
-            'bill' => 'nullable',
+            'bill' => 'nullable|file|mimes:jpg,pdf|max:2048',
             'bill_total' => 'required|integer|min:0',
              'bill_description' => 'nullable|string|max:1000',
         ];
