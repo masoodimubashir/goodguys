@@ -47,7 +47,7 @@ class AdminReturnListController extends Controller
                 'created_by' => auth()->id(),
             ]));
 
-            Activity::create([
+            $activity = Activity::create([
                 'client_id' => $validated['client_id'],
                 'description' => $validated['item_name'],
                 'unit_type' => $validated['item_name'],
@@ -78,6 +78,7 @@ class AdminReturnListController extends Controller
                 'purchased_item_id' => $purchase->id,
                 'refrence_id' => $return->id,
                 'refrence_type' => ReturnList::class,
+                'activity_id' => $activity->id,
 
             ]);
 

@@ -65,14 +65,9 @@ class PurchasesItemController extends Controller
                 'created_at' => $data['created_at']
             ]));
 
-            PaymentDeleteRefrence::create([
-                'purchased_item_id' => $purchase->id,
-                'refrence_id' => $purchase->id,
-                'refrence_type' => PurchasedItem::class,
 
-            ]);
 
-            Activity::create([
+            $activity = Activity::create([
                 'client_id' => $data['client_id'],
                 'unit_type' => $data['unit_type'],
                 'narration' => $data['narration'],
@@ -83,6 +78,14 @@ class PurchasesItemController extends Controller
                 'created_by' => auth()->id(),
                 'payment_flow' => false,
                 'created_at' => $data['created_at']
+            ]);
+
+            PaymentDeleteRefrence::create([
+                'purchased_item_id' => $purchase->id,
+                'refrence_id' => $purchase->id,
+                'refrence_type' => PurchasedItem::class,
+                'activity_id' => $activity->id,
+
             ]);
 
             DB::commit();
@@ -133,29 +136,40 @@ class PurchasesItemController extends Controller
      */
     public function destroy($id)
     {
-        DB::transaction(function () use ($id) {
+        // DB::transaction(function () use ($id) {
 
-            try {
-                // Find the purchased item with its polymorphic relationship
-                $purchasedItem = PurchasedItem::with('payemntDeleteRefrence')->findOrFail($id);
+        //     try {
 
-                $class = $purchasedItem->payemntDeleteRefrence->refrence_type;
 
-                if ($class === ClientAccount::class) {
-                    ClientAccount::find($purchasedItem->payemntDeleteRefrence->refrence_id)->delete();
-                } else if ($class === PurchaseListPayment::class) {
-                    PurchaseListPayment::find($purchasedItem->payemntDeleteRefrence->refrence_id)->delete();
-                } else if ($class === ReturnList::class) {
-                    ReturnList::find($purchasedItem->payemntDeleteRefrence->refrence_id)->delete();
-                }
+        //         DB::beginTransaction();
+        //         // Find the purchased item with its polymorphic relationship
+        //         $purchasedItem = PurchasedItem::with('payemntDeleteRefrence')->findOrFail($id);
 
-                $purchasedItem->delete();
+        //         $class = $purchasedItem->payemntDeleteRefrence->refrence_type;
 
-                return redirect()->back()->with('message', 'Payment deleted...');
-            } catch (Exception $e) {
-                Log::error($e->getMessage());
-                return redirect()->back()->with('error', 'Failed to delete payment');
-            }
-        });
+
+        //         if ($class === ClientAccount::class) {
+        //             ClientAccount::find($purchasedItem->payemntDeleteRefrence->refrence_id)->delete();
+        //         } else if ($class === PurchaseListPayment::class) {
+        //             PurchaseListPayment::find($purchasedItem->payemntDeleteRefrence->refrence_id)->delete();
+        //         } else if ($class === ReturnList::class) {
+        //             ReturnList::find($purchasedItem->payemntDeleteRefrence->refrence_id)->delete();
+        //         }
+
+        //         Activity::find($purchasedItem->payemntDeleteRefrence->activity_id)->delete();
+
+
+        //         $purchasedItem->delete();
+
+        //         DB::commit();
+
+        //         return redirect()->back()->with('message', 'Payment deleted...');
+        //     } catch (Exception $e) {
+        //         Log::error($e->getMessage());
+                
+        //         DB::rollBack();
+        //         return redirect()->back()->with('error', 'Failed to delete payment');
+        //     }
+        // });
     }
 }

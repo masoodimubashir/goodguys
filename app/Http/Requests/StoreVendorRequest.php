@@ -30,4 +30,12 @@ class StoreVendorRequest extends FormRequest
         ];
     }
 
+
+    public function messages(): array
+    {
+        return [
+            'vendor_name.required' => 'Party name is required.',
+        ];
+    }
+
 }

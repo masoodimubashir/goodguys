@@ -21,6 +21,7 @@ return new class extends Migration
             $table->integer('total');
             $table->integer('multiplier');
             $table->boolean('payment_flow')->nullable()->comment('1=in,0=out');
+           $table->boolean('is_credited')->default(true);
             $table->text('narration')->nullable();
             $table->tinyInteger('created_by')->nullable();
             $table->tinyInteger('updated_by')->nullable();

@@ -24,13 +24,20 @@ class UpdateVendorRequest extends FormRequest
         return [
             'vendor_name' => 'required|string|max:255',
             'contact_number' => 'required|digits:10',
-             'email' => [
+            'email' => [
                 'nullable',
                 'email',
                 'max:255',
             ],
             'address' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'vendor_name.required' => 'Party name is required.',
         ];
     }
 }

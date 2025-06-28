@@ -19,7 +19,7 @@ import { PaymentModal } from '@/Components/PaymentModal';
 export default function ShowServiceClient({ client, vendors = [], client_vendors = [], purchase_items, activities = [], }) {
     // State management
     const flash = usePage().props.flash;
-    
+
 
     const [activeTab, setActiveTab] = useState('purchase-items');
     const [purchaseItems, setPurchaseItems] = useState(purchase_items || []);
@@ -148,6 +148,15 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
 
     const analytics = calculateAnalytics();
 
+    const activity_total = () => {
+        const total = activities
+            .filter(activity => activity.payment_flow === 0)
+            .reduce((sum, activity) => sum + activity.total, 0);
+
+        return total;
+    };
+
+    const expenditure = activity_total();
 
     // Handle field changes for editing
     const handleItemChange = (itemId, field, value) => {
@@ -313,6 +322,10 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                                         <h6 className="mb-1 fw-bold">{formatCurrency(analytics.deposit)}</h6>
                                         <small className="text-muted">Deposits</small>
                                     </div>
+                                    <div className="text-center">
+                                        <h6 className="mb-1 fw-bold">{formatCurrency(expenditure)}</h6>
+                                        <small className="text-muted">Expenditure</small>
+                                    </div>
                                 </div>
                             </Card.Body>
                         </Card>
@@ -373,7 +386,12 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                 </Tab>
                 <Tab eventKey="activities-lists" title={<span className="d-flex align-items-center gap-1">
                     <ActivityIcon size={16} /> Activities</span>}>
-                    <ActivityTab activities={activities} client={client} />
+                    <ActivityTab
+                        activities={activities}
+                        client={client}
+                        setPurchaseItems={setPurchaseItems}
+                        setFilteredItems={setFilteredItems}
+                    />
                 </Tab>
                 <Tab eventKey="vendor-lists" title={<span className="d-flex align-items-center gap-1"><ShoppingBag size={16} /> Party List</span>}>
                     <PurchaseListTab

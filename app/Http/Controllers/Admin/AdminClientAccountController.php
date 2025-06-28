@@ -67,14 +67,7 @@ class AdminClientAccountController extends Controller
                     'payment_flow' => $payment_flow
                 ]);
 
-                PaymentDeleteRefrence::create([
-                    'purchased_item_id' => $purchase->id,
-                    'refrence_id' => $client->id,
-                    'refrence_type' => ClientAccount::class,
-
-                ]);
-
-                Activity::create([
+                $activity = Activity::create([
                     'client_id' => $validatedData["client_id"],
                     'description' => $validatedData["payment_type"],
                     'qty' => 1,
@@ -85,6 +78,13 @@ class AdminClientAccountController extends Controller
                     'multiplier' => 1,
                     'created_at' => Carbon::parse($validatedData['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
                     'payment_flow' => $payment_flow
+                ]);
+
+                PaymentDeleteRefrence::create([
+                    'purchased_item_id' => $purchase->id,
+                    'refrence_id' => $client->id,
+                    'refrence_type' => ClientAccount::class,
+                    'activity_id' => $activity->id,
                 ]);
             });
 

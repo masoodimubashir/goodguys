@@ -11,6 +11,7 @@ class PaymentDeleteRefrence extends Model
         'purchased_item_id',
         'refrence_id',
         'refrence_type',
+        'activity_id',
     ];
 
 

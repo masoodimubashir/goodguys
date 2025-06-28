@@ -13,7 +13,7 @@
     @viteReactRefresh   
 
 
-    {{-- <script type="module" src="{{ asset('build/assets/app-qL8kf_dE.js') }}"></script> --}}
+    {{-- <script type="module" src="{{ asset('build/assets/app-LZt9wtAK.js') }}"></script> --}}
     {{-- <link rel="stylesheet" href="{{ asset('build/assets/app-BaQ7370p.css') }}"> --}}
 
 

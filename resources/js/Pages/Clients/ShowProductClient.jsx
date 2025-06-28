@@ -150,6 +150,18 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
 
     const analytics = calculateAnalytics();
 
+
+    const activity_total = () => {
+        const total = activities
+            .filter(activity => activity.payment_flow === 0)
+            .reduce((sum, activity) => sum + activity.total, 0);
+
+        return total;
+    };
+
+    const expenditure = activity_total();
+
+
     // Handle field changes for editing
     const handleItemChange = (itemId, field, value) => {
 
@@ -325,6 +337,10 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                                                     <h6 className="mb-1 fw-bold">{formatCurrency(analytics.deposit)}</h6>
                                                     <small className="text-muted">Deposits</small>
                                                 </div>
+                                                <div className="text-center">
+                                                    <h6 className="mb-1 fw-bold">{formatCurrency(expenditure)}</h6>
+                                                    <small className="text-muted">Expenditure</small>
+                                                </div>
 
                                             </div>
                                         </Card.Body>
@@ -431,7 +447,13 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                     </div>
 
                     <div className="tab-pane fade" id="client-vendor-payment-tab" role="tabpanel">
-                        <ActivityTab activities={activities} client={client} />
+
+                        <ActivityTab
+                            activities={activities}
+                            client={client}
+                            setPurchaseItems={setPurchaseItems}
+                            setFilteredItems={setFilteredItems}
+                        />
 
                     </div>
 

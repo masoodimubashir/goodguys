@@ -69,15 +69,7 @@ class AdminPurchaseListPaymentController extends Controller
 
             ]);
 
-
-            PaymentDeleteRefrence::create([
-                'purchased_item_id' => $purchase->id,
-                'refrence_id' => $purchase_list_payment->id,
-                'refrence_type' => PurchaseListPayment::class,
-
-            ]);
-
-            Activity::create([
+            $activity = Activity::create([
                 'client_id' => $data['client_id'],
                 'narration' => $data['narration'],
                 'description' =>  $vendor->vendor_name,
@@ -87,6 +79,15 @@ class AdminPurchaseListPaymentController extends Controller
                 'created_by' => auth()->id(),
                 'payment_flow' => false,
                 'created_at' =>  Carbon::parse($data['created_at'])->setTimeFromTimeString(now()->format('H:i:s'))
+            ]);
+
+            
+            PaymentDeleteRefrence::create([
+                'purchased_item_id' => $purchase->id,
+                'refrence_id' => $purchase_list_payment->id,
+                'refrence_type' => PurchaseListPayment::class,
+                'activity_id' => $activity->id,
+
             ]);
 
             DB::commit();

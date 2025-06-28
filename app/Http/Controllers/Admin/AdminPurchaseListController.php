@@ -38,6 +38,7 @@ class AdminPurchaseListController extends Controller
 
         $vendor = Vendor::findOrFail($vendor_id);
 
+
         // 1. Get all PurchaseLists for this vendor and client (with returnLists and client)
         $purchaseLists = PurchaseList::with(['returnLists', 'client'])
             ->where('client_id', $client_id)
@@ -52,6 +53,7 @@ class AdminPurchaseListController extends Controller
             ->where('client_id', $client_id)
             ->orderBy('created_at', 'desc')
             ->get();
+
 
         return Inertia::render("PurchaseManagment/purchases", [
             'vendor' => $vendor,
@@ -73,7 +75,9 @@ class AdminPurchaseListController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create() {}
+    public function create()
+    {
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -92,7 +96,7 @@ class AdminPurchaseListController extends Controller
                 'created_at' => Carbon::parse($validated['purchase_date'])->setTimeFromTimeString(now()->format('H:i:s')),
             ]));
 
-            Activity::create([
+            $activity = Activity::create([
                 'client_id' => $purchase_list->client_id,
                 'unit_type' => $purchase_list->list_name,
                 'description' => $purchase_list->vendor->vendor_name,
@@ -101,12 +105,19 @@ class AdminPurchaseListController extends Controller
                 'narration' => $purchase_list->bill_description,
                 'total' => $purchase_list->bill_total,
                 'created_by' => auth()->id(),
+                'is_credited' => false,
                 'multiplier' => 1,
-                'created_at' =>  Carbon::parse($validated['purchase_date'])->setTimeFromTimeString(now()->format('H:i:s')),
+                'created_at' => Carbon::parse($validated['purchase_date'])->setTimeFromTimeString(now()->format('H:i:s')),
+            ]);
+
+            PaymentDeleteRefrence::create([
+                'refrence_id' => $purchase_list->id,
+                'refrence_type' => PurchaseList::class,
+                'activity_id' => $activity->id,
             ]);
 
             return redirect()->back()->with('message', 'Purchase list created successfully');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
 
             Log::error('Error creating purchase list: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to create purchase list');

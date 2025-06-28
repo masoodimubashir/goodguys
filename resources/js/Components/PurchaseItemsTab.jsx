@@ -47,7 +47,6 @@ const PurchaseItemsTab = ({
     setFilteredItems,
 }) => {
 
-    const { user } = usePage().props.auth;
 
 
 
@@ -322,11 +321,7 @@ const PurchaseItemsTab = ({
                                 Narration
                             </div>
                         </th>
-                        {
-                            user.role === 'admin' && (
-                                <th>Actions</th>
-                            )
-                        }
+                      
                     </tr>
                 </thead>
 
@@ -601,26 +596,7 @@ const PurchaseItemsTab = ({
                                 <td>
                                     <span>{item.narration}</span>
                                 </td>
-                                {
-                                    user.role === 'admin' && (
-                                        <td>
-                                            <Tooltip text="Edit item">
-                                                <Button
-                                                    variant="link"
-                                                    className="text-danger p-0"
-                                                    onClick={() => handleDeleteItem(item.id)}
-                                                    title="Delete item"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </Button>
-                                            </Tooltip>
-
-
-                                        </td>
-
-                                    )
-
-                                }
+                                
 
                             </tr>
                         );

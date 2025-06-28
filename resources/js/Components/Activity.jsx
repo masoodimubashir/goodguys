@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { Badge, Button, InputGroup, Form, Table } from 'react-bootstrap';
-import { Search, FileText, Package, Activity, IndianRupee, Text, XCircle, ChevronLeft, ChevronRight, Plus, Save, Minus } from 'lucide-react';
+import { Search, FileText, Package, Activity, IndianRupee, Text, XCircle, ChevronLeft, ChevronRight, Plus, Save, Minus, Trash2 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import { ShowMessage } from './ShowMessage';
+import Tooltip from './Tooltip';
+import Swal from 'sweetalert2';
 
-const ActivityTab = ({ activities, client, }) => {
+const ActivityTab = ({ activities, client, setPurchaseItems, setFilteredItems }) => {
+
+
+    const { user } = usePage().props.auth;
 
 
     // State for search and filters
@@ -83,64 +88,37 @@ const ActivityTab = ({ activities, client, }) => {
         setCurrentPage(page);
     };
 
-    // Handle new activity field changes
-    const handleNewActivityChange = (field, value) => {
-        setNewActivity(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
 
-    // Create new activity
-    const createActivity = () => {
+    const handleDeleteItem = (itemId) => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText:
+                'Yes, delete it!',
+            cancelButtonText: 'No, cancel!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(route('activity.destroy', itemId), {
+                    preserveScroll: true,
+                    onSuccess: (page) => {
+                        if (page.props.purchase_items) {
+                            setPurchaseItems(page.props.purchase_items);
+                            setFilteredItems(page.props.purchase_items);
+                        }
+                    },
+                    onError: (errors) => {
+                        const errorMsg = Object.values(errors).join('\n');
+                        ShowMessage('error', errorMsg || 'Failed to delete item');
+                    }
 
-        setIsCreating(true);
-
-        const activityData = {
-            client_id: client.id,
-            unit_type: newActivity.unit_type,
-            description: newActivity.description,
-            qty: Number(newActivity.qty) || 1,
-            price: Number(newActivity.price),
-            narration: newActivity.narration,
-            multiplier: Number(newActivity.multiplier) || 1,
-            created_at: newActivity.created_at,
-            total: Number((newActivity.qty * newActivity.price) * newActivity.multiplier),
-        };
-
-        router.post(route('activity.store'), activityData, {
-            onSuccess: () => {
-                // Reset form
-                setNewActivity({
-                    show: false,
-                    client_id: client?.id,
-                    unit_type: '',
-                    description: '',
-                    qty: '',
-                    price: '',
-                    narration: '',
-                    multiplier: 1,
-                    created_at: new Date().toISOString().split('T')[0],
                 });
-                setPaymentType('');
-                setSelectedVendor('');
-
-                ShowMessage('success', 'Activity created successfully!');
-
-                // Refresh the activities list
-                router.reload({
-                    only: ['activities'],
-                    preserveScroll: true
-                });
-            },
-            onError: (errors) => {
-                ShowMessage('error', 'Error creating activity');
-            },
-            onFinish: () => {
-                setIsCreating(false);
             }
         });
-    };
+    }
 
     return (
         <div className="activity-tab">
@@ -238,6 +216,11 @@ const ActivityTab = ({ activities, client, }) => {
                                 Narration
                             </div>
                         </th>
+                        {
+                            user.role === 'admin' && (
+                                <th>Actions</th>
+                            )
+                        }
                     </tr>
                 </thead>
 
@@ -302,7 +285,22 @@ const ActivityTab = ({ activities, client, }) => {
                                 <td>
                                     <span>{activity.narration}</span>
                                 </td>
-                                <td></td>
+                                {
+                                    user.role === 'admin' && (
+                                        <td>
+                                            <Tooltip text="Delete item">
+                                                <Button
+                                                    variant="link"
+                                                    className="text-danger p-0"
+                                                    onClick={() => handleDeleteItem(activity.id)}
+                                                    title="Delete item"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </Button>
+                                            </Tooltip>
+                                        </td>
+                                    )
+                                }
                             </tr>
                         );
                     })}

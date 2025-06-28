@@ -35,15 +35,7 @@ class PurchasedItem extends Model
     ];
 
 
-    /**
-     * Get the payemntDeleteRefrence associated with the PaymentDeleteRefrence
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
-     */
-    public function payemntDeleteRefrence(): HasOne
-    {
-        return $this->hasOne(PaymentDeleteRefrence::class);
-    }
+   
 
    
 }
