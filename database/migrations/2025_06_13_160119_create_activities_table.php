@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -21,7 +20,8 @@ return new class extends Migration
             $table->integer('total');
             $table->integer('multiplier');
             $table->boolean('payment_flow')->nullable()->comment('1=in,0=out');
-           $table->boolean('is_credited')->default(true);
+            $table->boolean('is_credited')->default(true);
+            $table->string('model_type');
             $table->text('narration')->nullable();
             $table->tinyInteger('created_by')->nullable();
             $table->tinyInteger('updated_by')->nullable();

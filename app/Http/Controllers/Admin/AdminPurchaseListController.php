@@ -108,6 +108,7 @@ class AdminPurchaseListController extends Controller
                 'is_credited' => false,
                 'multiplier' => 1,
                 'created_at' => Carbon::parse($validated['purchase_date'])->setTimeFromTimeString(now()->format('H:i:s')),
+                'model_type' => PurchaseList::class,
             ]);
 
             PaymentDeleteRefrence::create([
@@ -200,33 +201,64 @@ class AdminPurchaseListController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdatePurchaseListRequest $request, PurchaseList $purchaseList)
+    public function update(UpdatePurchaseListRequest $request, $id)
     {
         try {
 
+            DB::beginTransaction();
 
             $validated = $request->validated();
 
-            // Handle file upload
+            $activity = Activity::find($id);
+
+            $activity->update([
+                'unit_type' => $validated['unit_type'],
+                'description' => $validated['description'],
+                'narration' => $validated['narration'],
+                'price' => $validated['total'],
+                'total' => $validated['total'],
+                'model_type' => PurchaseList::class,
+                'updated_by' => auth()->id(),
+                'payment_flow' => false,
+                'created_at' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
+            ]);
+
+            $paymentRef = PaymentDeleteRefrence::where('activity_id', $activity->id)
+                ->where('refrence_type', PurchaseList::class)
+                ->first();
+
+            $purchase_list = PurchaseList::find($paymentRef->refrence_id);
+
             if ($request->hasFile('bill')) {
-                // Delete old file if it exists
-                if ($purchaseList->bill) {
-                    Storage::disk('public')->delete($purchaseList->bill);
+
+                if ($purchase_list->bill && Storage::disk('public')->exists($purchase_list->bill)) {
+                    Storage::disk('public')->delete($purchase_list->bill);
                 }
-                $validated['bill'] = $request->file('bill')->store('purchase-lists', 'public');
+
+                $path = $request->file('bill')->store('purchase-lists', 'public');
+                $validated['bill'] = $path;
             } else {
-                // If no new file uploaded, keep the existing bill
-                $validated['bill'] = $purchaseList->bill;
+                $validated['bill'] = $purchase_list->bill;
             }
 
-            $purchaseList->update(array_merge($validated, [
+            $purchase_list->update([
+                'purchase_date' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
+                'list_name' => $validated['unit_type'],
+                'bill' => $validated['bill'],
+                'bill_total' => $validated['total'],
+                'bill_description' => $validated['narration'],
                 'updated_by' => auth()->id(),
-                'is_credited' => true,
-            ]));
+            ]);
 
-            return redirect()->back()->with('message', 'Purchase list updated successfully');
+            DB::commit();
+
+            return redirect()->back()->with('message', 'record updated..');
+
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to update purchase list');
+            DB::rollBack();
+            Log::error('Error updating clinet account: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to update client account: ' . $e->getMessage());
         }
     }
 
@@ -264,4 +296,6 @@ class AdminPurchaseListController extends Controller
                 ->with('error', 'Failed to delete purchase list. Please try again.');
         }
     }
+
+
 }

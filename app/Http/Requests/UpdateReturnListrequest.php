@@ -22,9 +22,8 @@ class UpdateReturnListrequest extends FormRequest
     public function rules(): array
     {
         return [
-            'purchase_list_id' => 'required|exists:purchase_lists,id',
-            'item_name' => 'required|string|max:100',
-            'return_date' => 'required|date',
+            'description' => 'required|string|max:100',
+            'created_at' => 'required|date',
             'price' => 'required|integer|min:1',
             'narration' => 'required|string|max:255',
         ];

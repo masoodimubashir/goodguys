@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreActivityRequest;
+use App\Http\Requests\UpdateActivityRequest;
 use App\Models\Activity;
 use App\Models\ClientAccount;
 use App\Models\PurchasedItem;
@@ -56,6 +57,7 @@ class AdminActivityController extends Controller
                 'multiplier' => $data['multiplier'],
                 'created_by' => auth()->user()->id,
                 'payment_flow' => false,
+                'model_type' => Activity::class,
             ]);
 
             return redirect()->back()->with('message', 'Activity created successfully');
@@ -85,9 +87,36 @@ class AdminActivityController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateActivityRequest $request, string $id)
     {
-        //
+        try {
+
+
+            $data = $request->validated();
+
+            $activity = Activity::find($id);
+
+            $activity->update([
+                'unit_type' => $data['unit_type'],
+                'description' => $data['description'],
+                'qty' => $data['qty'],
+                'price' => $data['price'],
+                'narration' => $data['narration'],
+                'total' => $data['total'],
+                'created_at' => $data['created_at'],
+                'is_credited' => false,
+                'multiplier' => $data['multiplier'],
+                'updated_by' => auth()->user()->id,
+                'payment_flow' => false,
+                'model_type' => Activity::class,
+            ]);
+
+            return redirect()->back()->with('message', 'record updated');
+
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
+            return redirect()->back()->with('error', 'Something went wrong');
+        }
     }
 
     /**
@@ -95,7 +124,7 @@ class AdminActivityController extends Controller
      */
     public function destroy(string $id)
     {
-     
+
 
         DB::transaction(function () use ($id) {
 

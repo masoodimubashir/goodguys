@@ -11,6 +11,8 @@ use App\Models\PurchasedItem;
 use App\Models\PurchaseListPayment;
 use App\Models\Vendor;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -51,9 +53,9 @@ class AdminPurchaseListPaymentController extends Controller
                 'client_id' => $data['client_id'],
                 'amount' => $data['amount'],
                 'narration' => $data['narration'],
-                'transaction_date' =>  Carbon::parse($data['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
+                'transaction_date' => Carbon::parse($data['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
                 'created_by' => auth()->user()->id,
-                'created_at' =>  Carbon::parse($data['created_at'])->setTimeFromTimeString(now()->format('H:i:s'))
+                'created_at' => Carbon::parse($data['created_at'])->setTimeFromTimeString(now()->format('H:i:s'))
             ]);
 
             $purchase = PurchasedItem::create([
@@ -65,23 +67,23 @@ class AdminPurchaseListPaymentController extends Controller
                 'multiplier' => 1,
                 'created_by' => auth()->id(),
                 'payment_flow' => false,
-                'created_at' =>  Carbon::parse($data['created_at'])->setTimeFromTimeString(now()->format('H:i:s'))
+                'created_at' => Carbon::parse($data['created_at'])->setTimeFromTimeString(now()->format('H:i:s'))
 
             ]);
 
             $activity = Activity::create([
                 'client_id' => $data['client_id'],
                 'narration' => $data['narration'],
-                'description' =>  $vendor->vendor_name,
+                'description' => $vendor->vendor_name,
                 'price' => $data['amount'],
                 'total' => $data['amount'],
                 'multiplier' => 1,
                 'created_by' => auth()->id(),
                 'payment_flow' => false,
-                'created_at' =>  Carbon::parse($data['created_at'])->setTimeFromTimeString(now()->format('H:i:s'))
+                'created_at' => Carbon::parse($data['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
+                'model_type' => PurchaseListPayment::class,
             ]);
 
-            
             PaymentDeleteRefrence::create([
                 'purchased_item_id' => $purchase->id,
                 'refrence_id' => $purchase_list_payment->id,
@@ -93,7 +95,7 @@ class AdminPurchaseListPaymentController extends Controller
             DB::commit();
 
             return redirect()->back()->with('message', 'Payment created successfully');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error($e->getMessage());
             DB::rollback();
             return redirect()->back()->with('error', 'Failed! Something went Wrong');
@@ -121,15 +123,58 @@ class AdminPurchaseListPaymentController extends Controller
      */
     public function update(UpdatePurchaseListPaymentForm $request, string $id)
     {
-        $data = $request->validated();
 
-        $purchase = PurchaseListPayment::find($id);
+        try {
 
-        $purchase->update(array_merge($data, [
-            'updated_by' => auth()->user()->id
-        ]));
+            DB::beginTransaction();
 
-        return redirect()->back()->with('message', 'Purchase updated successfully');
+            $validated = $request->validated();
+
+            $activity = Activity::find($id);
+
+            $activity->update([
+                'narration' => $validated['narration'],
+                'price' => $validated['amount'],
+                'total' => $validated['amount'],
+                'updated_by' => auth()->id(),
+                'payment_flow' => false,
+                'created_at' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
+                'model_type' => PurchaseListPayment::class,
+            ]);
+
+            $paymentRef = PaymentDeleteRefrence::where('activity_id', $activity->id)
+                ->where('refrence_type', PurchaseListPayment::class)
+                ->first();
+
+            PurchaseListPayment::find($paymentRef->refrence_id)->update([
+                'amount' => $validated['amount'],
+                'narration' => $validated['narration'],
+                'transaction_date' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
+                'updated_by' => auth()->user()->id,
+                'created_at' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s'))
+            ]);
+
+            PurchasedItem::find($paymentRef->purchased_item_id)->update([
+                'unit_type' => $validated['description'],
+                'narration' => $validated['narration'],
+                'description' => $validated['description'],
+                'price' => $validated['amount'],
+                'total' => $validated['amount'],
+                'created_at' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
+                'updated_by' => auth()->user()->id,
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('message', 'record updated..');
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating clinet account: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to update client account: ' . $e->getMessage());
+        }
+
     }
 
     /**

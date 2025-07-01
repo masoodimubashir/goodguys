@@ -12,6 +12,7 @@ use App\Models\PaymentDeleteRefrence;
 use App\Models\PurchasedItem;
 use App\Models\PurchaseListPayment;
 use App\Models\ReturnList;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -65,8 +66,6 @@ class PurchasesItemController extends Controller
                 'created_at' => $data['created_at']
             ]));
 
-
-
             $activity = Activity::create([
                 'client_id' => $data['client_id'],
                 'unit_type' => $data['unit_type'],
@@ -77,7 +76,8 @@ class PurchasesItemController extends Controller
                 'multiplier' => $data['multiplier'],
                 'created_by' => auth()->id(),
                 'payment_flow' => false,
-                'created_at' => $data['created_at']
+                'created_at' => $data['created_at'],
+                'model_type' => PurchasedItem::class,
             ]);
 
             PaymentDeleteRefrence::create([
@@ -118,17 +118,54 @@ class PurchasesItemController extends Controller
      */
     public function update(UpdatePurchasedItemRequest $request, $id)
     {
-        $data = $request->validated();
+        try {
 
-        $purchasedItem = PurchasedItem::findOrFail($id);
+            DB::beginTransaction();
 
-        $data['total'] = $data['qty'] * $data['price'];
+            $validated = $request->validated();
 
-        $purchasedItem->update(array_merge($data, [
-            'updated_by' => auth()->id(),
-        ]));
+            $activity = Activity::find($id);
 
-        return redirect()->back()->with('message', 'Item updated successfully');
+            $activity->update([
+                'unit_type' => $validated['unit_type'],
+                'description' => $validated['description'],
+                'narration' => $validated['narration'],
+                'qty' => $validated['qty'],
+                'price' => $validated['price'],
+                'total' => $validated['total'],
+                'multiplier' => $validated['multiplier'],
+                'model_type' => PurchasedItem::class,
+                'updated_by' => auth()->id(),
+                'payment_flow' => false,
+                'created_at' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
+            ]);
+
+            $paymentRef = PaymentDeleteRefrence::where('activity_id', $activity->id)
+                ->where('refrence_type', PurchasedItem::class)
+                ->first();
+
+            PurchasedItem::find($paymentRef->purchased_item_id)->update([
+                'unit_type' => $validated['unit_type'],
+                'narration' => $validated['narration'],
+                'description' => $validated['description'],
+                'price' => $validated['price'],
+                'total' => $validated['total'],
+                'multiplier' => $validated['multiplier'],
+                'updated_by' => auth()->id(),
+                'payment_flow' => false,
+                'created_at' => $validated['created_at']
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('message', 'record updated..');
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating clinet account: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to update client account: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -166,7 +203,7 @@ class PurchasesItemController extends Controller
         //         return redirect()->back()->with('message', 'Payment deleted...');
         //     } catch (Exception $e) {
         //         Log::error($e->getMessage());
-                
+
         //         DB::rollBack();
         //         return redirect()->back()->with('error', 'Failed to delete payment');
         //     }

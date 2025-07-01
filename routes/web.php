@@ -78,6 +78,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('purchase-list', AdminPurchaseListController::class);
     Route::get('/purchase-list/{purchaseList}/download', [AdminPurchaseListController::class, 'downloadBill'])
         ->name('purchase-list.download');
+    Route::put('/purchase-list/{purchaseList}/upload-image', [AdminPurchaseListController::class, 'uploadImage'])->name('purchase-list.upload-image');
 
     // Route For Cost Incurred
     Route::resource('cost-incurreds', AdminCostIncurredController::class);

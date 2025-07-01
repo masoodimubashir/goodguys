@@ -12,7 +12,6 @@ use App\Models\ReturnList;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class AdminReturnListController extends Controller
 {
@@ -59,6 +58,7 @@ class AdminReturnListController extends Controller
                 'multiplier' => 1,
                 'created_by' => auth()->user()->id,
                 'payment_flow' => true,
+                'model_type' => ReturnList::class,
             ]);
 
 
@@ -111,19 +111,62 @@ class AdminReturnListController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateReturnListRequest $request, ReturnList $returnList)
+    public function update(UpdateReturnListrequest $request, $id)
     {
         try {
+
+
+            DB::beginTransaction();
             // Get validated data from the form request
             $validated = $request->validated();
 
-            $returnList->update(array_merge($validated, [
-                'updated_by' => auth()->id(),
-            ]));
+            $activity = Activity::find($id);
 
-            return redirect()->back()->with('message', 'Return updated successfully');
+            $activity->update([
+                'description' => $validated['description'],
+                'unit_type' => $validated['description'],
+                'qty' => 1,
+                'price' => $validated['price'],
+                'narration' => $validated['narration'],
+                'total' => $validated['price'],
+                'created_at' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
+                'multiplier' => 1,
+                'updated_by' => auth()->user()->id,
+                'payment_flow' => true,
+                'model_type' => ReturnList::class,
+            ]);
+
+            $paymentRef = PaymentDeleteRefrence::where('activity_id', $activity->id)
+                ->where('refrence_type', ReturnList::class)
+                ->first();
+
+            ReturnList::find($paymentRef->refrence_id)->update([
+                'item_name' => $validated['description'],
+                'return_date' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
+                'price' => $validated['price'],
+                'narration' => $validated['narration'],
+                'updated_by' => auth()->user()->id,
+            ]);
+
+            PurchasedItem::find($paymentRef->purchased_item_id)->update([
+                'unit_type' => $validated['description'],
+                'narration' => $validated['narration'],
+                'description' => $validated['description'],
+                'price' => $validated['price'],
+                'total' => $validated['price'],
+                'created_at' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
+                'updated_by' => auth()->user()->id,
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('message', 'record updated..');
+
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to update Return: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Error updating return list: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to update Return: ' . $e->getMessage());
         }
     }
 

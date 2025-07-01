@@ -22,11 +22,10 @@ class UpdatePurchaseListPaymentForm extends FormRequest
     public function rules(): array
     {
         return [
-            'vendor_id' => 'required|exists:vendors,id',
-            'client_id' => 'required|exists:clients,id',
+            'description' => 'required|string|max:255',
             'amount' => 'required|integer',
             'narration' => 'required|string|max:255',
-            'transaction_date' => 'required|date',
+            'created_at' => 'required|date',
         ];
     }
 }

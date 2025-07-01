@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import { Badge, Button, InputGroup, Form, Table } from 'react-bootstrap';
-import { Search, FileText, Package, Activity, IndianRupee, Text, XCircle, ChevronLeft, ChevronRight, Plus, Save, Minus, Trash2 } from 'lucide-react';
+import { Search, FileText, Package, Activity, IndianRupee, Text, XCircle, ChevronLeft, ChevronRight, Plus, Save, Minus, Trash2, Pen, Edit } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import { ShowMessage } from './ShowMessage';
 import Tooltip from './Tooltip';
 import Swal from 'sweetalert2';
+import EditActivity from './EditActivity';
 
 const ActivityTab = ({ activities, client, setPurchaseItems, setFilteredItems }) => {
 
 
     const { user } = usePage().props.auth;
 
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedActivity, setSelectedActivity] = useState(null);
 
     // State for search and filters
     const [searchTerm, setSearchTerm] = useState('');
@@ -40,9 +43,7 @@ const ActivityTab = ({ activities, client, setPurchaseItems, setFilteredItems })
         created_at: new Date().toISOString().split('T')[0]
     });
 
-    const [paymentType, setPaymentType] = useState('');
-    const [selectedVendor, setSelectedVendor] = useState('');
-    const [isCreating, setIsCreating] = useState(false);
+
 
     // Filter activities whenever search term, date range, or original activities change
     useEffect(() => {
@@ -119,6 +120,11 @@ const ActivityTab = ({ activities, client, setPurchaseItems, setFilteredItems })
             }
         });
     }
+
+    const editItem = (id, type, activityData) => {
+        setSelectedActivity(activityData);
+        setShowEditModal(true);
+    };
 
     return (
         <div className="activity-tab">
@@ -283,7 +289,7 @@ const ActivityTab = ({ activities, client, setPurchaseItems, setFilteredItems })
                                     </span>
                                 </td>
                                 <td>
-                                    <span>{activity.narration}</span>
+                                    <span>{activity.narration ?? 'NA'}</span>
                                 </td>
                                 {
                                     user.role === 'admin' && (
@@ -291,11 +297,21 @@ const ActivityTab = ({ activities, client, setPurchaseItems, setFilteredItems })
                                             <Tooltip text="Delete item">
                                                 <Button
                                                     variant="link"
-                                                    className="text-danger p-0"
+                                                    className="text-danger p-0 me-4"
                                                     onClick={() => handleDeleteItem(activity.id)}
                                                     title="Delete item"
                                                 >
                                                     <Trash2 size={16} />
+                                                </Button>
+                                            </Tooltip>
+                                            <Tooltip text="Edit item">
+                                                <Button
+                                                    variant="link"
+                                                    className="text-danger p-0"
+                                                    onClick={() => editItem(activity.id, activity.model_type, activity)}
+                                                    title="Delete item"
+                                                >
+                                                    <Edit size={16} />
                                                 </Button>
                                             </Tooltip>
                                         </td>
@@ -365,7 +381,23 @@ const ActivityTab = ({ activities, client, setPurchaseItems, setFilteredItems })
                     </div>
                 )
             }
+
+            {selectedActivity && (
+                <EditActivity
+                    show={showEditModal}
+                    onHide={() => setShowEditModal(false)}
+                    activity={selectedActivity}
+                    setPurchaseItems={setPurchaseItems}
+                    setFilteredItems={setFilteredItems}
+                    onSave={(updatedData) => {
+                        // Handle the updated data if needed
+                        setShowEditModal(false);
+                    }}
+                />
+            )}
         </div >
+
+
     );
 };
 

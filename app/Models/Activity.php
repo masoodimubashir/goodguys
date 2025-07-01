@@ -27,8 +27,8 @@ class Activity extends Model
         'updated_at',
         'multiplier',
         'payment_flow',
-        'created_at'
-
+        'created_at',
+        'model_type',
     ];
 
 

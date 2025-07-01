@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreClientAccountRequest;
+use App\Http\Requests\UpdateClientAccountRequest;
+use App\Http\Requests\UpdateClientRequest;
 use App\Models\Activiity;
 use App\Models\Activity;
 use App\Models\ClientAccount;
@@ -77,7 +79,8 @@ class AdminClientAccountController extends Controller
                     'created_by' => auth()->id(),
                     'multiplier' => 1,
                     'created_at' => Carbon::parse($validatedData['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
-                    'payment_flow' => $payment_flow
+                    'payment_flow' => $payment_flow,
+                    'model_type' => ClientAccount::class,
                 ]);
 
                 PaymentDeleteRefrence::create([
@@ -114,9 +117,60 @@ class AdminClientAccountController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateClientAccountRequest $request, string $id)
     {
-        //
+        try {
+
+            DB::beginTransaction();
+            // Get validated data from the form request
+            $validated = $request->validated();
+
+            $activity = Activity::find($id);
+
+            $activity->update([
+                'description' => $validated['description'],
+                'unit_type' => $validated['description'],
+                'qty' => 1,
+                'price' => $validated['amount'],
+                'narration' => $validated['narration'],
+                'total' => $validated['amount'],
+                'created_at' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
+                'multiplier' => 1,
+                'updated_by' => auth()->user()->id,
+                'model_type' => ClientAccount::class,
+            ]);
+
+            $paymentRef = PaymentDeleteRefrence::where('activity_id', $activity->id)
+                ->where('refrence_type', ClientAccount::class)
+                ->first();
+
+            ClientAccount::find($paymentRef->refrence_id)->update([
+                "payment_type" => $validated["description"],
+                "amount" => $validated["amount"],
+                "narration" => $validated["narration"],
+                'created_at' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
+            ]);
+
+            PurchasedItem::find($paymentRef->purchased_item_id)->update([
+                'unit_type' => $validated['description'],
+                'narration' => $validated['narration'],
+                'description' => $validated['description'],
+                'price' => $validated['amount'],
+                'total' => $validated['amount'],
+                'created_at' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
+                'updated_by' => auth()->user()->id,
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('message', 'record updated..');
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating clinet account: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to update client account: ' . $e->getMessage());
+        }
     }
 
     /**
