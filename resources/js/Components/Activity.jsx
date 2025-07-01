@@ -8,7 +8,7 @@ import Tooltip from './Tooltip';
 import Swal from 'sweetalert2';
 import EditActivity from './EditActivity';
 
-const ActivityTab = ({ activities, client, setPurchaseItems, setFilteredItems }) => {
+const ActivityTab = ({ activities, client, setPurchaseItems, setFilteredItems, vendors }) => {
 
 
     const { user } = usePage().props.auth;
@@ -307,7 +307,7 @@ const ActivityTab = ({ activities, client, setPurchaseItems, setFilteredItems })
                                             <Tooltip text="Edit item">
                                                 <Button
                                                     variant="link"
-                                                    className="text-danger p-0"
+                                                    className="text-primary p-0"
                                                     onClick={() => editItem(activity.id, activity.model_type, activity)}
                                                     title="Delete item"
                                                 >
@@ -389,6 +389,7 @@ const ActivityTab = ({ activities, client, setPurchaseItems, setFilteredItems })
                     activity={selectedActivity}
                     setPurchaseItems={setPurchaseItems}
                     setFilteredItems={setFilteredItems}
+                    vendors={vendors}
                     onSave={(updatedData) => {
                         // Handle the updated data if needed
                         setShowEditModal(false);

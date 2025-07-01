@@ -209,11 +209,13 @@ class AdminPurchaseListController extends Controller
 
             $validated = $request->validated();
 
+            $vendor = Vendor::where('id', $validated['description'])->first();
+
             $activity = Activity::find($id);
 
             $activity->update([
                 'unit_type' => $validated['unit_type'],
-                'description' => $validated['description'],
+                'description' => $vendor->vendor_name,
                 'narration' => $validated['narration'],
                 'price' => $validated['total'],
                 'total' => $validated['total'],

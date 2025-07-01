@@ -131,6 +131,7 @@ class AdminActivityController extends Controller
             try {
 
 
+                DB::beginTransaction();
                 // Find the purchased item with its polymorphic relationship
                 $activity = Activity::with('paymentDeleteRefrence')->findOrFail($id);
 
@@ -149,7 +150,8 @@ class AdminActivityController extends Controller
                     PurchaseListPayment::find($activity->paymentDeleteRefrence->refrence_id)->delete();
                     PurchasedItem::find($activity->paymentDeleteRefrence->purchased_item_id)->delete();
                 } else if ($class === ReturnList::class) {
-                    ReturnList::find($activity->paymentDeleteRefrence->refrence_id)->delete();
+                    $r = ReturnList::find($activity->paymentDeleteRefrence->refrence_id);
+                    dd($r);
                     PurchasedItem::find($activity->paymentDeleteRefrence->purchased_item_id)->delete();
                 } elseif ($class === PurchaseList::class) {
 
@@ -167,10 +169,12 @@ class AdminActivityController extends Controller
 
                 $activity->delete();
 
+                DB::commit();
+
                 return redirect()->back()->with('message', 'Record deleted...');
             } catch (Exception $e) {
                 Log::error($e->getMessage());
-
+                DB::rollBack();
                 return redirect()->back()->with('error', 'Failed to delete Record');
             }
         });

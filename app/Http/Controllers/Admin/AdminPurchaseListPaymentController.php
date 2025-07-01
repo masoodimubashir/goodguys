@@ -130,9 +130,12 @@ class AdminPurchaseListPaymentController extends Controller
 
             $validated = $request->validated();
 
+            $vendor = Vendor::where('id', $validated['description'])->first();
+
             $activity = Activity::find($id);
 
             $activity->update([
+                'description' => $vendor->vendor_name,
                 'narration' => $validated['narration'],
                 'price' => $validated['amount'],
                 'total' => $validated['amount'],
@@ -147,6 +150,7 @@ class AdminPurchaseListPaymentController extends Controller
                 ->first();
 
             PurchaseListPayment::find($paymentRef->refrence_id)->update([
+                'vendor_id' => $vendor->id,
                 'amount' => $validated['amount'],
                 'narration' => $validated['narration'],
                 'transaction_date' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
@@ -155,14 +159,15 @@ class AdminPurchaseListPaymentController extends Controller
             ]);
 
             PurchasedItem::find($paymentRef->purchased_item_id)->update([
-                'unit_type' => $validated['description'],
-                'narration' => $validated['narration'],
-                'description' => $validated['description'],
+                'description' => $vendor->vendor_name,
                 'price' => $validated['amount'],
                 'total' => $validated['amount'],
                 'created_at' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
                 'updated_by' => auth()->user()->id,
+                'narration' => $validated['narration'],
+
             ]);
+
 
             DB::commit();
 
@@ -170,7 +175,7 @@ class AdminPurchaseListPaymentController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Error updating clinet account: ' . $e->getMessage());
+            Log::error('Error updating purchase list payment : ' . $e->getMessage());
             return redirect()->back()
                 ->with('error', 'Failed to update client account: ' . $e->getMessage());
         }

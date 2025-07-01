@@ -1,16 +1,17 @@
 import { router, useForm } from '@inertiajs/react';
-import React, { useEffect } from 'react';
-import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
+import React, { useEffect, useState, useRef } from 'react';
+import { Modal, Button, Form, Row, Col, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Eye, Trash2, FileText } from 'lucide-react';
 
 const EditActivity = ({
     show,
     onHide,
     activity,
     setPurchaseItems,
-    setFilteredItems
+    setFilteredItems,
+    vendors,
+
 }) => {
-
-
     const { data, setData, processing, errors } = useForm({
         description: '',
         unit_type: '',
@@ -27,13 +28,17 @@ const EditActivity = ({
         list_name: '',
         total: 0,
         bill_description: '',
-        bill_url: null,
-        bill: null
+        bill_url: null
     });
+
+
+
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         if (activity) {
-            // Format dates for input fields (YYYY-MM-DD)
             const formatDate = (dateString) => {
                 if (!dateString) return '';
                 const date = new Date(dateString);
@@ -56,26 +61,101 @@ const EditActivity = ({
                 list_name: activity.list_name || '',
                 total: activity.total || 0,
                 bill_description: activity.bill_description || '',
-                bill_url: activity.bill_url || null,
-                bill: null // Explicitly set bill to null initially
+                bill_url: activity.bill_url || null
             };
             setData(baseData);
+
+            if (activity.bill_url) {
+                setPreviewUrl(`/storage/${activity.bill_url}`);
+            }
         }
     }, [activity]);
 
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [selectedVendorName, setSelectedVendorName] = useState('');
+    const [filteredVendors, setFilteredVendors] = useState(vendors);
+
+    // Set initial vendor when data loads
+    useEffect(() => {
+        if (activity && vendors.length > 0) {
+            // Find vendor by ID (assuming activity.description contains the ID)
+            const currentVendor = vendors.find(v => v.description == activity.description);
+
+            if (currentVendor) {
+                setSelectedVendorName(currentVendor.vendor_name); // Show name
+                setData('description', currentVendor.id); // Store ID
+            } else if (activity.description) {
+                // If no match but has description, try to find by name (fallback)
+                const byName = vendors.find(v => v.vendor_name === activity.description);
+                if (byName) {
+                    setSelectedVendorName(byName.vendor_name);
+                    setData('description', byName.id);
+                } else {
+                    setSelectedVendorName(activity.description);
+                }
+            }
+        }
+    }, [activity, vendors]);
+
+    // Filter vendors based on search term
+    useEffect(() => {
+        if (searchTerm) {
+            setFilteredVendors(
+                vendors.filter(vendor =>
+                    vendor.vendor_name.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+            );
+        } else {
+            setFilteredVendors(vendors);
+        }
+    }, [searchTerm, vendors]);
+
+
+    // Add this to your handleChange for the vendor select
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setData(name, type === 'checkbox' ? checked : value);
+
+        if (name === 'description') {
+            const vendor = vendors.find(v => v.id == value);
+            selectedVendorName(vendor.id);
+        }
     };
+
+    // const handleChange = (e) => {
+    //     const { name, value, type, checked } = e.target;
+    //     setData(name, type === 'checkbox' ? checked : value);
+    // };
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
+        setSelectedFile(file || null);
+
         if (file) {
-            setData('bill', file);
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = () => setPreviewUrl(reader.result);
+                reader.readAsDataURL(file);
+            } else {
+                setPreviewUrl(file.name);
+            }
         } else {
-            setData('bill', null);
+            setPreviewUrl(data.bill_url ? `/storage/${data.bill_url}` : null);
         }
     };
+
+    const handleDeleteFile = () => {
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+        setData('bill_url', null);
+    };
+
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -104,22 +184,20 @@ const EditActivity = ({
         try {
             const formData = new FormData();
 
-            // Append all data fields
             Object.entries(data).forEach(([key, value]) => {
                 if (value !== null && value !== undefined) {
-                    if (key === 'bill' && value instanceof File) {
-                        formData.append('bill', value, value.name);
-                    } else {
-                        formData.append(key, value);
-                    }
+                    formData.append(key, value);
                 }
             });
 
-            // Method spoofing for PUT request
+            if (selectedFile) {
+                formData.append('bill', selectedFile, selectedFile.name);
+            }
+
             formData.append('_method', 'PUT');
 
-            // Using router.post with method spoofing
             await router.post(route(routeName, activity.id), formData, {
+                preserveScroll: true,
                 onSuccess: (page) => {
                     if (page.props.purchase_items) {
                         setPurchaseItems(page.props.purchase_items);
@@ -137,11 +215,13 @@ const EditActivity = ({
     };
 
 
+    // 3. Alternative error display method
     const renderError = (field) => {
+
         return errors[field] ? (
-            <Form.Control.Feedback type="invalid">
-                {errors[field]}
-            </Form.Control.Feedback>
+            <small className="text-danger d-block mt-1">
+                {Array.isArray(errors[field]) ? errors[field][0] : errors[field]}
+            </small>
         ) : null;
     };
 
@@ -155,16 +235,18 @@ const EditActivity = ({
             case 'App\\Models\\ClientAccount':
                 return (
                     <>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Payment Description</Form.Label>
-                            <Form.Control
-                                name="description"
-                                value={data.description}
-                                onChange={handleChange}
-                                isInvalid={!!errors.description}
-                            />
-                            {renderError('payment_type')}
-                        </Form.Group>
+                        <Row>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Payment Description</Form.Label>
+                                <Form.Control
+                                    name="description"
+                                    value={data.description}
+                                    onChange={handleChange}
+                                    isInvalid={!!errors.description}
+                                />
+                                {renderError('description')}
+                            </Form.Group>
+                        </Row>
 
                         <Form.Group className="mb-3">
                             <Form.Label>Date</Form.Label>
@@ -211,12 +293,55 @@ const EditActivity = ({
                             <Col md={6}>
                                 <Form.Group className="mb-3">
                                     <Form.Label>Party</Form.Label>
-                                    <Form.Control
-                                        name="description"
-                                        value={data.description}
-                                        onChange={handleChange}
-                                        isInvalid={!!errors.description}
-                                    />
+                                    <div className="position-relative">
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            value={selectedVendorName || ''}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setSelectedVendorName(value);
+                                                setSearchTerm(value);
+                                                setShowDropdown(true);
+                                            }}
+                                            onFocus={() => {
+                                                setShowDropdown(true);
+                                                setSearchTerm(''); // Clear search when focusing
+                                            }}
+                                            onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                                            placeholder="Search vendor..."
+                                        />
+                                        {showDropdown && (
+                                            <div className="dropdown-menu show w-100" style={{
+                                                position: 'absolute',
+                                                maxHeight: '200px',
+                                                overflowY: 'auto',
+                                                zIndex: 1000,
+                                                width: '100%'
+                                            }}>
+                                                {filteredVendors.length > 0 ? (
+                                                    filteredVendors.map((vendor) => (
+                                                        <button
+                                                            key={vendor.id}
+                                                            className={`dropdown-item ${selectedVendorName === vendor.vendor_name ? 'active' : ''}`}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setSelectedVendorName(vendor.vendor_name);
+                                                                setData('description', vendor.id); // Store vendor_name
+                                                                setShowDropdown(false);
+                                                            }}
+                                                        >
+                                                            {vendor.vendor_name}
+                                                        </button>
+                                                    ))
+                                                ) : (
+                                                    <div className="dropdown-item text-muted">
+                                                        No vendors found
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                     {renderError('description')}
                                 </Form.Group>
                             </Col>
@@ -267,16 +392,40 @@ const EditActivity = ({
                             <Form.Label>Bill (Image or PDF)</Form.Label>
                             <Form.Control
                                 type="file"
+                                ref={fileInputRef}
                                 onChange={handleFileChange}
                                 accept="image/*,.pdf"
                                 isInvalid={!!errors.bill}
                             />
                             {renderError('bill')}
-
-                          
+                            {previewUrl && (
+                                <div className="mt-2 d-flex align-items-center gap-2">
+                                    <OverlayTrigger overlay={<Tooltip>View</Tooltip>}>
+                                        <Button
+                                            variant="outline-primary"
+                                            size="sm"
+                                            onClick={() => window.open(
+                                                previewUrl.startsWith('data:') ? previewUrl :
+                                                    previewUrl.includes('/storage/') ? previewUrl :
+                                                        URL.createObjectURL(selectedFile),
+                                                '_blank'
+                                            )}
+                                        >
+                                            <Eye size={16} />
+                                        </Button>
+                                    </OverlayTrigger>
+                                    <OverlayTrigger overlay={<Tooltip>Remove</Tooltip>}>
+                                        <Button
+                                            variant="danger"
+                                            size="sm"
+                                            onClick={handleDeleteFile}
+                                        >
+                                            <Trash2 size={16} className="me-1" />
+                                        </Button>
+                                    </OverlayTrigger>
+                                </div>
+                            )}
                         </Form.Group>
-
-
 
                         <Form.Group className="mb-3">
                             <Form.Label>Bill Description</Form.Label>
@@ -287,7 +436,7 @@ const EditActivity = ({
                                 onChange={handleChange}
                                 isInvalid={!!errors.narration}
                             />
-                            {renderError('narration"')}
+                            {renderError('narration')}
                         </Form.Group>
                     </>
                 );
@@ -298,12 +447,55 @@ const EditActivity = ({
                         <Row>
                             <Form.Group className="mb-3">
                                 <Form.Label>Party</Form.Label>
-                                <Form.Control
-                                    name="description"
-                                    value={data.description}
-                                    onChange={handleChange}
-                                    isInvalid={!!errors.description}
-                                />
+                                <div className="position-relative">
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={selectedVendorName || ''}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            setSelectedVendorName(value);
+                                            setSearchTerm(value);
+                                            setShowDropdown(true);
+                                        }}
+                                        onFocus={() => {
+                                            setShowDropdown(true);
+                                            setSearchTerm(''); // Clear search when focusing
+                                        }}
+                                        onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                                        placeholder="Search vendor..."
+                                    />
+                                    {showDropdown && (
+                                        <div className="dropdown-menu show w-100" style={{
+                                            position: 'absolute',
+                                            maxHeight: '200px',
+                                            overflowY: 'auto',
+                                            zIndex: 1000,
+                                            width: '100%'
+                                        }}>
+                                            {filteredVendors.length > 0 ? (
+                                                filteredVendors.map((vendor) => (
+                                                    <button
+                                                        key={vendor.id}
+                                                        className={`dropdown-item ${selectedVendorName === vendor.vendor_name ? 'active' : ''}`}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSelectedVendorName(vendor.vendor_name);
+                                                            setData('description', vendor.id); // Store vendor_name
+                                                            setShowDropdown(false);
+                                                        }}
+                                                    >
+                                                        {vendor.vendor_name}
+                                                    </button>
+                                                ))
+                                            ) : (
+                                                <div className="dropdown-item text-muted">
+                                                    No vendors found
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                                 {renderError('description')}
                             </Form.Group>
                         </Row>
@@ -433,6 +625,7 @@ const EditActivity = ({
                                     onChange={handleChange}
                                     isInvalid={!!errors.price}
                                 />
+                                {renderError('price')}
                             </Form.Group>
                         </Row>
 
@@ -588,7 +781,7 @@ const EditActivity = ({
     };
 
     return (
-        <Modal show={show} onHide={onHide} size="lg" encType="multipart/form-data">
+        <Modal show={show} onHide={onHide} size="lg">
             <Modal.Header closeButton>
                 <Modal.Title>
                     <h5 className="text-primary">
@@ -597,7 +790,7 @@ const EditActivity = ({
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <Form onSubmit={handleSubmit}>
+                <Form onSubmit={handleSubmit} encType="multipart/form-data">
                     {renderModelSpecificFields()}
                     <div className="d-flex justify-content-end mt-4">
                         <Button variant="secondary" onClick={onHide} className="me-2">

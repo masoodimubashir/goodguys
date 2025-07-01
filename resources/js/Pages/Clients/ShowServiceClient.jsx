@@ -391,6 +391,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                         client={client}
                         setPurchaseItems={setPurchaseItems}
                         setFilteredItems={setFilteredItems}
+                         vendors={vendors}
                     />
                 </Tab>
                 <Tab eventKey="vendor-lists" title={<span className="d-flex align-items-center gap-1"><ShoppingBag size={16} /> Party List</span>}>
