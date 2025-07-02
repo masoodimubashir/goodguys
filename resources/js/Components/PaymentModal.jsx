@@ -135,7 +135,7 @@ export const PaymentModal = ({
     };
 
     return (
-        <Modal show={show} onHide={onHide} backdrop="static" size="lg" centered>
+        <Modal show={show} onHide={onHide} backdrop="static" keyboard={false} size="lg" centered>
             <Form onSubmit={handleSubmit}>
                 <Modal.Body className="p-4">
                     <div className="row">

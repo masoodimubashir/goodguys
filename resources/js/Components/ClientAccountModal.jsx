@@ -80,7 +80,7 @@ const ClientAccountModal = ({
     };
 
     return (
-        <Modal show={show} onHide={onHide} centered>
+        <Modal show={show} onHide={onHide} backdrop="static" keyboard={false} centered>
             <Form onSubmit={handleSubmit}>
                 <Modal.Header closeButton>
                     <Modal.Title>

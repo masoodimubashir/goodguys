@@ -781,7 +781,7 @@ const EditActivity = ({
     };
 
     return (
-        <Modal show={show} onHide={onHide} size="lg">
+        <Modal show={show} onHide={onHide} size="lg" backdrop="static" keyboard={false}>
             <Modal.Header closeButton>
                 <Modal.Title>
                     <h5 className="text-primary">

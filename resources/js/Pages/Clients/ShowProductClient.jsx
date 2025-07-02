@@ -396,9 +396,6 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                         </button>
                     </li>
 
-
-
-
                     <li className="nav-item" role="presentation">
                         <button className="nav-link d-flex align-items-center gap-1" data-bs-toggle="tab" data-bs-target="#pdf-tab" type="button" role="tab">
                             <FileText size={16} />
@@ -411,8 +408,6 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                             Documents
                         </button>
                     </li>
-
-
 
                 </ul>
 
@@ -453,6 +448,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                             client={client}
                             setPurchaseItems={setPurchaseItems}
                             setFilteredItems={setFilteredItems}
+                            vendors={vendors}
                         />
 
                     </div>

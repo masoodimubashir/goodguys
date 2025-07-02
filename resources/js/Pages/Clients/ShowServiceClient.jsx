@@ -391,7 +391,7 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                         client={client}
                         setPurchaseItems={setPurchaseItems}
                         setFilteredItems={setFilteredItems}
-                         vendors={vendors}
+                        vendors={vendors}
                     />
                 </Tab>
                 <Tab eventKey="vendor-lists" title={<span className="d-flex align-items-center gap-1"><ShoppingBag size={16} /> Party List</span>}>
@@ -444,6 +444,8 @@ export default function ShowServiceClient({ client, vendors = [], client_vendors
                 onHide={() => setChallanState(prev => ({ ...prev, showChallanForm: false }))}
                 size="lg"
                 centered
+                backdrop="static" 
+                keyboard={false}
             >
                 <Modal.Header closeButton>
                     <Modal.Title>Create New Challan</Modal.Title>

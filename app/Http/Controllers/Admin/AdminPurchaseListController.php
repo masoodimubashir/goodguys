@@ -239,6 +239,7 @@ class AdminPurchaseListController extends Controller
 
                 $path = $request->file('bill')->store('purchase-lists', 'public');
                 $validated['bill'] = $path;
+                
             } else {
                 $validated['bill'] = $purchase_list->bill;
             }

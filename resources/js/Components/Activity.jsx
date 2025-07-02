@@ -394,6 +394,7 @@ const ActivityTab = ({ activities, client, setPurchaseItems, setFilteredItems, v
                         // Handle the updated data if needed
                         setShowEditModal(false);
                     }}
+                    
                 />
             )}
         </div >
