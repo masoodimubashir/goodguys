@@ -1,6 +1,6 @@
-import { Footer } from '@/Components/Footer';
 import { SideBar } from '@/Components/SideBar';
 import { Header } from '@/Components/Header';
+import Footer from '@/Components/Footer';
 
 
 export default function AuthenticatedLayout({ children }) {
@@ -25,8 +25,7 @@ export default function AuthenticatedLayout({ children }) {
                 </div>
 
 
-                <Footer />
-
+        
             </div>
 
         </>

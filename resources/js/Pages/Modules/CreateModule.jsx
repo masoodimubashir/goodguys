@@ -139,10 +139,26 @@ export default function CreateModule({ fields = [] }) {
     };
 
 
-    const breadcrumbs = [
-        { href: '/module', label: 'Back', active: true }
-    ];
 
+
+    const breadcrumbs = [
+        {
+            href: '/module',
+            label: 'module',
+            active: false
+        },
+        {
+            href: '/module/create',
+            label: 'Create',
+            active: false,
+        },
+        {
+            href: '/module',
+            label: 'Back',
+            active: true,
+        }
+
+    ];
 
 
 
@@ -150,23 +166,15 @@ export default function CreateModule({ fields = [] }) {
         <AuthenticatedLayout>
             <Head title="Create Module" />
 
+            <div className="d-flex justify-content-between align-items-center">
+
+                <BreadCrumbHeader
+                    breadcrumbs={breadcrumbs}
+                />
+
+            </div>
+
             <div className="container-fluid">
-
-                <div className="row m-1">
-                    <div className="col-12">
-                        <ul className="app-line-breadcrumbs mb-3">
-                            <li>
-                                <Link href={route('module.index')} className="f-s-14 f-w-500">
-                                    <span><i className="iconoir-home-alt"></i></span>
-                                </Link>
-                            </li>
-                            <li className="active">
-                                <Link href={route('module.index')} className="f-s-14 f-w-500">Back</Link>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
 
 
                 <div className="row">

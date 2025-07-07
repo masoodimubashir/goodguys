@@ -4,12 +4,13 @@ import TextInput from "@/Components/TextInput";
 import InputLabel from "@/Components/InputLabel";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
+import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
 
 export default function EditField({ field }) {
     const { data, setData, put, processing, errors } = useForm({
         field_name: field.field_name,
         si_unit: field.si_unit,
-        dimension_value: field.dimension_value, 
+        dimension_value: field.dimension_value,
     });
 
     const submit = (e) => {
@@ -19,22 +20,32 @@ export default function EditField({ field }) {
         });
     };
 
+    const breadcrumbs = [
+        {
+            href: '/field',
+            label: 'field',
+            active: false
+        },
+        {
+            href: '/field/' + field.id + '/edit',
+            label: field.field_name,
+            active: false,
+        },
+        {
+            href: '/field',
+            label: 'Back',
+            active: true,
+        }
+
+    ];
+
     return (
         <AuthenticatedLayout>
             <Head title="Edit Field" />
             <div className="row m-1">
-                <div className="col-12">
-                    <ul className="app-line-breadcrumbs mb-3">
-                        <li>
-                            <Link href={route('field.index')} className="f-s-14 f-w-500">
-                                <i className="iconoir-home-alt"></i>
-                            </Link>
-                        </li>
-                        <li className="active">
-                            <Link href={route('field.index')} className="f-s-14 f-w-500">Back</Link>
-                        </li>
-                    </ul>
-                </div>
+                <BreadCrumbHeader
+                    breadcrumbs={breadcrumbs}
+                />
             </div>
 
             <div className="row">

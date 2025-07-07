@@ -4,6 +4,7 @@ import TextInput from "@/Components/TextInput";
 import InputLabel from "@/Components/InputLabel";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
+import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
 
 export default function CreateInventory() {
     const { data, setData, post, processing, errors } = useForm({
@@ -42,23 +43,33 @@ export default function CreateInventory() {
         setData("item_dimensions", updated);
     };
 
+
+    const breadcrumbs = [
+        {
+            href: '/inventory',
+            label: 'Inventory',
+            active: false
+        },
+        {
+            href: '/inventory/create',
+            label: 'Create',
+            active: false,
+        },
+        {
+            href: '/inventory',
+            label: 'Back',
+            active: true,
+        }
+
+    ];
+
     return (
         <AuthenticatedLayout>
             <Head title="Inventory" />
 
             <div className="row">
-                <div className="col-12">
-                    <ul className="app-line-breadcrumbs mb-3">
-                        <li>
-                            <Link href={route('inventory.index')} className="f-s-14 f-w-500">
-                                <span><i className="iconoir-home-alt"></i></span>
-                            </Link>
-                        </li>
-                        <li className="active">
-                            <Link href={route('inventory.index')} className="f-s-14 f-w-500">Back</Link>
-                        </li>
-                    </ul>
-                </div>
+                <BreadCrumbHeader breadcrumbs={breadcrumbs} />
+
             </div>
 
             <div className="row">
@@ -98,8 +109,8 @@ export default function CreateInventory() {
                                         </div>
                                     </div>
 
-                                      {/* Item Count */}
-                                      <div className="col-md-4">
+                                    {/* Item Count */}
+                                    <div className="col-md-4">
                                         <div className="mb-4">
                                             <InputLabel htmlFor="count" value="Item Count" />
                                             <TextInput
@@ -158,12 +169,12 @@ export default function CreateInventory() {
                                             />
                                             <InputError message={errors.item_sub_type} />
                                         </div>
-                                    </div>                 
+                                    </div>
 
                                     {/* Item Dimensions */}
                                     <div className="col-12">
                                         <div className="mb-4">
-                                            
+
                                             <InputLabel value="Item Dimensions (Max 3)" />
 
                                             <InputError message={errors.item_dimensions} />
@@ -239,7 +250,7 @@ export default function CreateInventory() {
                                                                         onClick={() => handleRemoveRow(index)}
                                                                         title="Remove"
                                                                     >
-                                                                        <i className="ti ti-trash"></i> 
+                                                                        <i className="ti ti-trash"></i>
                                                                     </button>
                                                                 )}
                                                             </div>
@@ -250,8 +261,8 @@ export default function CreateInventory() {
                                         </div>
                                     </div>
 
-                                     {/* Description */}
-                                     <div className="col-md-12">
+                                    {/* Description */}
+                                    <div className="col-md-12">
                                         <div className="mb-4">
                                             <InputLabel htmlFor="description" value="Description" />
                                             <textarea
@@ -282,7 +293,7 @@ export default function CreateInventory() {
                 </div>
             </div>
 
-            
+
         </AuthenticatedLayout>
     );
 }

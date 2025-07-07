@@ -10,6 +10,7 @@ import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
 import InputError from "@/Components/InputError";
 import Button from "@/Components/Button";
+import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
 
 export default function EditModule({ module, fields = [] }) {
     // Improved parser that handles both string and object formats
@@ -18,7 +19,7 @@ export default function EditModule({ module, fields = [] }) {
 
         return module.fields.map(field => {
             // Handle string format (e.g., "length,20,m")
-            
+
             if (typeof field === 'string') {
                 const [field_name, si_unit, dimension_value] = field.split(',');
 
@@ -40,8 +41,7 @@ export default function EditModule({ module, fields = [] }) {
 
     const initialFields = parseModuleFields();
 
-    console.log(initialFields);
-    
+
 
     const { data, setData, put, processing, errors } = useForm({
         module_name: module.module_name || '',
@@ -127,9 +127,36 @@ export default function EditModule({ module, fields = [] }) {
     };
 
 
+    const breadcrumbs = [
+        {
+            href: '/module',
+            label: 'module',
+            active: false
+        },
+        {
+            href: '/module/' + module.id + '/edit',
+            label: module.module_name,
+            active: false,
+        },
+        {
+            href: '/module',
+            label: 'Back',
+            active: true,
+        }
+
+    ];
+
     return (
         <AuthenticatedLayout>
             <Head title="Edit Module" />
+
+            <div className="d-flex justify-content-between align-items-center">
+
+                <BreadCrumbHeader
+                    breadcrumbs={breadcrumbs}
+                />
+
+            </div>
 
             <div className="row m-1">
                 <div className="col-12">

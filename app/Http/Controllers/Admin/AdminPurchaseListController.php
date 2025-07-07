@@ -54,7 +54,6 @@ class AdminPurchaseListController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-
         return Inertia::render("PurchaseManagment/purchases", [
             'vendor' => $vendor,
             'purchaseLists' => $purchaseLists,

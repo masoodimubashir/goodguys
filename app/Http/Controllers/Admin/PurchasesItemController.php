@@ -51,6 +51,7 @@ class PurchasesItemController extends Controller
 
             $data = $request->validated();
 
+
             $data['total'] = ($data['qty'] * $data['amount']) * $data['multiplier'];
 
             $purchase = PurchasedItem::create(array_merge($data, [

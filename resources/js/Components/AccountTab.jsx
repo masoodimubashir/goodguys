@@ -82,7 +82,7 @@ export default function AccountTab({
                         <button
                             className="btn btn-primary btn-sm d-flex align-items-center gap-1"
                             onClick={handleAddNew}
-                            disabled={isAdding || editingRow.id}
+                            disabled={isAdding || editingRow?.id}
                         >
                             <Plus size={16} />
                             Add Entry

@@ -6,6 +6,7 @@ import TextInput from "@/Components/TextInput";
 import InputError from "@/Components/InputError";
 import Button from "@/Components/Button";
 import { ShowMessage } from "@/Components/ShowMessage";
+import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
 
 export default function EditInventory({ inventory }) {
     const { data, setData, put, processing, errors } = useForm({
@@ -55,22 +56,30 @@ export default function EditInventory({ inventory }) {
         });
     };
 
+    const breadcrumbs = [
+        { 
+            href: '/inventory', 
+            label: 'Inventory', 
+            active: false },
+        {
+            href: '/inventory/' + inventory.id + '/edit',
+            label: inventory.item_name,
+            active: false,
+        },
+        {
+            href: '/inventory',
+            label: 'Back',
+            active: true,
+        }
+
+    ];
+
     return (
         <AuthenticatedLayout>
             <Head title="Edit Inventory" />
             <div className="row">
-                <div className="col-12">
-                    <ul className="app-line-breadcrumbs mb-3">
-                        <li>
-                            <Link href={route('inventory.index')} className="f-s-14 f-w-500">
-                                <span><i className="iconoir-home-alt"></i></span>
-                            </Link>
-                        </li>
-                        <li className="active">
-                            <Link href={route('inventory.index')} className="f-s-14 f-w-500">Back</Link>
-                        </li>
-                    </ul>
-                </div>
+                <BreadCrumbHeader breadcrumbs={breadcrumbs} />
+
             </div>
 
             <div className="row">

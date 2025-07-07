@@ -52,8 +52,25 @@ export default function EditClient({ client }) {
 
   };
 
+
+
   const breadcrumbs = [
-    { href: '/clients', label: 'Back', active: true }
+    {
+      href: '/clients',
+      label: 'clients',
+      active: false
+    },
+    {
+      href: '/clients/' + client.id + '/edit',
+      label: client.client_name,
+      active: false,
+    },
+    {
+      href: '/clients',
+      label: 'Back',
+      active: true,
+    }
+
   ];
 
   return (

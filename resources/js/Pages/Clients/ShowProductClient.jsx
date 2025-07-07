@@ -1,32 +1,72 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Head, usePage, useForm as useInertiaForm, router, useForm } from '@inertiajs/react';
+
+
+
+import React, { lazy, Suspense, useEffect, useState } from 'react';
+import { Head, usePage, router, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ShowMessage } from '@/Components/ShowMessage';
-import PdfTable from '@/Components/PdfTable';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
-import { ClientInfoCard } from '@/Components/ClientInfoCard';
 import { FileText, Activity, BarChart3, Eye, EyeOff, RefreshCw, ActivityIcon } from 'lucide-react';
-import ProjectDocumentTab from '@/Components/ProjectDocumentTab';
-import PurchaseItemsTab from '@/Components/PurchaseItemsTab';
-import { PurchaseListModal } from '@/Components/PurchaseListModal';
-import ClientAccountModal from '@/Components/ClientAccountModal';
-import 'react-datepicker/dist/react-datepicker.css';
-import { Button, Card, Col, Dropdown, Form, InputGroup, Modal, Row, Table } from 'react-bootstrap';
-import PurchaseListTab from '@/Components/PurchaseListTab';
-import ActivityTab from '@/Components/Activity';
+import { Button, Card, Col, Dropdown, Form, InputGroup, Modal, Row, Table, Tabs, Tab } from 'react-bootstrap';
+
+import { ClientInfoCard } from '@/Components/ClientInfoCard';
 import { PaymentModal } from '@/Components/PaymentModal';
+import ClientAccountModal from '@/Components/ClientAccountModal';
+import { PurchaseListModal } from '@/Components/PurchaseListModal';
+
+// Lazy load heavy components while maintaining same import paths
+const PurchaseItemsTab = lazy(() => import('@/Components/PurchaseItemsTab'));
+const ActivityTab = lazy(() => import('@/Components/Activity'));
+const PurchaseListTab = lazy(() => import('@/Components/PurchaseListTab'));
+const ProjectDocumentTab = lazy(() => import('@/Components/ProjectDocumentTab'));
+const PdfTable = lazy(()=> import('@/Components/PdfTable') )
+
+const TabPlaceholder = () => (
+    <div className="text-center py-5">
+        <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+        </div>
+    </div>
+);
+
+const AnalyticsPlaceholder = () => (
+    <Row className="mb-3 g-1">
+        <Col md={6}>
+            <Card className="placeholder-glow">
+                <Card.Body>
+                    <div className="placeholder col-8"></div>
+                </Card.Body>
+            </Card>
+        </Col>
+        <Col md={6}>
+            <Card className="placeholder-glow">
+                <Card.Body>
+                    <h6 className="mb-3 placeholder col-4"></h6>
+                    <div className="d-flex justify-content-between">
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="text-center">
+                                <h6 className="mb-1 placeholder col-3"></h6>
+                                <small className="placeholder col-5"></small>
+                            </div>
+                        ))}
+                    </div>
+                </Card.Body>
+            </Card>
+        </Col>
+    </Row>
+);
 
 export default function ShowClient({ client, purchase_items, vendors = [], company_profile = null, BankProfile = null, client_vendors = [], activities = [] }) {
 
     // State management
     const flash = usePage().props.flash;
-
-
+    const [activeTab, setActiveTab] = useState('purchase-items');
     const [purchaseItems, setPurchaseItems] = useState(purchase_items || []);
     const [filteredItems, setFilteredItems] = useState(purchase_items || []);
-    const [editedItems, setEditedItems] = useState({});
     const [showAnalytics, setShowAnalytics] = useState(true);
     const [showPaymentModal, setshowPaymentModal] = useState(false);
+    const [editedItems, setEditedItems] = useState({});
+
 
     const [searchTerm, setSearchTerm] = useState('');
     const [dateRange, setDateRange] = useState([null, null]);
@@ -292,7 +332,8 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
             <div className="d-flex justify-content-between align-items-center">
                 <BreadCrumbHeader breadcrumbs={[
                     { href: '/clients', label: 'Clients', active: false },
-                    { href: `/clients/${client.id}`, label: client.client_name, active: true }
+                    { href: `/clients/${client.id}`, label: client.client_name, active: false },
+                    { href: '/clients', label: 'Back', active: true },
                 ]} />
 
                 <div className="d-flex flex-wrap gap-2 justify-content-end">
@@ -309,47 +350,42 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
             {/* Main Content */}
             <div>
 
-                {
-                    showAnalytics && (
-                        <>
-                            {/* Client Information */}
-                            <Row >
-                                <ClientInfoCard client={client} />
-                                <Col md={6}>
-                                    <Card className="border-0 shadow-sm h-100">
-                                        <Card.Body className="p-3">
-                                            <h6 className="mb-3 d-flex align-items-center gap-2">
-                                                <BarChart3 size={18} className="text-primary" />
-                                                Quick Stats
-                                            </h6>
-                                            <div className="d-flex justify-content-between">
+                {showAnalytics && (
+                    <Row className="mb-3 g-1">
+                        <Col md={6}>
+                            <ClientInfoCard client={client} />
+                        </Col>
 
+                        <Col md={6}>
+                            <Card className="border-0  shadow-sm rounded-3 ">
+                                <Card.Body className="">
+                                    <h6 className="mb-3 d-flex align-items-center gap-2">
+                                        <BarChart3 size={18} className="text-primary" /> Quick Stats
+                                    </h6>
+                                    <div className="d-flex justify-content-between">
+                                        <div className="text-center">
+                                            <h6 className="mb-1 fw-bold">{analytics.spends}</h6>
+                                            <small className="text-muted">Total Spend</small>
+                                        </div>
+                                        <div className="text-center">
+                                            <h6 className="mb-1 fw-bold">{formatCurrency(analytics.balance)}</h6>
+                                            <small className="text-muted">Balance</small>
+                                        </div>
+                                        <div className="text-center">
+                                            <h6 className="mb-1 fw-bold">{formatCurrency(analytics.deposit)}</h6>
+                                            <small className="text-muted">Deposits</small>
+                                        </div>
+                                        <div className="text-center">
+                                            <h6 className="mb-1 fw-bold">{formatCurrency(expenditure)}</h6>
+                                            <small className="text-muted">Expenditure</small>
+                                        </div>
+                                    </div>
+                                </Card.Body>
+                            </Card>
+                        </Col>
 
-                                                <div className="text-center">
-                                                    <h6 className="mb-1 fw-bold">{analytics.spends}</h6>
-                                                    <small className="text-muted">Total Spends</small>
-                                                </div>
-                                                <div className="text-center">
-                                                    <h6 className="mb-1 fw-bold">{formatCurrency(analytics.balance)}</h6>
-                                                    <small className="text-muted">Balance</small>
-                                                </div>
-                                                <div className="text-center">
-                                                    <h6 className="mb-1 fw-bold">{formatCurrency(analytics.deposit)}</h6>
-                                                    <small className="text-muted">Deposits</small>
-                                                </div>
-                                                <div className="text-center">
-                                                    <h6 className="mb-1 fw-bold">{formatCurrency(expenditure)}</h6>
-                                                    <small className="text-muted">Expenditure</small>
-                                                </div>
-
-                                            </div>
-                                        </Card.Body>
-                                    </Card>
-                                </Col>
-                            </Row>
-                        </>
-                    )
-                }
+                    </Row>
+                )}
 
 
                 <div className="d-flex flex-wrap justify-content-end align-items-center mt-2 mb-3 gap-2">
@@ -374,106 +410,115 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
                     </Dropdown>
                 </div>
 
-                {/* Tabs Section */}
-                <ul className="nav nav-tabs" role="tablist">
-                    <li className="nav-item" role="presentation">
-                        <button className="nav-link d-flex align-items-center gap-1 active" data-bs-toggle="tab" data-bs-target="#purchase-items-tab" type="button" role="tab">
-                            <Activity size={16} />
-                            Payment
-                        </button>
-                    </li>
-                    <li className="nav-item" role="presentation">
-                        <button className="nav-link d-flex align-items-center gap-1" data-bs-toggle="tab" data-bs-target="#client-vendor-payment-tab" type="button" role="tab">
-                            <ActivityIcon size={16} />
+                <Tabs
+                    activeKey={activeTab}
+                    onSelect={(k) => setActiveTab(k)}
+                    className="mb-3"
+                >
+                    <Tab
+                        eventKey="purchase-items"
+                        title={
+                            <span className="d-flex align-items-center gap-1">
+                                <Activity size={16} />
+                                Payment
+                            </span>
+                        }
+                    >
+                        <Suspense fallback={<TabPlaceholder />}>
+                            <PurchaseItemsTab
+                                filteredItems={filteredItems}
+                                purchaseItems={purchaseItems}
+                                editedItems={editedItems}
+                                newItem={newItem}
+                                setNewItem={setNewItem}
+                                challanState={challanState}
+                                setChallanState={setChallanState}
+                                searchTerm={searchTerm}
+                                setSearchTerm={setSearchTerm}
+                                setDateRange={setDateRange}
+                                startDate={startDate}
+                                endDate={endDate}
+                                handleItemChange={handleItemChange}
+                                handleNewItemChange={handleNewItemChange}
+                                toggleProductSelection={toggleProductSelection}
+                                openChallanForm={openChallanForm}
+                                resetDateFilter={resetDateFilter}
+                                formatCurrency={formatCurrency}
+                                client={client}
+                                client_vendors={client_vendors}
+                                setPurchaseItems={setPurchaseItems}
+                                setFilteredItems={setFilteredItems}
+                            />
+                        </Suspense>
+                    </Tab>
 
-                            Activities
-                        </button>
-                    </li>
-                    <li className="nav-item" role="presentation">
-                        <button className="nav-link d-flex align-items-center gap-1 " data-bs-toggle="tab" data-bs-target="#vendor-tab" type="button" role="tab">
-                            <Activity size={16} />
-                            Party List
-                        </button>
-                    </li>
+                    <Tab
+                        eventKey="activities"
+                        title={
+                            <span className="d-flex align-items-center gap-1">
+                                <ActivityIcon size={16} />
+                                Activities
+                            </span>
+                        }
+                    >
+                        <Suspense fallback={<TabPlaceholder />}>
+                            <ActivityTab
+                                activities={activities}
+                                client={client}
+                                setPurchaseItems={setPurchaseItems}
+                                setFilteredItems={setFilteredItems}
+                                vendors={vendors}
+                            />
+                        </Suspense>
+                    </Tab>
 
-                    <li className="nav-item" role="presentation">
-                        <button className="nav-link d-flex align-items-center gap-1" data-bs-toggle="tab" data-bs-target="#pdf-tab" type="button" role="tab">
-                            <FileText size={16} />
-                            PDF Report
-                        </button>
-                    </li>
-                    <li className="nav-item" role="presentation">
-                        <button className="nav-link d-flex align-items-center gap-1" data-bs-toggle="tab" data-bs-target="#project-document-tab" type="button" role="tab">
-                            <FileText size={16} />
-                            Documents
-                        </button>
-                    </li>
+                    <Tab
+                        eventKey="vendor-list"
+                        title={
+                            <span className="d-flex align-items-center gap-1">
+                                <Activity size={16} />
+                                Party List
+                            </span>
+                        }
+                    >
+                        <Suspense fallback={<TabPlaceholder />}>
+                            <PurchaseListTab
+                                client={client}
+                                handleEditAccount={(purchase_list) => openPurchaseListModal(purchase_list)}
+                                clientVendors={client_vendors}
+                            />
+                        </Suspense>
+                    </Tab>
 
-                </ul>
+                    <Tab
+                        eventKey="pdf-report"
+                        title={
+                            <span className="d-flex align-items-center gap-1">
+                                <FileText size={16} />
+                                PDF Report
+                            </span>
+                        }
+                    >
+                        <Suspense fallback={<TabPlaceholder />}>
+                            <PdfTable client={client} CompanyProfile={company_profile} BankProfile={BankProfile} />
+                        </Suspense>
+                    </Tab>
 
-                <div className="tab-content">
+                    <Tab
+                        eventKey="documents"
+                        title={
+                            <span className="d-flex align-items-center gap-1">
+                                <FileText size={16} />
+                                Documents
+                            </span>
+                        }
+                    >
+                        <Suspense fallback={<TabPlaceholder />}>
+                            <ProjectDocumentTab client={client} />
+                        </Suspense>
+                    </Tab>
+                </Tabs>
 
-
-                    <div className="tab-pane fade show active" id="purchase-items-tab" role="tabpanel">
-                        <PurchaseItemsTab
-                            filteredItems={filteredItems}
-                            purchaseItems={purchaseItems}
-                            editedItems={editedItems}
-                            newItem={newItem}
-                            setNewItem={setNewItem}
-                            challanState={challanState}
-                            setChallanState={setChallanState}
-                            searchTerm={searchTerm}
-                            setSearchTerm={setSearchTerm}
-                            setDateRange={setDateRange}
-                            startDate={startDate}
-                            endDate={endDate}
-                            handleItemChange={handleItemChange}
-                            handleNewItemChange={handleNewItemChange}
-                            toggleProductSelection={toggleProductSelection}
-                            openChallanForm={openChallanForm}
-                            resetDateFilter={resetDateFilter}
-                            formatCurrency={formatCurrency}
-                            client={client}
-                            client_vendors={client_vendors}
-                            setPurchaseItems={setPurchaseItems}
-                            setFilteredItems={setFilteredItems}
-                        />
-                    </div>
-
-                    <div className="tab-pane fade" id="client-vendor-payment-tab" role="tabpanel">
-
-                        <ActivityTab
-                            activities={activities}
-                            client={client}
-                            setPurchaseItems={setPurchaseItems}
-                            setFilteredItems={setFilteredItems}
-                            vendors={vendors}
-                        />
-
-                    </div>
-
-                    <div className="tab-pane fade " id="vendor-tab" role="tabpanel">
-                        <PurchaseListTab
-                            client={client}
-                            handleEditAccount={(purchase_list) => openPurchaseListModal(purchase_list)}
-                            clientVendors={client_vendors}
-                        />
-                    </div>
-
-
-                    <div className="tab-pane fade" id="pdf-tab" role="tabpanel">
-                        <PdfTable client={client} CompanyProfile={company_profile} BankProfile={BankProfile} />
-                    </div>
-
-                    <div className="tab-pane fade" id="project-document-tab" role="tabpanel">
-                        <ProjectDocumentTab client={client} />
-                    </div>
-
-
-
-
-                </div>
             </div>
 
             <PaymentModal

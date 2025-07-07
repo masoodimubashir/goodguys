@@ -301,12 +301,19 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
     }
 
 
-  
+
 
     return (
         <AuthenticatedLayout>
             <div>
-                <BreadCrumbHeader breadcrumbs={breadcrumbs} />
+
+                <BreadCrumbHeader breadcrumbs={[
+                    { href: '/clients', label: 'Clients', active: false },
+                    { href: `/clients/${client.id}`, label: client.client_name, active: false },
+                    { href: '/client-vendor', label: vendor.vendor_name, active: false },
+                    { href: `/clients/${client.id}`, label: 'Back', active: true },
+
+                ]} />
 
                 {/* Enhanced Header with Analytics Toggle */}
                 <div className="d-flex justify-content-between align-items-center mb-4">
@@ -567,7 +574,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                 </Button>
                                                             </>
 
-                                                        ) 
+                                                        )
 
                                                     }
                                                     <Button
@@ -899,7 +906,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
 
                 {/* Payments Table Section */}
                 <div className="mt-5">
-                    <h5>Purchase Section</h5>
+                    <h5>Payment Section</h5>
 
 
                     <Card className="border-0 shadow-sm mt-2">

@@ -12,7 +12,6 @@ use App\Models\PurchaseListPayment;
 use App\Models\Vendor;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -41,6 +40,7 @@ class AdminPurchaseListPaymentController extends Controller
     {
 
         try {
+
 
             DB::beginTransaction();
 

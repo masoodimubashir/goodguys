@@ -19,7 +19,6 @@ use App\Http\Controllers\Admin\AdminPurchaseListPaymentController;
 use App\Http\Controllers\Admin\AdminPurchaseManagmentController;
 use App\Http\Controllers\Admin\AdminReturnListController;
 use App\Http\Controllers\Admin\AdminUsersController;
-use App\Http\Controllers\Admin\AdminVendorController;
 use App\Http\Controllers\Admin\ProjectDocumentController;
 use App\Http\Controllers\Admin\PurchasesItemController;
 use App\Http\Controllers\AdminAdminCompanyProfile;

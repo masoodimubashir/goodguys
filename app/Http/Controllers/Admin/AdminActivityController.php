@@ -127,14 +127,9 @@ class AdminActivityController extends Controller
 
 
         DB::transaction(function () use ($id) {
-
             try {
-
-
-                DB::beginTransaction();
                 // Find the purchased item with its polymorphic relationship
                 $activity = Activity::with('paymentDeleteRefrence')->findOrFail($id);
-
 
                 if ($activity->paymentDeleteRefrence === null) {
                     $activity->delete();
@@ -142,40 +137,51 @@ class AdminActivityController extends Controller
                 }
 
                 $class = $activity->paymentDeleteRefrence->refrence_type;
+                $referenceId = $activity->paymentDeleteRefrence->refrence_id;
+                $purchasedItemId = $activity->paymentDeleteRefrence->purchased_item_id;
 
-                if ($class === ClientAccount::class) {
-                    ClientAccount::find($activity->paymentDeleteRefrence->refrence_id)->delete();
-                    PurchasedItem::find($activity->paymentDeleteRefrence->purchased_item_id)->delete();
-                } else if ($class === PurchaseListPayment::class) {
-                    PurchaseListPayment::find($activity->paymentDeleteRefrence->refrence_id)->delete();
-                    PurchasedItem::find($activity->paymentDeleteRefrence->purchased_item_id)->delete();
-                } else if ($class === ReturnList::class) {
-                    $r = ReturnList::find($activity->paymentDeleteRefrence->refrence_id);
-                    dd($r);
-                    PurchasedItem::find($activity->paymentDeleteRefrence->purchased_item_id)->delete();
-                } elseif ($class === PurchaseList::class) {
+                switch ($class) {
+                    case ClientAccount::class:
+                        ClientAccount::findOrFail($referenceId)->delete();
+                        if ($purchasedItemId) {
+                            PurchasedItem::findOrFail($purchasedItemId)->delete();
+                        }
+                        break;
 
-                    $purchaseList = PurchaseList::find($activity->paymentDeleteRefrence->refrence_id);
-                    // Delete the bill file if it exists
-                    if ($purchaseList->bill && Storage::disk('public')->exists($purchaseList->bill)) {
-                        Storage::disk('public')->delete($purchaseList->bill);
-                    }
+                    case PurchaseListPayment::class:
+                        PurchaseListPayment::findOrFail($referenceId)->delete();
+                        if ($purchasedItemId) {
+                            PurchasedItem::findOrFail($purchasedItemId)->delete();
+                        }
+                        break;
 
-                    $purchaseList->delete();
+                    case ReturnList::class:
+                        ReturnList::findOrFail($referenceId)->delete();
+                        if ($purchasedItemId) {
+                            PurchasedItem::findOrFail($purchasedItemId)->delete();
+                        }
+                        break;
 
-                } elseif ($class === PurchasedItem::class) {
-                    PurchasedItem::find($activity->paymentDeleteRefrence->refrence_id)->delete();
+                    case PurchaseList::class:
+                        $purchaseList = PurchaseList::findOrFail($referenceId);
+                        // Delete the bill file if it exists
+                        if ($purchaseList->bill && Storage::disk('public')->exists($purchaseList->bill)) {
+                            Storage::disk('public')->delete($purchaseList->bill);
+                        }
+                        $purchaseList->delete();
+                        break;
+
+                    case PurchasedItem::class:
+                        PurchasedItem::findOrFail($referenceId)->delete();
+                        break;
                 }
 
                 $activity->delete();
+                return redirect()->back()->with('message', 'Record deleted successfully');
 
-                DB::commit();
-
-                return redirect()->back()->with('message', 'Record deleted...');
             } catch (Exception $e) {
-                Log::error($e->getMessage());
-                DB::rollBack();
-                return redirect()->back()->with('error', 'Failed to delete Record');
+                Log::error('Failed to delete activity: ' . $e->getMessage());
+                return redirect()->back()->with('error', 'Failed to delete the record');
             }
         });
 

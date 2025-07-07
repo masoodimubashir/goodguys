@@ -32,9 +32,6 @@ const Welcome = () => {
 
   const auth = usePage().props.auth;
 
-  console.log(auth);
-  
-
   return (
     <div className="main-wrapper">
       {/* Hero Section */}

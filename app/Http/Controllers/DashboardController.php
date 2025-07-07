@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ChallanRefrence;
 use App\Models\Client;
 use App\Models\Inventory;
 use App\Models\PurchasedItem;

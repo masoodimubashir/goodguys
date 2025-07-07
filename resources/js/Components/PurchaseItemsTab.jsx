@@ -16,10 +16,10 @@ import {
     Minus,
     Trash2
 } from 'lucide-react';
-import DatePicker from 'react-datepicker';
 import { ShowMessage } from './ShowMessage';
 import Swal from 'sweetalert2';
-import Tooltip from './Tooltip';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 
 const PurchaseItemsTab = ({
     filteredItems,
@@ -232,9 +232,11 @@ const PurchaseItemsTab = ({
                             selectsRange={true}
                             startDate={startDate}
                             endDate={endDate}
-                            onChange={(update) => setDateRange(update)}
+                            onChange={(update) => {
+                                setDateRange(update);
+                            }}
                             isClearable={true}
-                            placeholderText="Filter by date range"
+                            placeholderText="Select date range"
                             className="form-control form-control-sm"
                         />
                         {(startDate || endDate) && (
@@ -321,7 +323,7 @@ const PurchaseItemsTab = ({
                                 Narration
                             </div>
                         </th>
-                      
+
                     </tr>
                 </thead>
 
@@ -596,7 +598,7 @@ const PurchaseItemsTab = ({
                                 <td>
                                     <span>{item.narration}</span>
                                 </td>
-                                
+
 
                             </tr>
                         );

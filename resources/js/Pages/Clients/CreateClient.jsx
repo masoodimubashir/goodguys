@@ -48,8 +48,25 @@ export default function CreateClient() {
         });
     };
 
+    
+
     const breadcrumbs = [
-        { href: '/clients', label: 'Back', active: true }
+        {
+            href: '/clients',
+            label: 'clients',
+            active: false
+        },
+        {
+            href: '/clients/create',
+            label: 'Create',
+            active: false,
+        },
+        {
+            href: '/clients',
+            label: 'Back',
+            active: true,
+        }
+
     ];
 
     return (

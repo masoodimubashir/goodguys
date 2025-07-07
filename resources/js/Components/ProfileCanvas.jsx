@@ -29,7 +29,9 @@ const ProfileCanvas = ({ Logo }) => {
             >
                 <img
                     alt="avatar"
-                    className="b-r-50 w-35 bg-dark"
+                    className="b-r-50 bg-dark"
+                    width={30}
+                    height={30}
                     src={Logo}
                 />
             </a>

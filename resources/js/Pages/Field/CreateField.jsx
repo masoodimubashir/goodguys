@@ -4,6 +4,7 @@ import TextInput from "@/Components/TextInput";
 import InputLabel from "@/Components/InputLabel";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
+import BreadCrumbHeader from "@/Components/BreadCrumbHeader";
 
 export default function CreateField() {
     const { data, setData, post, processing, errors } = useForm({
@@ -19,9 +20,36 @@ export default function CreateField() {
         });
     };
 
+    const breadcrumbs = [
+        {
+            href: '/field',
+            label: 'field',
+            active: false
+        },
+        {
+            href: '/field/create',
+            label: 'Create',
+            active: false,
+        },
+        {
+            href: '/field',
+            label: 'Back',
+            active: true,
+        }
+
+    ];
+
     return (
         <AuthenticatedLayout>
             <Head title="Create Field" />
+
+            <div className="d-flex justify-content-between align-items-center">
+
+                <BreadCrumbHeader
+                    breadcrumbs={breadcrumbs}
+                />
+
+            </div>
 
             <div className="row m-1">
                 <div className="col-12">
@@ -38,7 +66,7 @@ export default function CreateField() {
                 </div>
             </div>
 
-            
+
 
             <div className="row">
                 <div className="col-12">

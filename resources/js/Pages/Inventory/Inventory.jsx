@@ -11,9 +11,6 @@ import Swal from "sweetalert2";
 export default function Inventory({ inventories: initialPaginatedData }) {
 
 
-    console.log(initialPaginatedData);
-    
-
     const [paginatedData, setPaginatedData] = useState(initialPaginatedData);
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredData, setFilteredData] = useState(initialPaginatedData.data);
@@ -106,7 +103,7 @@ export default function Inventory({ inventories: initialPaginatedData }) {
     };
 
     const breadcrumbs = [
-        { href: '/inventory', label: 'Inventory', active: true }
+        { href: '/inventory', label: 'Inventory', active: true },
     ];
 
     return (

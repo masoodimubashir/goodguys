@@ -1,5 +1,5 @@
 <!-- Animation css -->
-<link rel="stylesheet" href="{{ asset('assets/vendor/animation/animate.min.css') }}">
+{{-- <link rel="stylesheet" href="{{ asset('assets/vendor/animation/animate.min.css') }}"> --}}
 
 <!-- Fonts -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
@@ -8,26 +8,26 @@
     rel="stylesheet">
 
 <!-- iconoir icon css  -->
-<link href="{{ asset('assets/vendor/ionio-icon/css/iconoir.css') }}" rel="stylesheet">
+{{-- <link href="{{ asset('assets/vendor/ionio-icon/css/iconoir.css') }}" rel="stylesheet"> --}}
 
 <!-- Weather icon css-->
-<link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/weather/weather-icons.css') }}">
-<link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/weather/weather-icons-wind.css') }}">
+{{-- <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/weather/weather-icons.css') }}"> --}}
+{{-- <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/weather/weather-icons-wind.css') }}"> --}}
 
 <!--Flag Icon css-->
-<link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/flag-icons-master/flag-icon.css') }}">
+{{-- <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/flag-icons-master/flag-icon.css') }}"> --}}
 
 <!-- Tabler icons-->
 <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/tabler-icons/tabler-icons.css') }}">
 
 <!-- Prism css-->
-<link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/prism/prism.min.css') }}">
+{{-- <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/prism/prism.min.css') }}"> --}}
 
 <!-- Bootstrap css-->
 <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/bootstrap/bootstrap.min.css') }}">
 
 <!-- Simplebar css-->
-<link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/simplebar/simplebar.css') }}">
+{{-- <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/simplebar/simplebar.css') }}"> --}}
 
 @yield('css')
 

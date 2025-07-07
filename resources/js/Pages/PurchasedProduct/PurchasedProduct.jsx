@@ -1,19 +1,139 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Card, Table, Badge, Form, InputGroup, Row, Col, Collapse, Pagination } from 'react-bootstrap';
+import { Card, Table, Badge, Form, InputGroup, Row, Col, Collapse, Pagination, Spinner } from 'react-bootstrap';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 import { IndianRupee, Percent, Calculator, Search, User, ChevronDown, ChevronUp, FileText, ArrowDown, ArrowUp, CreditCard } from 'lucide-react';
-import { usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { ShowMessage } from '@/Components/ShowMessage';
+import { Button, Modal } from 'react-bootstrap';
+import Tooltip from '@/Components/Tooltip';
 
 export default function PurchasedProduct({ vendor, clientAccounts }) {
-
-    const { flash } = usePage().props;
+    const { flash, errors: serverErrors } = usePage().props;
 
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedClient, setExpandedClient] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [clientsPerPage] = useState(10);
+
+    // Payment Modal State
+    const [showModal, setShowModal] = useState(false);
+    const [paymentData, setPaymentData] = useState({
+        amount: '',
+        created_at: new Date().toISOString().split('T')[0],
+        narration: '',
+        vendor_id: vendor.id,
+        client_id: ''
+    });
+    const [errors, setErrors] = useState({});
+    const [processing, setProcessing] = useState(false);
+
+    const handleOpenPaymentModal = () => {
+        setPaymentData({
+            amount: '',
+            created_at: new Date().toISOString().split('T')[0],
+            narration: '',
+            vendor_id: vendor.id,
+            client_id: ''
+        });
+        setErrors({});
+        setShowModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setErrors({});
+        setProcessing(false);
+    };
+
+    const handlePaymentChange = (e) => {
+        const { name, value } = e.target;
+        setPaymentData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+
+        // Clear error when user types
+        if (errors[name]) {
+            setErrors(prev => ({
+                ...prev,
+                [name]: ''
+            }));
+        }
+    };
+
+    const validatePayment = () => {
+        const newErrors = {};
+        let isValid = true;
+
+        // Validate client selection
+        if (!paymentData.client_id) {
+            newErrors.client_id = 'Please select a client';
+            isValid = false;
+        }
+
+        // Validate amount
+        if (!paymentData.amount || paymentData.amount.trim() === '') {
+            newErrors.amount = 'Amount is required';
+            isValid = false;
+        } else if (isNaN(paymentData.amount)) {
+            newErrors.amount = 'Amount must be a number';
+            isValid = false;
+        } else if (parseFloat(paymentData.amount) <= 0) {
+            newErrors.amount = 'Amount must be greater than 0';
+            isValid = false;
+        } else if (paymentData.client_id) {
+            const selectedClient = clientSummaries.find(c => c.client.id === parseInt(paymentData.client_id));
+            if (selectedClient && parseFloat(paymentData.amount) > selectedClient.balance) {
+                newErrors.amount = `Amount cannot exceed ₹${selectedClient.balance.toLocaleString('en-IN')}`;
+                isValid = false;
+            }
+        }
+
+        // Validate date
+        if (!paymentData.created_at) {
+            newErrors.created_at = 'Date is required';
+            isValid = false;
+        }
+
+        // Validate narration
+        if (!paymentData.narration || paymentData.narration.trim() === '') {
+            newErrors.narration = 'Description is required';
+            isValid = false;
+        } else if (paymentData.narration.length > 200) {
+            newErrors.narration = 'Description must be less than 200 characters';
+            isValid = false;
+        }
+
+        setErrors(newErrors);
+        return isValid;
+    };
+
+    const handlePaymentSubmit = (e) => {
+        e.preventDefault();
+
+        if (!validatePayment()) return;
+
+        setProcessing(true);
+
+        router.post('/purchase-list-payments', paymentData, {
+            onSuccess: () => {
+                ShowMessage('success', 'Payment done..');
+                handleCloseModal();
+            },
+            onError: (errors) => {
+                setErrors(errors);
+                if (errors.balance) {
+                    setErrors(prev => ({
+                        ...prev,
+                        amount: errors.balance
+                    }));
+                }
+                setProcessing(false);
+            },
+            preserveScroll: true
+        });
+    };
 
     // Transform clientAccounts into array and calculate grand totals
     const { clientSummaries, grandTotals } = useMemo(() => {
@@ -50,11 +170,9 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
     useEffect(() => {
         if (flash?.message) {
             ShowMessage('success', flash.message);
-            // Clear the flash message after showing it
         }
         if (flash?.error) {
             ShowMessage('error', flash.error);
-            // Clear the flash message after showing it
         }
     }, [flash]);
 
@@ -77,7 +195,8 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
 
     const breadcrumbs = [
         { href: '/client-vendor', label: 'Parties', active: false },
-        { href: `/client-vendor/${vendor.id}`, label: vendor.vendor_name, active: true }
+        { href: `/client-vendor/${vendor.id}`, label: vendor.vendor_name, active: false },
+        { href: '/client-vendor', label: 'Back', active: true },
     ];
 
     return (
@@ -87,7 +206,7 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
             {/* Analytics Summary Cards */}
             <Row className="g-3 mb-4">
                 <Col md={3}>
-                    <Card className="h-100 border-0 shadow-sm">
+                    <Card className=" border-0 shadow-sm">
                         <Card.Body className="p-3">
                             <div className="d-flex align-items-center">
                                 <div className="bg-primary bg-opacity-10 p-2 rounded me-3">
@@ -102,7 +221,7 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
                     </Card>
                 </Col>
                 <Col md={3}>
-                    <Card className="h-100 border-0 shadow-sm">
+                    <Card className=" border-0 shadow-sm">
                         <Card.Body className="p-3">
                             <div className="d-flex align-items-center">
                                 <div className="bg-danger bg-opacity-10 p-2 rounded me-3">
@@ -117,7 +236,7 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
                     </Card>
                 </Col>
                 <Col md={3}>
-                    <Card className="h-100 border-0 shadow-sm">
+                    <Card className=" border-0 shadow-sm">
                         <Card.Body className="p-3">
                             <div className="d-flex align-items-center">
                                 <div className="bg-success bg-opacity-10 p-2 rounded me-3">
@@ -132,7 +251,7 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
                     </Card>
                 </Col>
                 <Col md={3}>
-                    <Card className="h-100 border-0 shadow-sm">
+                    <Card className=" border-0 shadow-sm">
                         <Card.Body className="p-3">
                             <div className="d-flex align-items-center">
                                 <div className="bg-info bg-opacity-10 p-2 rounded me-3">
@@ -147,6 +266,18 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
                     </Card>
                 </Col>
             </Row>
+
+            <div className='d-flex justify-content-end align-items-center mb-3'>
+                <Tooltip text="Make payment">
+                    <Button
+                        size="sm"
+                        variant="outline-primary"
+                        onClick={handleOpenPaymentModal}
+                    >
+                        Make Payment
+                    </Button>
+                </Tooltip>
+            </div>
 
             {/* Search and Client Table */}
             <Card className="border-0 shadow-sm">
@@ -187,10 +318,6 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
                                     total_returns,
                                     total_payments,
                                     balance,
-                                    purchase_lists,
-                                    serviceRate,
-                                    serviceChargeTotal,
-                                    totalWithService
                                 }) => (
                                     <React.Fragment key={client.id}>
                                         <tr
@@ -209,7 +336,13 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
                                                         <User size={16} />
                                                     </div>
                                                     <div>
-                                                        <strong>{client.client_name}</strong>
+                                                        <Tooltip text={'Click To View Client'}>
+                                                            <strong>
+                                                                <Link href={`/clients/${client.id}`} className="text-primary">
+                                                                    {client.client_name}
+                                                                </Link>
+                                                            </strong>
+                                                        </Tooltip>
                                                         <div className="small text-muted">
                                                             {client.client_email || 'No email'} | {client.client_phone || 'No phone'}
                                                         </div>
@@ -237,41 +370,6 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
                                                 <Collapse in={expandedClient === client.id}>
                                                     <div className="p-3">
                                                         <Row>
-                                                            {/* <Col md={12}>
-                                                                <h6 className="mb-3 d-flex align-items-center">
-                                                                    <FileText size={18} className="me-2" />
-                                                                    Payments
-                                                                </h6>
-                                                                <div className="table-responsive">
-                                                                    <Table bordered size="sm">
-                                                                        <thead>
-                                                                            <tr>
-                                                                                <th>Date</th>
-                                                                                <th>List Name</th>
-                                                                                <th className="text-end">Amount</th>
-                                                                                <th className="text-end">Service</th>
-                                                                                <th className="text-end">Total</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody>
-                                                                            {
-                                                                                purchase_lists.map((list) => (
-                                                                                    <tr key={list.id}>
-                                                                                        <td>{new Date(list.created_at).toLocaleDateString()}</td>
-                                                                                        <td>{list.list_name}</td>
-                                                                                        <td className="text-end">₹{parseFloat(list.total_amount).toLocaleString('en-IN')}</td>
-                                                                                        <td className="text-end">{serviceRate}%</td>
-                                                                                        <td className="text-end fw-bold">
-                                                                                            ₹{(parseFloat(list.total_amount) + (parseFloat(list.total_amount) * serviceRate / 100)).toLocaleString('en-IN')}
-                                                                                        </td>
-                                                                                    </tr>
-                                                                                ))
-
-                                                                            }
-                                                                        </tbody>
-                                                                    </Table>
-                                                                </div>
-                                                            </Col> */}
                                                             <Col md={12}>
                                                                 <h6 className="mb-3 d-flex align-items-center">
                                                                     <CreditCard size={18} className="me-2" />
@@ -283,7 +381,6 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
                                                                             <span>Total Purchases:</span>
                                                                             <strong>₹{total_purchases.toLocaleString('en-IN')}</strong>
                                                                         </div>
-
                                                                         <div className="d-flex justify-content-between mb-2">
                                                                             <span>Total Returns:</span>
                                                                             <strong className="text-danger">₹{total_returns.toLocaleString('en-IN')}</strong>
@@ -351,6 +448,113 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
                     )}
                 </Card.Body>
             </Card>
+
+            {/* Payment Modal */}
+            <Modal show={showModal} onHide={handleCloseModal} backdrop="static" centered>
+                
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <CreditCard size={20} className="me-2" />
+                        Make Payment
+                    </Modal.Title>
+                </Modal.Header>
+
+                <Form onSubmit={handlePaymentSubmit} noValidate>
+                    <Modal.Body>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Select Client</Form.Label>
+                            <Form.Select
+                                name="client_id"
+                                value={paymentData.client_id}
+                                onChange={handlePaymentChange}
+                                isInvalid={!!errors.client_id}
+                                required
+                            >
+                                <option value="">Select a client</option>
+                                {clientSummaries.map(({ client, balance }) => (
+                                    <option key={client.id} value={client.id}>
+                                        {client.client_name} (₹{balance.toLocaleString('en-IN')})
+                                    </option>
+                                ))}
+                            </Form.Select>
+                            <Form.Control.Feedback type="invalid">
+                                {errors.client_id}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label>Amount (₹)</Form.Label>
+                            <Form.Control
+                                type="number"
+                                name="amount"
+                                value={paymentData.amount}
+                                onChange={handlePaymentChange}
+                                isInvalid={!!errors.amount}
+                                placeholder="Enter payment amount"
+                                required
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {errors.amount}
+                            </Form.Control.Feedback>
+                            {paymentData.client_id && (
+                                <small className="text-muted">
+                                    Max payable: ₹{
+                                        clientSummaries.find(c => c.client.id === parseInt(paymentData.client_id))?.balance.toLocaleString('en-IN') || 0
+                                    }
+                                </small>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label>Date</Form.Label>
+                            <Form.Control
+                                type="date"
+                                name="created_at"
+                                value={paymentData.created_at}
+                                onChange={handlePaymentChange}
+                                isInvalid={!!errors.created_at}
+                                required
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {errors.created_at}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label>Description</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={3}
+                                name="narration"
+                                value={paymentData.narration}
+                                onChange={handlePaymentChange}
+                                isInvalid={!!errors.narration}
+                                placeholder="Enter payment description"
+                                required
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {errors.narration}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+                    </Modal.Body>
+
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={handleCloseModal} disabled={processing}>
+                            Cancel
+                        </Button>
+                        <Button variant="primary" type="submit" disabled={processing}>
+                            {processing ? (
+                                <>
+                                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                                    <span className="ms-2">Processing...</span>
+                                </>
+                            ) : (
+                                'Make Payment'
+                            )}
+                        </Button>
+                    </Modal.Footer>
+                </Form>
+            </Modal>
         </AuthenticatedLayout>
     );
 }

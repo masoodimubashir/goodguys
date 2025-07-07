@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreVendorRequest;
 use App\Http\Requests\UpdateVendorRequest;
 use App\Models\Vendor;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class AdminClientVednorsController extends Controller
@@ -33,14 +34,14 @@ class AdminClientVednorsController extends Controller
      */
     public function store(StoreVendorRequest $request)
     {
-        
+
         $validated = $request->validated();
 
         $vendor = Vendor::create(array_merge($validated, [
             'created_by' => auth()->user()->id,
         ]));
 
-        return redirect()->route('client-vendor.show', $vendor->id )
+        return redirect()->route('client-vendor.show', $vendor->id)
             ->with('message', 'Party created successfully');
     }
 
@@ -49,39 +50,40 @@ class AdminClientVednorsController extends Controller
      */
     public function show(string $id)
     {
-        // Load vendor with relationships
+
+
+        DB::enableQueryLog();
+
+
+        // Load vendor with necessary relationships in one query
         $vendor = Vendor::with([
             'purchaseLists.client',
             'purchaseLists.returnLists',
-            'purchaseListPayments'
+            'purchaseListPayments' => function ($query) {
+                $query->select('id', 'client_id', 'vendor_id', 'amount');
+            }
         ])->findOrFail($id);
 
-        // Get paginated purchase lists separately to avoid N+1 issues
-        $paginatedPurchaseLists = $vendor->purchaseLists()->with(['client', 'returnLists'])->paginate(10);
+        // Get all purchase lists (already loaded via eager loading)
+        $purchaseLists = $vendor->purchaseLists;
 
-        // Group all purchase lists by client for calculations
-        $groupedPurchaseLists = $vendor->purchaseLists->groupBy('client_id');
+        // Calculate payments by client using collection methods
+        $paymentsByClient = $vendor->purchaseListPayments
+            ->groupBy('client_id')
+            ->map(fn($payments) => $payments->sum('amount'));
 
-        // Calculate totals for each client
+        // Group purchase lists by client using collection
+        $groupedPurchaseLists = $purchaseLists->groupBy('client_id');
+
+        // Build client accounts
         $clientAccounts = [];
 
         foreach ($groupedPurchaseLists as $clientId => $lists) {
             $client = $lists->first()->client;
 
-            // Calculate total purchases (amount vendor owes client)
             $totalPurchases = $lists->sum('bill_total');
-
-            // Calculate total returns (reduces amount vendor owes)
-            $totalReturns = $lists->flatMap(function ($purchaseList) {
-                return $purchaseList->returnLists;
-            })->sum('price');
-
-            // Calculate total payments (amount vendor has paid to client)
-            $totalPayments = $vendor->purchaseListPayments
-                ->where('client_id', $clientId)
-                ->sum('amount');
-
-            // Calculate current balance (positive means vendor owes client)
+            $totalReturns = $lists->flatMap->returnLists->sum('price');
+            $totalPayments = $paymentsByClient[$clientId] ?? 0;
             $balance = ($totalPurchases - $totalReturns) - $totalPayments;
 
             $clientAccounts[$clientId] = [
@@ -90,9 +92,18 @@ class AdminClientVednorsController extends Controller
                 'total_returns' => $totalReturns,
                 'total_payments' => $totalPayments,
                 'balance' => $balance,
-                'purchase_lists' => $lists
+                'purchase_lists' => $lists,
             ];
         }
+
+        // Paginate the already loaded purchase lists for display
+        $paginatedPurchaseLists = new \Illuminate\Pagination\LengthAwarePaginator(
+            $purchaseLists->forPage(request('page', 1), 10),
+            $purchaseLists->count(),
+            10,
+            request('page', 1),
+            ['path' => request()->url()]
+        );
 
         return Inertia::render('PurchasedProduct/PurchasedProduct', [
             'vendor' => $vendor,

@@ -47,22 +47,46 @@ const CreateClientVendor = () => {
 
 
 
-    const breadcrumbs = [
-        { href: '/client-vendor', label: 'Parties', active: true }
+    
+
+      const breadcrumbs = [
+        {
+            href: '/client-vendor',
+            label: 'Parties',
+            active: false
+        },
+        {
+            href: '/client-vendor/create',
+            label: 'Create',
+            active: false,
+        },
+        {
+            href: '/client-vendor',
+            label: 'Back',
+            active: true,
+        }
+
     ];
+    
 
     return (
         <>
             <Head title="Create Party" />
 
+
             <AuthenticatedLayout>
+
+                
+            <div className="d-flex justify-content-between align-items-center">
+
+                <BreadCrumbHeader
+                    breadcrumbs={breadcrumbs}
+                />
+
+            </div>
                 <div className="row">
 
-                    <div className="d-flex justify-content-between align-items-center">
-                        <BreadCrumbHeader breadcrumbs={breadcrumbs} />
-
-                       
-                    </div>
+                   
 
                     <div className="col-12">
                         <div className="card">

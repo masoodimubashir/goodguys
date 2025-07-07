@@ -83,13 +83,11 @@ class AdminClientsController extends Controller
             'projectDocuments',
         ]);
 
-
         $clientVendorIds = $client->purchaseLists->pluck('vendor_id')->unique();
 
         $clientVendors = Vendor::whereIn('id', $clientVendorIds)
             ->orderBy('vendor_name')
             ->get();
-
 
         $purchase_items = PurchasedItem::where('client_id', $client->id)
             ->orderBy('created_at', 'desc')
@@ -98,7 +96,6 @@ class AdminClientsController extends Controller
         $activities = Activity::where('client_id', $client->id)
             ->orderBy('created_at', 'desc')
             ->get();
-
 
         if ($client->client_type === 'Service Client') {
 

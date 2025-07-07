@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { usePage } from '@inertiajs/react';
 import NavLink from './NavLink';
+import { Box, Boxes, ChevronLeft, ChevronRight, Home, PartyPopper, ShoppingBag, User, UserPlus } from 'lucide-react';
 
 export const SideBar = () => {
 
-    
+
     const { url, props } = usePage();
     const user = props.auth.user;
-    
+
     // State to manage sidebar open/close
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
@@ -17,10 +18,10 @@ export const SideBar = () => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth <= 768);
         };
-        
+
         checkMobile();
         window.addEventListener('resize', checkMobile);
-        
+
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
@@ -51,86 +52,89 @@ export const SideBar = () => {
         <>
             {/* Mobile overlay */}
             {isMobile && isSidebarOpen && (
-                <div 
-                    className="" 
+                <div
+                    className=""
                     onClick={closeSidebar}
-                  
+
                 />
             )}
 
             <nav className={`sidebar ${isMobile ? (isSidebarOpen ? 'sidebar-open' : 'sidebar-closed') : ''}`}>
                 <div className="app-logo">
                     <span className="bg-light-primary toggle-semi-nav" onClick={toggleSidebar}>
-                        <i className={`ti ${isSidebarOpen ? 'ti-chevrons-left' : 'ti-chevrons-right'} f-s-20`}></i>
+                        <i>
+                            {isSidebarOpen ? <ChevronLeft /> : <ChevronRight />}
+                        </i>
+
                     </span>
                 </div>
 
                 <div className="app-nav" id="app-simple-bar">
                     <ul className="main-nav p-0 mt-2">
                         <li>
-                            <NavLink 
-                                active={url === '/dashboard'} 
+                            <NavLink
+                                active={url === '/dashboard'}
                                 href={route('dashboard')}
                                 onClick={() => isMobile && closeSidebar()}
                             >
-                                <i className="iconoir-home-alt"></i>
+                                <Home size={16} />
                                 dashboard
                             </NavLink>
                         </li>
 
                         <li>
-                            <NavLink 
-                                active={url === '/inventory'} 
+                            <NavLink
+                                active={url === '/inventory'}
                                 href='/inventory'
                                 onClick={() => isMobile && closeSidebar()}
                             >
-                                <i className="iconoir-box"></i>
+                                <Box size={16} />
                                 Inventory
                             </NavLink>
                         </li>
 
                         {user.role === 'admin' && (
                             <li>
-                                <NavLink 
-                                    active={url === '/users'} 
+                                <NavLink
+                                    active={url === '/users'}
                                     href='/users'
                                     onClick={() => isMobile && closeSidebar()}
                                 >
-                                    <i className="iconoir-user-badge-check"></i>
+                                    <User size={16} />
                                     Users
                                 </NavLink>
                             </li>
                         )}
 
                         <li>
-                            <NavLink 
-                                active={url === '/clients'} 
+                            <NavLink
+                                active={url === '/clients'}
                                 href='/clients'
                                 onClick={() => isMobile && closeSidebar()}
                             >
-                                <i className="iconoir-user-plus"></i>
+                                <UserPlus size={16} />
                                 Clients
                             </NavLink>
                         </li>
 
                         <li>
-                            <NavLink 
-                                active={url === '/module'} 
+                            <NavLink
+                                active={url === '/module'}
                                 href='/module'
                                 onClick={() => isMobile && closeSidebar()}
                             >
-                                <i className="iconoir-box"></i>
+                                <Boxes size={16} />
                                 Module
                             </NavLink>
                         </li>
 
                         <li>
-                            <NavLink 
-                                active={url === '/client-vendor'} 
+                            <NavLink
+                                active={url === '/client-vendor'}
                                 href='/client-vendor'
                                 onClick={() => isMobile && closeSidebar()}
                             >
-                                <i className="iconoir-user"></i>
+                                <ShoppingBag size={16} />
                                 Parties
                             </NavLink>
                         </li>

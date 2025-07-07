@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputLabel from "@/Components/InputLabel";
 import InputError from "@/Components/InputError";
 import TextInput from "@/Components/TextInput";
+import BreadCrumbHeader from '@/Components/BreadCrumbHeader';
 
 
 export default function Register() {
@@ -20,6 +21,25 @@ export default function Register() {
         });
     };
 
+    const breadcrumbs = [
+        {
+            href: '/users',
+            label: 'users',
+            active: false
+        },
+        {
+            href: '/register',
+            label: 'Create',
+            active: false,
+        },
+        {
+            href: '/users',
+            label: 'Back',
+            active: true,
+        }
+
+    ];
+
     return (
 
         <AuthenticatedLayout>
@@ -27,19 +47,13 @@ export default function Register() {
 
             <Head title="Register" />
 
-            <div className="row m-1">
-                <div className="col-12">
-                    <ul className="app-line-breadcrumbs mb-3">
-                        <li>
-                            <Link href={route('dashboard')} className="f-s-14 f-w-500">
-                                <span><i className="iconoir-home-alt"></i></span>
-                            </Link>
-                        </li>
-                        <li className="active">
-                            <Link href={route('users.index')} className="f-s-14 f-w-500">Back</Link>
-                        </li>
-                    </ul>
-                </div>
+
+            <div className="d-flex justify-content-between align-items-center">
+
+                <BreadCrumbHeader
+                    breadcrumbs={breadcrumbs}
+                />
+
             </div>
 
             <div className="row">
@@ -47,7 +61,7 @@ export default function Register() {
                     <div className="card">
                         <div className="card-body">
                             <form className="app-form" onSubmit={submit}>
-                                
+
                                 <div className="row">
                                     {/* Username */}
                                     <div className="col-md-6">

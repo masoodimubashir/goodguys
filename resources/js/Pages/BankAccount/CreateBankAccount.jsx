@@ -35,8 +35,6 @@ const BankAccountForm = ({ bankAccount = null, clientId }) => {
         setData(field, e.target.files[0] || null);
     };
 
-    console.log(errors);
-
 
     const handleSubmit = (e) => {
         e.preventDefault();

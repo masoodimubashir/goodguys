@@ -1,6 +1,7 @@
 import React from 'react'
 import ProfileCanvas from './ProfileCanvas'
 import Logo from '../../Logo/good_guys.png'
+import { Grid } from 'lucide-react'
 
 export const Header = () => {
     return (
@@ -13,7 +14,7 @@ export const Header = () => {
 
                         <div className="col-6 col-sm-4 d-flex align-items-center header-left p-0">
                             <span className="header-toggle me-3">
-                                <i className="iconoir-view-grid"></i>
+                                <Grid size={16} />
                             </span>
                         </div>
 

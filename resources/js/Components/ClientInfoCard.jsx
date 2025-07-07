@@ -3,7 +3,7 @@ import { Card } from "react-bootstrap";
 
 export const ClientInfoCard = ({ client }) => {
     return (
-        <Card className="shadow-sm border-0 rounded-3 col-md-6">
+        <Card className="shadow-sm border-0 rounded-3">
             <Card.Body className="p-3">
                 {/* Compact Header */}
                 <div className="d-flex align-items-center mb-3">
