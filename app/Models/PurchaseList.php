@@ -77,4 +77,14 @@ class PurchaseList extends Model
     {
         return $this->hasMany(ReturnList::class);
     }
+
+    /**
+     * Get all of the billItemLists for the PurchaseList
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function billItemLists(): HasMany
+    {
+        return $this->hasMany(BillItemList::class);
+    }
 }

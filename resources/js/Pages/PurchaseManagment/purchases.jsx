@@ -7,7 +7,8 @@ import {
     Wallet,
     Save,
     Image,
-    Trash2
+    Trash2,
+    Edit
 } from 'lucide-react';
 import { Card, Table, Form, Button, Badge, ProgressBar, Row, Col, Tooltip, OverlayTrigger } from 'react-bootstrap';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -28,6 +29,12 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
     const [newReturns, setNewReturns] = useState({});
     const [showAnalytics, setShowAnalytics] = useState(true);
     const [animatingCards, setAnimatingCards] = useState(new Set());
+    const [editingItemId, setEditingItemId] = useState(null);
+    const [editedItems, setEditedItems] = useState({});
+    const [newItems, setNewItems] = useState({});
+    const [editingPaymentId, setEditingPaymentId] = useState(null);
+    const [editedPayments, setEditedPayments] = useState({});
+    const [newPayment, setNewPayment] = useState(null);
 
     const totalPurchases = purchases.reduce((sum, p) => sum + parseFloat(p.bill_total || 0), 0);
     const totalReturns = purchases.reduce((sum, p) =>
@@ -66,7 +73,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
             .map(p => Math.floor((new Date() - new Date(p.purchase_date)) / (1000 * 60 * 60 * 24)))) : 0
     };
 
-
     // Animation CSS classes
     const animationClasses = {
         fadeIn: 'animate__animated animate__fadeIn',
@@ -103,6 +109,26 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
 
     const handleNewReturnChange = (purchaseId, field, value) => {
         setNewReturns(prev => ({
+            ...prev,
+            [purchaseId]: {
+                ...(prev[purchaseId] || {}),
+                [field]: value
+            }
+        }));
+    };
+
+    const handleItemChange = (purchaseId, itemId, field, value) => {
+        setEditedItems(prev => ({
+            ...prev,
+            [itemId]: {
+                ...(prev[itemId] || {}),
+                [field]: value
+            }
+        }));
+    };
+
+    const handleNewItemChange = (purchaseId, field, value) => {
+        setNewItems(prev => ({
             ...prev,
             [purchaseId]: {
                 ...(prev[purchaseId] || {}),
@@ -171,39 +197,63 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
         }
     };
 
+    const saveItem = async (purchaseId, item) => {
+        try {
+            triggerCardAnimation(`item-${item.id || 'new'}`);
+            const itemToSave = item.id
+                ? {
+                    ...purchases
+                        .find(p => p.id === purchaseId)
+                        .bill_item_lists.find(i => i.id === item.id),
+                    ...editedItems[item.id]
+                }
+                : item;
 
+            const formData = {
+                purchase_list_id: purchaseId,
+                item_description: itemToSave.item_description,
+                item_price: itemToSave.item_price,
+                item_quantity: itemToSave.item_quantity,
+            };
 
-
-
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-        }).format(amount).replace('₹', '₹ ');
+            if (itemToSave.id) {
+                await router.put(route('bill-items.update', itemToSave.id), formData, {
+                    onSuccess: () => {
+                        ShowMessage('success', 'Item updated successfully');
+                        setEditingItemId(null);
+                        setEditedItems(prev => {
+                            const newState = { ...prev };
+                            delete newState[itemToSave.id];
+                            return newState;
+                        });
+                    },
+                    onError: (errors) => {
+                        ShowMessage('error', 'Failed to update item');
+                        console.error(errors);
+                    }
+                });
+            } else {
+                await router.post(route('bill-items.store'), formData, {
+                    onSuccess: () => {
+                        ShowMessage('success', 'Item created successfully');
+                        setNewItems(prev => {
+                            const copy = { ...prev };
+                            delete copy[purchaseId];
+                            return copy;
+                        });
+                    },
+                    onError: (errors) => {
+                        ShowMessage('error', 'Failed to create item');
+                        console.error(errors);
+                    }
+                });
+            }
+        } catch (error) {
+            ShowMessage('error', 'An unexpected error occurred');
+            console.error(error);
+        }
     };
 
-    const CustomTooltip = ({ children, text }) => (
-        <OverlayTrigger
-            placement="top"
-            overlay={<Tooltip>{text}</Tooltip>}
-        >
-            {children}
-        </OverlayTrigger>
-    );
-
-    const breadcrumbs = [
-        { href: `/clients/${client.id} `, label: 'Back', active: true }
-    ];
-
-
-    const [expandedPayments, setExpandedPayments] = useState([]);
-    const [editingPaymentId, setEditingPaymentId] = useState(null);
-    const [editedPayments, setEditedPayments] = useState({});
-    const [newPayment, setNewPayment] = useState(null);
-
-    // Calculate payment totals
-
-    // Payment handlers
     const handlePaymentChange = (paymentId, field, value) => {
         setEditedPayments(prev => ({
             ...prev,
@@ -236,7 +286,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                 amount: paymentToSave.amount,
                 transaction_date: paymentToSave.transaction_date,
                 narration: paymentToSave.narration,
-                // Add other payment fields as needed
             };
 
             if (paymentToSave.id) {
@@ -281,15 +330,14 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
-            confirmButtonText:
-                'Yes, delete it!',
+            confirmButtonText: 'Yes, delete it!',
             cancelButtonText: 'No, cancel!'
         }).then((result) => {
             if (result.isConfirmed) {
-
                 router.delete(route('purchase-list.destroy', itemId), {
                     preserveScroll: true,
                     onSuccess: (page) => {
+                        ShowMessage('success', 'Item deleted successfully');
                     },
                     onError: (errors) => {
                         const errorMsg = Object.values(errors).join('\n');
@@ -298,21 +346,88 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                 });
             }
         });
-    }
+    };
 
+    const handleDeleteBillItem = (itemId) => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'No, cancel!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(route('bill-items.destroy', { id: itemId }), {
+                    preserveScroll: true,
+                    onSuccess: (page) => {
+                        ShowMessage('success', 'Bill item deleted successfully');
+                    },
+                    onError: (errors) => {
+                        const errorMsg = Object.values(errors).join('\n');
+                        ShowMessage('error', errorMsg || 'Failed to delete bill item');
+                    }
+                });
+            }
+        });
+    };
 
+    const handleDeleteReturn = (returnId) => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'No, cancel!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(route('return-list.destroy', returnId), {
+                    preserveScroll: true,
+                    onSuccess: (page) => {
+                        ShowMessage('success', 'Return deleted successfully');
+                    },
+                    onError: (errors) => {
+                        const errorMsg = Object.values(errors).join('\n');
+                        ShowMessage('error', errorMsg || 'Failed to delete return');
+                    }
+                });
+            }
+        });
+    };
 
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+        }).format(amount).replace('₹', '₹ ');
+    };
+
+    const CustomTooltip = ({ children, text }) => (
+        <OverlayTrigger
+            placement="top"
+            overlay={<Tooltip>{text}</Tooltip>}
+        >
+            {children}
+        </OverlayTrigger>
+    );
+
+    const breadcrumbs = [
+        { href: `/clients/${client.id} `, label: 'Back', active: true }
+    ];
 
     return (
         <AuthenticatedLayout>
             <div>
-
                 <BreadCrumbHeader breadcrumbs={[
                     { href: '/clients', label: 'Clients', active: false },
                     { href: `/clients/${client.id}`, label: client.client_name, active: false },
                     { href: '/client-vendor', label: vendor.vendor_name, active: false },
                     { href: `/clients/${client.id}`, label: 'Back', active: true },
-
                 ]} />
 
                 {/* Enhanced Header with Analytics Toggle */}
@@ -338,105 +453,93 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                 Analytics
                             </Button>
                         </CustomTooltip>
-
                     </div>
-
                 </div>
 
                 {showAnalytics && (
-                    <>
-                        {showAnalytics && (
-                            <div className={`mb-4 ${animationClasses.fadeIn}`}>
-                                {/* Primary Metrics */}
-                                <Row className="g-3 mb-3">
-                                    <Col md={3}>
-                                        <Card className={`border-0 shadow-sm h-100 card-hover gradient-bg  ${animatingCards.has('total-bill') ? 'pulse-animation' : ''}`}>
-                                            <Card.Body className="p-3">
-                                                <div className="d-flex align-items-center justify-content-between">
-                                                    <div>
-                                                        <h6 className="-50 mb-1">Total Bill Amount</h6>
-                                                        <h6 className="mb-0 fw-bold">{formatCurrency(analytics.totalPurchases)}</h6>
+                    <div className={`mb-4 ${animationClasses.fadeIn}`}>
+                        {/* Primary Metrics */}
+                        <Row className="g-3 mb-3">
+                            <Col md={3}>
+                                <Card className={`border-0 shadow-sm h-100 card-hover gradient-bg  ${animatingCards.has('total-bill') ? 'pulse-animation' : ''}`}>
+                                    <Card.Body className="p-3">
+                                        <div className="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <h6 className="-50 mb-1">Total Bill Amount</h6>
+                                                <h6 className="mb-0 fw-bold">{formatCurrency(analytics.totalPurchases)}</h6>
+                                            </div>
+                                            <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
+                                                <Receipt size={28} className="" />
+                                            </div>
+                                        </div>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
 
-                                                    </div>
-                                                    <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
-                                                        <Receipt size={28} className="" />
-                                                    </div>
+                            <Col md={3}>
+                                <Card className={`border-0 shadow-sm h-100 card-hover gradient-warning  ${animatingCards.has('total-returns') ? 'pulse-animation' : ''}`}>
+                                    <Card.Body className="p-3">
+                                        <div className="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <h6 className="-50 mb-1">Total Returns</h6>
+                                                <h6 className="mb-0 fw-bold">{formatCurrency(analytics.totalReturns)}</h6>
+                                            </div>
+                                            <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
+                                                <Package size={28} className="" />
+                                            </div>
+                                        </div>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+
+                            <Col md={3}>
+                                <Card className={`border-0 shadow-sm h-100 card-hover gradient-success  ${animatingCards.has('total-payments') ? 'pulse-animation' : ''}`}>
+                                    <Card.Body className="p-3">
+                                        <div className="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <h6 className="-50 mb-1">Total Payments</h6>
+                                                <h6 className="mb-0 fw-bold">{formatCurrency(analytics.totalPayments)}</h6>
+                                                <small className="-75">
+                                                    <Banknote size={12} className="me-1" />
+                                                    {purchaseListPayments.length} payments
+                                                </small>
+                                            </div>
+                                            <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
+                                                <Banknote size={28} className="" />
+                                            </div>
+                                        </div>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+
+                            <Col md={3}>
+                                <Card className={`border-0 shadow-sm h-100 card-hover gradient-info  ${animatingCards.has('remaining') ? 'pulse-animation' : ''}`}>
+                                    <Card.Body className="p-3">
+                                        <div className="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <h6 className="-50 mb-1">Remaining Balance</h6>
+                                                <h6 className={`mb-0 fw-bold ${analytics.remainingBalance < 0 ? 'text-danger' : ''}`}>
+                                                    {formatCurrency(analytics.remainingBalance)}
+                                                </h6>
+                                                <div className="mt-2">
+                                                    <ProgressBar
+                                                        now={Math.min(analytics.paymentProgress, 100)}
+                                                        variant={analytics.paymentProgress > 100 ? 'danger' : 'success'}
+                                                        className="progress-animated"
+                                                        style={{ height: '4px' }}
+                                                    />
                                                 </div>
-                                            </Card.Body>
-                                        </Card>
-                                    </Col>
-
-                                    <Col md={3}>
-                                        <Card className={`border-0 shadow-sm h-100 card-hover gradient-warning  ${animatingCards.has('total-returns') ? 'pulse-animation' : ''}`}>
-                                            <Card.Body className="p-3">
-                                                <div className="d-flex align-items-center justify-content-between">
-                                                    <div>
-                                                        <h6 className="-50 mb-1">Total Returns</h6>
-                                                        <h6 className="mb-0 fw-bold">{formatCurrency(analytics.totalReturns)}</h6>
-
-                                                    </div>
-                                                    <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
-                                                        <Package size={28} className="" />
-                                                    </div>
-                                                </div>
-                                            </Card.Body>
-                                        </Card>
-                                    </Col>
-
-                                    <Col md={3}>
-                                        <Card className={`border-0 shadow-sm h-100 card-hover gradient-success  ${animatingCards.has('total-payments') ? 'pulse-animation' : ''}`}>
-                                            <Card.Body className="p-3">
-                                                <div className="d-flex align-items-center justify-content-between">
-                                                    <div>
-                                                        <h6 className="-50 mb-1">Total Payments</h6>
-                                                        <h6 className="mb-0 fw-bold">{formatCurrency(analytics.totalPayments)}</h6>
-                                                        <small className="-75">
-                                                            <Banknote size={12} className="me-1" />
-                                                            {purchaseListPayments.length} payments
-                                                        </small>
-                                                    </div>
-                                                    <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
-                                                        <Banknote size={28} className="" />
-                                                    </div>
-                                                </div>
-                                            </Card.Body>
-                                        </Card>
-                                    </Col>
-
-                                    <Col md={3}>
-                                        <Card className={`border-0 shadow-sm h-100 card-hover gradient-info  ${animatingCards.has('remaining') ? 'pulse-animation' : ''}`}>
-                                            <Card.Body className="p-3">
-                                                <div className="d-flex align-items-center justify-content-between">
-                                                    <div>
-                                                        <h6 className="-50 mb-1">Remaining Balance</h6>
-                                                        <h6 className={`mb-0 fw-bold ${analytics.remainingBalance < 0 ? 'text-danger' : ''}`}>
-                                                            {formatCurrency(analytics.remainingBalance)}
-                                                        </h6>
-                                                        <div className="mt-2">
-                                                            <ProgressBar
-                                                                now={Math.min(analytics.paymentProgress, 100)}
-                                                                variant={analytics.paymentProgress > 100 ? 'danger' : 'success'}
-                                                                className="progress-animated"
-                                                                style={{ height: '4px' }}
-                                                            />
-
-                                                        </div>
-                                                    </div>
-                                                    <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
-                                                        <Wallet size={28} className="" />
-                                                    </div>
-                                                </div>
-                                            </Card.Body>
-                                        </Card>
-                                    </Col>
-                                </Row>
-                            </div>
-                        )}
-                    </>
-
-
+                                            </div>
+                                            <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
+                                                <Wallet size={28} className="" />
+                                            </div>
+                                        </div>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        </Row>
+                    </div>
                 )}
-
 
                 {/* Enhanced Purchases Table */}
                 <div className={`border-0 ${animationClasses.slideInUp} mb-5`}>
@@ -445,7 +548,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                         <thead className="table-light">
                             <tr>
                                 <th style={{ width: '40px' }}></th>
-
                                 <th>
                                     <div className="d-flex align-items-center gap-2">
                                         <FileText size={14} />
@@ -465,8 +567,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                     </div>
                                 </th>
                                 <th>Actions</th>
-
-
                             </tr>
                         </thead>
 
@@ -475,6 +575,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                 const remaining = getRemainingBudget(purchase);
                                 const isExpanded = expandedPurchases.includes(purchase.id);
                                 const returns = purchase.return_lists || [];
+                                const billItems = purchase.bill_item_lists || [];
                                 const purchaseProgress = purchase.bill_total > 0 ?
                                     ((parseFloat(purchase.bill_total) - remaining) / parseFloat(purchase.bill_total)) * 100 : 0;
 
@@ -536,60 +637,49 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                             </td>
                                             <td>
                                                 <div className="d-flex align-items-center gap-2">
-
-                                                    {
-                                                        purchase.bill && (
-                                                            <>
-                                                                <Button
-                                                                    variant="outline-primary"
-                                                                    size="sm"
-                                                                    className="d-flex align-items-center gap-1"
-                                                                    onClick={() => {
-                                                                        // Handle both new previews and existing files
-                                                                        const url = purchase.bill.startsWith('http')
-                                                                            ? purchase.bill
-                                                                            : `/storage/${purchase.bill}`;
-                                                                        window.open(url, '_blank');
-                                                                    }}
-                                                                >
-                                                                    {purchase.bill.endsWith('.pdf') ? (
-                                                                        <FileText size={14} />
-                                                                    ) : (
-                                                                        <Image size={14} />
-                                                                    )}
-                                                                </Button>
-                                                                <Button
-                                                                    variant="outline-secondary"
-                                                                    size="sm"
-                                                                    className="d-flex align-items-center gap-1"
-                                                                    onClick={() => {
-                                                                        // Trigger download instead of just viewing
-                                                                        const url = purchase.bill.startsWith('http')
-                                                                            ? purchase.bill
-                                                                            : `/purchase-list/${purchase.id}/download`;
-                                                                        window.open(url, '_blank');
-                                                                    }}
-                                                                >
-                                                                    <Download size={14} />
-                                                                </Button>
-                                                            </>
-
-                                                        )
-
-                                                    }
+                                                    {purchase.bill && (
+                                                        <>
+                                                            <Button
+                                                                variant="outline-primary"
+                                                                size="sm"
+                                                                className="d-flex align-items-center gap-1"
+                                                                onClick={() => {
+                                                                    const url = purchase.bill.startsWith('http')
+                                                                        ? purchase.bill
+                                                                        : `/storage/${purchase.bill}`;
+                                                                    window.open(url, '_blank');
+                                                                }}
+                                                            >
+                                                                {purchase.bill.endsWith('.pdf') ? (
+                                                                    <FileText size={14} />
+                                                                ) : (
+                                                                    <Image size={14} />
+                                                                )}
+                                                            </Button>
+                                                            <Button
+                                                                variant="outline-secondary"
+                                                                size="sm"
+                                                                className="d-flex align-items-center gap-1"
+                                                                onClick={() => {
+                                                                    const url = purchase.bill.startsWith('http')
+                                                                        ? purchase.bill
+                                                                        : `/purchase-list/${purchase.id}/download`;
+                                                                    window.open(url, '_blank');
+                                                                }}
+                                                            >
+                                                                <Download size={14} />
+                                                            </Button>
+                                                        </>
+                                                    )}
                                                     <Button
                                                         variant="link"
                                                         className="text-danger p-0"
                                                         onClick={() => handleDeleteItem(purchase.id)}
                                                         title="Delete item"
                                                     >
-                                                        <>
-                                                            <Trash2 size={20} />
-                                                        </>
-
+                                                        <Trash2 size={20} />
                                                     </Button>
                                                 </div>
-
                                             </td>
                                         </tr>
 
@@ -597,10 +687,279 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                             <tr className="fade-in">
                                                 <td colSpan={7} className="p-0">
                                                     <div className="p-4">
+                                                        {/* Bill Items Section */}
+                                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                                            <h6 className="mb-0 fw-bold d-flex align-items-center gap-2">
+                                                                <FileText size={16} className="text-primary" />
+                                                                Bill Items
+                                                                <Badge bg="primary" className="ms-2">
+                                                                    {billItems.length} items
+                                                                </Badge>
+                                                            </h6>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="primary"
+                                                                className="d-flex align-items-center gap-2 bounce-in"
+                                                                onClick={() => {
+                                                                    setNewItems(prev => ({
+                                                                        ...prev,
+                                                                        [purchase.id]: {
+                                                                            purchase_list_id: purchase.id,
+                                                                            item_description: '',
+                                                                            item_priceprice: 0,
+                                                                            item_quantity: 1,
+                                                                        }
+                                                                    }));
+                                                                }}
+                                                            >
+                                                                <Plus size={12} />
+                                                                Add Item
+                                                            </Button>
+                                                        </div>
+
+                                                        <Card className="border-0 shadow-sm mb-4">
+                                                            <Table hover responsive className="mb-0">
+                                                                <thead className="table-primary">
+                                                                    <tr>
+                                                                        <th>#</th>
+                                                                        <th>Item Name</th>
+                                                                        <th>Price</th>
+                                                                        <th>Quantity</th>
+                                                                        <th>Total</th>
+                                                                        <th>Actions</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {billItems.map((item, itemIndex) => {
+                                                                        const isEditing = editingItemId === item.id;
+                                                                        const itemTotal = isEditing
+                                                                            ? (editedItems[item.id]?.item_price || item.item_price) *
+                                                                            (editedItems[item.id]?.item_quantity || item.item_quantity)
+                                                                            : item.item_price * item.item_quantity;
+
+                                                                        return (
+                                                                            <tr key={item.id}>
+                                                                                <td>{itemIndex + 1}</td>
+                                                                                <td>
+                                                                                    {isEditing ? (
+                                                                                        <Form.Control
+                                                                                            size="sm"
+                                                                                            type="text"
+                                                                                            value={editedItems[item.id]?.item_description || item.item_description}
+                                                                                            onChange={(e) => handleItemChange(
+                                                                                                purchase.id,
+                                                                                                item.id,
+                                                                                                'item_description',
+                                                                                                e.target.value
+                                                                                            )}
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <div className="fw-medium">{item.item_description}</div>
+                                                                                    )}
+                                                                                </td>
+                                                                                <td>
+                                                                                    {isEditing ? (
+                                                                                        <Form.Control
+                                                                                            size="sm"
+                                                                                            type="number"
+                                                                                            min="0"
+                                                                                            value={editedItems[item.id]?.item_price || item.item_price}
+                                                                                            onChange={(e) => handleItemChange(
+                                                                                                purchase.id,
+                                                                                                item.id,
+                                                                                                'item_price',
+                                                                                                e.target.value
+                                                                                            )}
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <div className="fw-bold">{item.item_price}</div>
+                                                                                    )}
+                                                                                </td>
+                                                                                <td>
+                                                                                    {isEditing ? (
+                                                                                        <Form.Control
+                                                                                            size="sm"
+                                                                                            type="number"
+                                                                                            min="1"
+                                                                                            value={editedItems[item.id]?.item_quantity || item.item_quantity}
+                                                                                            onChange={(e) => handleItemChange(
+                                                                                                purchase.id,
+                                                                                                item.id,
+                                                                                                'item_quantity',
+                                                                                                e.target.value
+                                                                                            )}
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <div>{item.item_quantity}</div>
+                                                                                    )}
+                                                                                </td>
+                                                                                <td className="fw-bold text-primary">
+                                                                                    {(itemTotal)}
+                                                                                </td>
+
+                                                                                <td>
+                                                                                    <div className="d-flex gap-1">
+                                                                                        {isEditing ? (
+                                                                                            <>
+                                                                                                <Button
+                                                                                                    size="sm"
+                                                                                                    variant="success"
+                                                                                                    onClick={() => saveItem(purchase.id, {
+                                                                                                        ...item,
+                                                                                                        ...editedItems[item.id]
+                                                                                                    })}
+                                                                                                >
+                                                                                                    <Save size={12} />
+                                                                                                </Button>
+                                                                                                <Button
+                                                                                                    size="sm"
+                                                                                                    variant="outline-secondary"
+                                                                                                    onClick={() => {
+                                                                                                        setEditingItemId(null);
+                                                                                                        setEditedItems(prev => {
+                                                                                                            const newState = { ...prev };
+                                                                                                            delete newState[item.id];
+                                                                                                            return newState;
+                                                                                                        });
+                                                                                                    }}
+                                                                                                >
+                                                                                                    <XCircle size={12} />
+                                                                                                </Button>
+                                                                                            </>
+                                                                                        ) : (
+                                                                                            <>
+                                                                                                <Button
+                                                                                                    size="sm"
+                                                                                                    variant="link"
+                                                                                                    className='text-primary'
+                                                                                                    onClick={() => {
+                                                                                                        setEditingItemId(item.id);
+                                                                                                        setEditedItems(prev => ({
+                                                                                                            ...prev,
+                                                                                                            [item.id]: {
+                                                                                                                ...item
+                                                                                                            }
+                                                                                                        }));
+                                                                                                    }}
+                                                                                                >
+                                                                                                    <Edit size={18} />
+                                                                                                </Button>
+                                                                                                <Button
+                                                                                                    size="sm"
+                                                                                                    variant="link"
+                                                                                                    className='text-danger'
+                                                                                                  
+                                                                                                >
+                                                                                                    <Trash2 size={18}   onClick={() => handleDeleteBillItem(item.id)} />
+                                                                                                </Button>
+                                                                                            </>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </td>
+                                                                            </tr>
+                                                                        );
+                                                                    })}
+
+                                                                    {/* New Item Row */}
+                                                                    {newItems[purchase.id] && (
+                                                                        <tr className="table-primary">
+                                                                            <td>#</td>
+                                                                            <td>
+                                                                                <Form.Control
+                                                                                    size="sm"
+                                                                                    type="text"
+                                                                                    placeholder="Item name"
+                                                                                    value={newItems[purchase.id]?.item_description || ''}
+                                                                                    onChange={(e) => handleNewItemChange(
+                                                                                        purchase.id,
+                                                                                        'item_description',
+                                                                                        e.target.value
+                                                                                    )}
+                                                                                />
+                                                                            </td>
+                                                                            <td>
+                                                                                <Form.Control
+                                                                                    size="sm"
+                                                                                    type="number"
+                                                                                    min="0"
+                                                                                    placeholder="Price"
+                                                                                    value={newItems[purchase.id]?.item_price || ''}
+                                                                                    onChange={(e) => handleNewItemChange(
+                                                                                        purchase.id,
+                                                                                        'item_price',
+                                                                                        e.target.value
+                                                                                    )}
+                                                                                />
+                                                                            </td>
+                                                                            <td>
+                                                                                <Form.Control
+                                                                                    size="sm"
+                                                                                    type="number"
+                                                                                    min="1"
+                                                                                    placeholder="Quantity"
+                                                                                    value={newItems[purchase.id]?.item_quantity || ''}
+                                                                                    onChange={(e) => handleNewItemChange(
+                                                                                        purchase.id,
+                                                                                        'item_quantity',
+                                                                                        e.target.value
+                                                                                    )}
+                                                                                />
+                                                                            </td>
+                                                                            <td className="fw-bold text-primary">
+                                                                                {formatCurrency(
+                                                                                    (newItems[purchase.id]?.item_price || 0) *
+                                                                                    (newItems[purchase.id]?.item_quantity || 1)
+                                                                                )}
+                                                                            </td>
+                                                                         
+                                                                            <td>
+                                                                                <div className="d-flex gap-1">
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        variant="success"
+                                                                                        onClick={() => saveItem(purchase.id, newItems[purchase.id])}
+                                                                                        disabled={!newItems[purchase.id]?.item_description ||
+                                                                                            !newItems[purchase.id]?.item_price ||
+                                                                                            !newItems[purchase.id]?.item_quantity}
+                                                                                    >
+                                                                                        <Save size={12} />
+                                                                                    </Button>
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        variant="outline-secondary"
+                                                                                        onClick={() => setNewItems(prev => {
+                                                                                            const copy = { ...prev };
+                                                                                            delete copy[purchase.id];
+                                                                                            return copy;
+                                                                                        })}
+                                                                                    >
+                                                                                        <XCircle size={12} />
+                                                                                    </Button>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    )}
+
+                                                                    {/* Empty State for Bill Items */}
+                                                                    {billItems.length === 0 && !newItems[purchase.id] && (
+                                                                        <tr>
+                                                                            <td colSpan={7} className="text-center py-4">
+                                                                                <div className="text-muted">
+                                                                                    <FileText size={32} className="mb-2 opacity-50" />
+                                                                                    <p className="mb-0">No bill items recorded</p>
+                                                                                    <small>Click "Add Item" to add items to this bill</small>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    )}
+                                                                </tbody>
+                                                            </Table>
+                                                        </Card>
+
                                                         {/* Enhanced Returns Section */}
                                                         <div className="d-flex justify-content-between align-items-center mb-3">
                                                             <h6 className="mb-0 fw-bold d-flex align-items-center gap-2">
-                                                                <RotateCcw size={16} className="text-black" />
+                                                                <RotateCcw size={16} className="text-warning" />
                                                                 Return History
                                                                 <Badge bg="warning" className="ms-2">
                                                                     {returns.length} returns
@@ -632,30 +991,10 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                             <Table hover responsive className="mb-0">
                                                                 <thead className="table-warning">
                                                                     <tr>
-                                                                        <th>
-                                                                            <div className="d-flex align-items-center gap-2">
-                                                                                <Calendar size={14} />
-                                                                                Return Date
-                                                                            </div>
-                                                                        </th>
-                                                                        <th>
-                                                                            <div className="d-flex align-items-center gap-2">
-                                                                                <Package size={14} />
-                                                                                Item Name
-                                                                            </div>
-                                                                        </th>
-                                                                        <th>
-                                                                            <div className="d-flex align-items-center gap-2">
-                                                                                <IndianRupee size={14} />
-                                                                                Price
-                                                                            </div>
-                                                                        </th>
-                                                                        <th>
-                                                                            <div className="d-flex align-items-center gap-2">
-                                                                                <FileText size={14} />
-                                                                                Narration
-                                                                            </div>
-                                                                        </th>
+                                                                        <th>Date</th>
+                                                                        <th>Item Name</th>
+                                                                        <th>Price</th>
+                                                                        <th>Description</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
@@ -663,7 +1002,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                         const isEditingReturn = editingReturnId === returnItem.id;
 
                                                                         return (
-                                                                            <tr key={returnItem.id} >
+                                                                            <tr key={returnItem.id}>
                                                                                 <td>
                                                                                     {isEditingReturn ? (
                                                                                         <Form.Control
@@ -676,7 +1015,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                                                 'return_date',
                                                                                                 e.target.value
                                                                                             )}
-                                                                                            className="fade-in"
                                                                                         />
                                                                                     ) : (
                                                                                         <div>
@@ -702,7 +1040,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                                                 'item_name',
                                                                                                 e.target.value
                                                                                             )}
-                                                                                            className="fade-in"
                                                                                         />
                                                                                     ) : (
                                                                                         <div className="text-truncate fw-medium" style={{ maxWidth: '200px' }}>
@@ -723,7 +1060,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                                                 'price',
                                                                                                 e.target.value
                                                                                             )}
-                                                                                            className="fade-in"
                                                                                         />
                                                                                     ) : (
                                                                                         <span className="fw-bold text-warning">
@@ -744,7 +1080,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                                                 'narration',
                                                                                                 e.target.value
                                                                                             )}
-                                                                                            className="fade-in"
                                                                                         />
                                                                                     ) : (
                                                                                         <div className="text-truncate" style={{ maxWidth: '200px' }}>
@@ -752,14 +1087,49 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                                         </div>
                                                                                     )}
                                                                                 </td>
-
+                                                                                <td>
+                                                                                    <div className="d-flex gap-1">
+                                                                                        {isEditingReturn ? (
+                                                                                            <>
+                                                                                                <Button
+                                                                                                    size="sm"
+                                                                                                    variant="success"
+                                                                                                    onClick={() => saveReturn(purchase.id, {
+                                                                                                        ...returnItem,
+                                                                                                        ...editedReturns[returnItem.id]
+                                                                                                    })}
+                                                                                                >
+                                                                                                    <Save size={12} />
+                                                                                                </Button>
+                                                                                                <Button
+                                                                                                    size="sm"
+                                                                                                    variant="outline-secondary"
+                                                                                                    onClick={() => {
+                                                                                                        setEditingReturnId(null);
+                                                                                                        setEditedReturns(prev => {
+                                                                                                            const newState = { ...prev };
+                                                                                                            delete newState[returnItem.id];
+                                                                                                            return newState;
+                                                                                                        });
+                                                                                                    }}
+                                                                                                >
+                                                                                                    <XCircle size={12} />
+                                                                                                </Button>
+                                                                                            </>
+                                                                                        ) : (
+                                                                                            <>
+                                                                                              
+                                                                                            </>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </td>
                                                                             </tr>
                                                                         );
                                                                     })}
 
                                                                     {/* New Return Row */}
                                                                     {newReturns[purchase.id] && (
-                                                                        <tr className="table-warning bounce-in">
+                                                                        <tr className="table-warning">
                                                                             <td>
                                                                                 <Form.Control
                                                                                     size="sm"
@@ -816,30 +1186,25 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                             </td>
                                                                             <td>
                                                                                 <div className="d-flex gap-1">
-                                                                                    <CustomTooltip text="Save Return">
-                                                                                        <Button
-                                                                                            size="sm"
-                                                                                            variant="success"
-                                                                                            onClick={() => saveReturn(purchase.id, newReturns[purchase.id])}
-                                                                                            disabled={!newReturns[purchase.id]?.price || !newReturns[purchase.id]?.return_date || !newReturns[purchase.id]?.item_name}
-                                                                                            className="bounce-in"
-                                                                                        >
-                                                                                            <Save size={12} />
-                                                                                        </Button>
-                                                                                    </CustomTooltip>
-                                                                                    <CustomTooltip text="Cancel">
-                                                                                        <Button
-                                                                                            size="sm"
-                                                                                            variant="outline-secondary"
-                                                                                            onClick={() => setNewReturns(prev => {
-                                                                                                const copy = { ...prev };
-                                                                                                delete copy[purchase.id];
-                                                                                                return copy;
-                                                                                            })}
-                                                                                        >
-                                                                                            <XCircle size={12} />
-                                                                                        </Button>
-                                                                                    </CustomTooltip>
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        variant="success"
+                                                                                        onClick={() => saveReturn(purchase.id, newReturns[purchase.id])}
+                                                                                        disabled={!newReturns[purchase.id]?.price || !newReturns[purchase.id]?.return_date || !newReturns[purchase.id]?.item_name}
+                                                                                    >
+                                                                                        <Save size={12} />
+                                                                                    </Button>
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        variant="outline-secondary"
+                                                                                        onClick={() => setNewReturns(prev => {
+                                                                                            const copy = { ...prev };
+                                                                                            delete copy[purchase.id];
+                                                                                            return copy;
+                                                                                        })}
+                                                                                    >
+                                                                                        <XCircle size={12} />
+                                                                                    </Button>
                                                                                 </div>
                                                                             </td>
                                                                         </tr>
@@ -907,31 +1272,15 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                 {/* Payments Table Section */}
                 <div className="mt-5">
                     <h5>Payment Section</h5>
-
-
                     <Card className="border-0 shadow-sm mt-2">
                         <Table hover responsive className="mb-0">
                             <thead className="table-success">
                                 <tr>
                                     <th>#</th>
-                                    <th>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <Calendar size={14} />
-                                            Date
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <IndianRupee size={14} />
-                                            Amount
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <FileText size={14} />
-                                            Narration
-                                        </div>
-                                    </th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -980,8 +1329,63 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                     payment.narration || 'No description'
                                                 )}
                                             </td>
-
-
+                                            <td>
+                                                <div className="d-flex gap-1">
+                                                    {isEditing ? (
+                                                        <>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="success"
+                                                                onClick={() => savePayment({
+                                                                    ...payment,
+                                                                    ...editedPayments[payment.id]
+                                                                })}
+                                                            >
+                                                                <Save size={12} />
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline-secondary"
+                                                                onClick={() => {
+                                                                    setEditingPaymentId(null);
+                                                                    setEditedPayments(prev => {
+                                                                        const newState = { ...prev };
+                                                                        delete newState[payment.id];
+                                                                        return newState;
+                                                                    });
+                                                                }}
+                                                            >
+                                                                <XCircle size={12} />
+                                                            </Button>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline-success"
+                                                                onClick={() => {
+                                                                    setEditingPaymentId(payment.id);
+                                                                    setEditedPayments(prev => ({
+                                                                        ...prev,
+                                                                        [payment.id]: {
+                                                                            ...payment
+                                                                        }
+                                                                    }));
+                                                                }}
+                                                            >
+                                                                <Edit size={12} />
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline-danger"
+                                                                onClick={() => handleDeleteReturn(payment.id)}
+                                                            >
+                                                                <Trash2 size={12} />
+                                                            </Button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </td>
                                         </tr>
                                     );
                                 })}
@@ -1017,7 +1421,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                 placeholder="Payment description..."
                                             />
                                         </td>
-                                        <td></td>
                                         <td>
                                             <div className="d-flex gap-2">
                                                 <Button
@@ -1042,7 +1445,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
 
                                 {purchaseListPayments.length === 0 && !newPayment && (
                                     <tr>
-                                        <td colSpan={6} className="text-center py-4">
+                                        <td colSpan={5} className="text-center py-4">
                                             <div className="text-muted">
                                                 <Banknote size={32} className="mb-2 opacity-50" />
                                                 <p className="mb-0">No payments recorded</p>
@@ -1053,17 +1456,9 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                             </tbody>
                         </Table>
                     </Card>
-
-
                 </div>
-
-
-
-
-
             </div>
-
-        </AuthenticatedLayout >
+        </AuthenticatedLayout>
     );
 };
 

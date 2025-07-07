@@ -134,6 +134,19 @@ export default function ShowServiceClient({
         setFilteredItems(results);
     }, [searchTerm, dateRange, purchaseItems]);
 
+    useEffect(() => {
+        if (flash.message) {
+            ShowMessage('success', flash.message);
+            // Clear the flash message
+            router.reload({ only: [], preserveScroll: true, preserveState: true });
+        }
+        if (flash.error) {
+            ShowMessage('error', flash.error);
+            // Clear the flash message
+            router.reload({ only: [], preserveScroll: true, preserveState: true });
+        }
+    }, [flash]);
+
     const calculateAnalytics = () => {
         const returns = filteredItems
             .filter(item => item.payment_flow === null)

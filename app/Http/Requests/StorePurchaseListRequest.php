@@ -29,6 +29,7 @@ class StorePurchaseListRequest extends FormRequest
             'bill' => 'nullable|file|mimes:jpg,pdf|max:2048',
             'bill_total' => 'required|integer|min:0',
             'bill_description' => 'nullable|string|max:1000',
+            'items' => 'nullable|array|min:1'
         ];
     }
 

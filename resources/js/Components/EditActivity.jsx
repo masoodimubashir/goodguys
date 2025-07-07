@@ -32,7 +32,6 @@ const EditActivity = ({
     });
 
 
-
     const [previewUrl, setPreviewUrl] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const fileInputRef = useRef(null);

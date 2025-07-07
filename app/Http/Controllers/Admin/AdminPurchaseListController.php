@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePurchaseListRequest;
 use App\Http\Requests\UpdatePurchaseListRequest;
 use App\Models\Activity;
+use App\Models\BillItemList;
 use App\Models\ClientAccount;
 use App\Models\PaymentDeleteRefrence;
 use App\Models\PurchaseList;
@@ -36,23 +37,56 @@ class AdminPurchaseListController extends Controller
         $client_id = $request->client_id;
         $vendor_id = $request->vendor_id;
 
-        $vendor = Vendor::findOrFail($vendor_id);
+        // 1. Get vendor with minimal data
+        $vendor = Vendor::select(['id', 'vendor_name'])
+            ->findOrFail($vendor_id);
 
-
-        // 1. Get all PurchaseLists for this vendor and client (with returnLists and client)
-        $purchaseLists = PurchaseList::with(['returnLists', 'client'])
+        // 2. Optimized purchase lists query with eager loading
+        $purchaseLists = PurchaseList::query()
+            ->with([
+                'returnLists:id,purchase_list_id,return_date,item_name,price,narration',
+                'client:id,client_name,client_phone,client_address',
+                'billItemLists:id,purchase_list_id,item_description,item_quantity,item_price'
+            ])
             ->where('client_id', $client_id)
             ->where('vendor_id', $vendor_id)
+            ->select([
+                'id',
+                'client_id',
+                'vendor_id',
+                'list_name',
+                'purchase_date',
+                'bill_total',
+                'bill_description',
+                'bill',
+                'created_at'
+            ])
             ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
-        // 2. Get PurchaseListPayments for this vendor that also match the given client
+        // 3. Optimized payments query
         $purchaseListPayments = PurchaseListPayment::query()
             ->where('vendor_id', $vendor_id)
             ->where('client_id', $client_id)
+            ->select([
+                'id',
+                'client_id',
+                'vendor_id',
+                'amount',
+                'transaction_date',
+                'narration',
+                'created_at'
+            ])
             ->orderBy('created_at', 'desc')
             ->get();
+
+        // 4. Optimized client account totals (single query)
+        $clientAccountTotals = ClientAccount::query()
+            ->where('client_id', $client_id)
+            ->selectRaw('SUM(CASE WHEN payment_flow = 1 THEN amount ELSE 0 END) as in_total')
+            ->selectRaw('SUM(CASE WHEN payment_flow = 0 THEN amount ELSE 0 END) as out_total')
+            ->first();
 
         return Inertia::render("PurchaseManagment/purchases", [
             'vendor' => $vendor,
@@ -60,14 +94,8 @@ class AdminPurchaseListController extends Controller
             'purchaseListPayments' => $purchaseListPayments,
             'Client' => $purchaseLists->first()?->client,
             'filters' => $request->only(['search']),
-            'clientAccountInTotal' => ClientAccount::where([
-                'client_id' => $client_id,
-                'payment_flow' => 1
-            ])->sum('amount'),
-            'clientAccountOutTotal' => ClientAccount::where([
-                'client_id' => $client_id,
-                'payment_flow' => 0
-            ])->sum('amount'),
+            'clientAccountInTotal' => $clientAccountTotals->in_total ?? 0,
+            'clientAccountOutTotal' => $clientAccountTotals->out_total ?? 0,
         ]);
     }
 
@@ -85,6 +113,8 @@ class AdminPurchaseListController extends Controller
     {
         try {
 
+            DB::beginTransaction();
+
             $validated = $request->validated();
 
             if ($request->hasFile('bill')) {
@@ -94,6 +124,19 @@ class AdminPurchaseListController extends Controller
             $purchase_list = PurchaseList::create(array_merge($validated, [
                 'created_at' => Carbon::parse($validated['purchase_date'])->setTimeFromTimeString(now()->format('H:i:s')),
             ]));
+
+
+            if (!empty($validated['items'])) {  // Better check for array existence and content
+                foreach ($validated['items'] as $item) {
+                    BillItemList::create([
+                        'purchase_list_id' => $purchase_list->id,
+                        'item_description' => $item['description'],
+                        'item_quantity' => $item['quantity'],
+                        'item_price' => $item['price'],
+                    ]);
+                }
+            }
+
 
             $activity = Activity::create([
                 'client_id' => $purchase_list->client_id,
@@ -116,10 +159,14 @@ class AdminPurchaseListController extends Controller
                 'activity_id' => $activity->id,
             ]);
 
+            DB::commit();
+
             return redirect()->back()->with('message', 'Purchase list created successfully');
         } catch (Exception $e) {
 
             Log::error('Error creating purchase list: ' . $e->getMessage());
+
+            DB::rollBack();
             return redirect()->back()->with('error', 'Failed to create purchase list');
         }
     }
@@ -238,7 +285,7 @@ class AdminPurchaseListController extends Controller
 
                 $path = $request->file('bill')->store('purchase-lists', 'public');
                 $validated['bill'] = $path;
-                
+
             } else {
                 $validated['bill'] = $purchase_list->bill;
             }

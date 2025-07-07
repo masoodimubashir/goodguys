@@ -1,8 +1,8 @@
 import { useForm } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
-import { Button, Form, Modal } from 'react-bootstrap';
+import { Button, Col, Form, Modal, Row, Table } from 'react-bootstrap';
 import { ShowMessage } from './ShowMessage';
-import { Trash2, Eye } from 'lucide-react';
+import { Trash2, Eye, Plus } from 'lucide-react';
 import Tooltip from './Tooltip';
 
 export const PurchaseListModal = ({
@@ -19,6 +19,7 @@ export const PurchaseListModal = ({
     const [filteredVendors, setFilteredVendors] = useState(vendors);
     const [isNewDescription, setIsNewDescription] = useState(false);
     const [formSubmitted, setFormSubmitted] = useState(false);
+    const [items, setItems] = useState([]);
     const vendorInputRef = useRef(null);
     const fileInputRef = useRef(null);
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -40,7 +41,11 @@ export const PurchaseListModal = ({
         total: '',
         narration: '',
         attachment: null,
-        created_at: new Date().toISOString().split('T')[0]
+        item_description: '',
+        item_quantity: 1,
+        item_price: '',
+        created_at: new Date().toISOString().split('T')[0],
+        items: []
     });
 
     // Filter vendors based on search term
@@ -61,6 +66,7 @@ export const PurchaseListModal = ({
         if (show) {
             const hasErrors = Object.keys(errors).length > 0;
             setFormSubmitted(false);
+            setItems([]);
 
             // Only reset the form and search if there are no validation errors
             if (!hasErrors) {
@@ -120,6 +126,36 @@ export const PurchaseListModal = ({
         }
     };
 
+    const addItem = () => {
+        if (!data.item_description || !data.item_price) return;
+        
+        const newItem = {
+            description: data.item_description,
+            quantity: parseInt(data.item_quantity) || 1,
+            price: parseFloat(data.item_price) || 0,
+            total: (parseInt(data.item_quantity) || 1) * (parseFloat(data.item_price) || 0)
+        };
+        
+        setItems([...items, newItem]);
+        setData('items', [...items, newItem]);
+        
+        // Reset item fields
+        setData({
+            ...data,
+            item_description: '',
+            item_quantity: 1,
+            item_price: '',
+            items: [...items, newItem]
+        });
+    };
+
+    const removeItem = (index) => {
+        const updatedItems = [...items];
+        updatedItems.splice(index, 1);
+        setItems(updatedItems);
+        setData('items', updatedItems);
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         setFormSubmitted(true);
@@ -142,7 +178,11 @@ export const PurchaseListModal = ({
         const formData = new FormData();
         Object.entries(data).forEach(([key, value]) => {
             if (value !== null && value !== undefined && value !== '') {
-                formData.append(key, value);
+                if (key === 'items') {
+                    formData.append(key, JSON.stringify(value));
+                } else {
+                    formData.append(key, value);
+                }
             }
         });
 
@@ -160,6 +200,7 @@ export const PurchaseListModal = ({
                 onHide();
                 reset();
                 ShowMessage('success', page.props.message);
+                
             },
         });
     };
@@ -197,10 +238,10 @@ export const PurchaseListModal = ({
                                         onKeyDown={handleVendorKeyDown}
                                         onClick={() => setShowVendorSuggestions(true)}
                                         onBlur={() => setTimeout(() => setShowVendorSuggestions(false), 200)}
-                                        isInvalid={(formSubmitted && !isNewDescription && !data.vendor_id) || 
-                                                   (formSubmitted && isNewDescription && !vendorSearchTerm.trim()) || 
-                                                   !!errors.vendor_id || 
-                                                   !!errors.description}
+                                        isInvalid={(formSubmitted && !isNewDescription && !data.vendor_id) ||
+                                            (formSubmitted && isNewDescription && !vendorSearchTerm.trim()) ||
+                                            !!errors.vendor_id ||
+                                            !!errors.description}
                                     />
                                     {showVendorSuggestions && (
                                         <div className="position-absolute bg-white border mt-1 w-100 shadow-sm z-3"
@@ -225,9 +266,9 @@ export const PurchaseListModal = ({
                                         </div>
                                     )}
                                     <Form.Control.Feedback type="invalid">
-                                        {(formSubmitted && !isNewDescription && !data.vendor_id) ? "party name is required" : 
-                                         (formSubmitted && isNewDescription && !vendorSearchTerm.trim()) ? "this field is required" :
-                                         errors.vendor_id || errors.description}
+                                        {(formSubmitted && !isNewDescription && !data.vendor_id) ? "party name is required" :
+                                            (formSubmitted && isNewDescription && !vendorSearchTerm.trim()) ? "this field is required" :
+                                                errors.vendor_id || errors.description}
                                     </Form.Control.Feedback>
                                 </div>
                             </Form.Group>
@@ -266,6 +307,88 @@ export const PurchaseListModal = ({
                                         </Form.Control.Feedback>
                                     </Form.Group>
                                 </div>
+
+                                <Row className="mb-3">
+                                    <Col md={5}>
+                                        <Form.Group>
+                                            <Form.Label>Item Description</Form.Label>
+                                            <Form.Control
+                                                type="text"
+                                                value={data.item_description}
+                                                onChange={(e) => setData('item_description', e.target.value)}
+                                                isInvalid={!!errors.item_description}
+                                            />
+                                        </Form.Group>
+                                    </Col>
+                                    <Col md={2}>
+                                        <Form.Group>
+                                            <Form.Label>Qty</Form.Label>
+                                            <Form.Control
+                                                type="number"
+                                                min="1"
+                                                value={data.item_quantity}
+                                                onChange={(e) => setData('item_quantity', e.target.value)}
+                                            />
+                                        </Form.Group>
+                                    </Col>
+                                    <Col md={3}>
+                                        <Form.Group>
+                                            <Form.Label>Price</Form.Label>
+                                            <Form.Control
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={data.item_price}
+                                                onChange={(e) => setData('item_price', e.target.value)}
+                                            />
+                                        </Form.Group>
+                                    </Col>
+                                    <Col md={2} className="d-flex align-items-end">
+                                        <Button 
+                                            variant="primary" 
+                                            onClick={addItem}
+                                            className="mb-3"
+                                            disabled={!data.item_description || !data.item_price}
+                                        >
+                                            <Plus size={16} />
+                                        </Button>
+                                    </Col>
+                                </Row>
+
+                                {items.length > 0 && (
+                                    <div className="col-12 mb-3">
+                                        <Table striped bordered hover size="sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Description</th>
+                                                    <th>Qty</th>
+                                                    <th>Price</th>
+                                                    <th>Total</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {items.map((item, index) => (
+                                                    <tr key={index}>
+                                                        <td>{item.description}</td>
+                                                        <td>{item.quantity}</td>
+                                                        <td>{item.price.toFixed(2)}</td>
+                                                        <td>{item.total.toFixed(2)}</td>
+                                                        <td>
+                                                            <Button 
+                                                                variant="danger" 
+                                                                size="sm"
+                                                                onClick={() => removeItem(index)}
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </Button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </Table>
+                                    </div>
+                                )}
 
                                 <div className="col-md-6">
                                     <Form.Group className="mb-3">

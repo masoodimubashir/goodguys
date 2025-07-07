@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminAccountsController;
 use App\Http\Controllers\Admin\AdminActivityController;
 use App\Http\Controllers\Admin\AdminBankAccountController;
+use App\Http\Controllers\Admin\AdminBillItemListController;
 use App\Http\Controllers\Admin\AdminChallanController;
 use App\Http\Controllers\Admin\AdminClientAccountController;
 use App\Http\Controllers\Admin\AdminClientProductController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\Admin\ProjectDocumentController;
 use App\Http\Controllers\Admin\PurchasesItemController;
 use App\Http\Controllers\AdminAdminCompanyProfile;
 use App\Http\Controllers\AdminInvoiceController;
+use App\Http\Controllers\BillItemListController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Models\PurchaseListPayment;
@@ -118,6 +120,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Route For Activity
     Route::resource('activity', AdminActivityController::class);
+
+    // Route::resource('bill-items', AdminBillItemListController::class);
+
+    Route::resource('bill-items', BillItemListController::class);
 });
 
 

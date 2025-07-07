@@ -160,12 +160,14 @@ const ViewChallans = ({ client, company_profile, bankAccount, bills }) => {
             <Head title={`${client.client_name} - Challans`} />
             <div className="container-fluid py-4">
                 <BreadCrumbHeader breadcrumbs={breadcrumbs} />
-                
+
                 {/* Client Information Card */}
-                <Row className="mb-4">
-                    <ClientInfoCard client={client} />
+                <Row className="mb-4 gap-2">
                     <Col md={6}>
-                        <Card className="border-0 shadow-sm">
+                        <ClientInfoCard client={client} />
+                    </Col>
+                    <Col md={6}>
+                        <Card className="shadow-sm border-0 rounded-3">
                             <Card.Body>
                                 <div className="d-flex justify-content-between align-items-center">
                                     <div>
@@ -251,9 +253,9 @@ const ViewChallans = ({ client, company_profile, bankAccount, bills }) => {
                                         <td className="text-end">{items.length}</td>
                                         <td className="text-center">
                                             <div className="d-flex justify-content-center gap-2">
-                                                <Trash2 
-                                                    size={20} 
-                                                    className="text-danger" 
+                                                <Trash2
+                                                    size={20}
+                                                    className="text-danger"
                                                     title="Delete"
                                                     onClick={() => handleDelete(ref.id)}
                                                 />
@@ -285,15 +287,15 @@ const ViewChallans = ({ client, company_profile, bankAccount, bills }) => {
                     {client.challan_refrences.length > itemsPerPage && (
                         <div className="d-flex justify-content-end mt-3">
                             <Pagination>
-                                <Pagination.First 
-                                    onClick={() => paginate(1)} 
-                                    disabled={currentPage === 1} 
+                                <Pagination.First
+                                    onClick={() => paginate(1)}
+                                    disabled={currentPage === 1}
                                 />
-                                <Pagination.Prev 
-                                    onClick={() => paginate(currentPage - 1)} 
-                                    disabled={currentPage === 1} 
+                                <Pagination.Prev
+                                    onClick={() => paginate(currentPage - 1)}
+                                    disabled={currentPage === 1}
                                 />
-                                
+
                                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
                                     <Pagination.Item
                                         key={number}
@@ -303,14 +305,14 @@ const ViewChallans = ({ client, company_profile, bankAccount, bills }) => {
                                         {number}
                                     </Pagination.Item>
                                 ))}
-                                
-                                <Pagination.Next 
-                                    onClick={() => paginate(currentPage + 1)} 
-                                    disabled={currentPage === totalPages} 
+
+                                <Pagination.Next
+                                    onClick={() => paginate(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
                                 />
-                                <Pagination.Last 
-                                    onClick={() => paginate(totalPages)} 
-                                    disabled={currentPage === totalPages} 
+                                <Pagination.Last
+                                    onClick={() => paginate(totalPages)}
+                                    disabled={currentPage === totalPages}
                                 />
                             </Pagination>
                         </div>
