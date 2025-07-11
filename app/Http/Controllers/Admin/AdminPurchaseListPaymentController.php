@@ -46,8 +46,6 @@ class AdminPurchaseListPaymentController extends Controller
 
             $data = $request->validated();
 
-            dd($data);
-
             $vendor = Vendor::find($data['vendor_id']);
 
             $purchase_list_payment = PurchaseListPayment::create([
@@ -131,8 +129,6 @@ class AdminPurchaseListPaymentController extends Controller
             DB::beginTransaction();
 
             $validated = $request->validated();
-
-            dd($validated);
 
             $activity = Activity::find($id);
 
