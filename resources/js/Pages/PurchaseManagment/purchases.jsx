@@ -426,7 +426,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                 <BreadCrumbHeader breadcrumbs={[
                     { href: '/clients', label: 'Clients', active: false },
                     { href: `/clients/${client.id}`, label: client.client_name, active: false },
-                    { href: '/client-vendor', label: vendor.vendor_name, active: false },
+                    { href: `/client-vendor/${vendor.id}`, label: vendor.vendor_name, active: false },
                     { href: `/clients/${client.id}`, label: 'Back', active: true },
                 ]} />
 
@@ -461,7 +461,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                         {/* Primary Metrics */}
                         <Row className="g-3 mb-3">
                             <Col md={3}>
-                                <Card className={`border-0 shadow-sm h-100 card-hover gradient-bg  ${animatingCards.has('total-bill') ? 'pulse-animation' : ''}`}>
+                                <Card className={`border-0 shadow-sm card-hover gradient-bg  ${animatingCards.has('total-bill') ? 'pulse-animation' : ''}`}>
                                     <Card.Body className="p-3">
                                         <div className="d-flex align-items-center justify-content-between">
                                             <div>
@@ -477,7 +477,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                             </Col>
 
                             <Col md={3}>
-                                <Card className={`border-0 shadow-sm h-100 card-hover gradient-warning  ${animatingCards.has('total-returns') ? 'pulse-animation' : ''}`}>
+                                <Card className={`border-0 shadow-sm card-hover gradient-warning  ${animatingCards.has('total-returns') ? 'pulse-animation' : ''}`}>
                                     <Card.Body className="p-3">
                                         <div className="d-flex align-items-center justify-content-between">
                                             <div>
@@ -493,16 +493,12 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                             </Col>
 
                             <Col md={3}>
-                                <Card className={`border-0 shadow-sm h-100 card-hover gradient-success  ${animatingCards.has('total-payments') ? 'pulse-animation' : ''}`}>
+                                <Card className={`border-0 shadow-sm  card-hover gradient-success  ${animatingCards.has('total-payments') ? 'pulse-animation' : ''}`}>
                                     <Card.Body className="p-3">
                                         <div className="d-flex align-items-center justify-content-between">
                                             <div>
                                                 <h6 className="-50 mb-1">Total Payments</h6>
                                                 <h6 className="mb-0 fw-bold">{formatCurrency(analytics.totalPayments)}</h6>
-                                                <small className="-75">
-                                                    <Banknote size={12} className="me-1" />
-                                                    {purchaseListPayments.length} payments
-                                                </small>
                                             </div>
                                             <div className="bg-white bg-opacity-20 p-3 rounded-circle text-black">
                                                 <Banknote size={28} className="" />
@@ -513,7 +509,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                             </Col>
 
                             <Col md={3}>
-                                <Card className={`border-0 shadow-sm h-100 card-hover gradient-info  ${animatingCards.has('remaining') ? 'pulse-animation' : ''}`}>
+                                <Card className={`border-0 shadow-sm card-hover gradient-info  ${animatingCards.has('remaining') ? 'pulse-animation' : ''}`}>
                                     <Card.Body className="p-3">
                                         <div className="d-flex align-items-center justify-content-between">
                                             <div>
@@ -848,9 +844,10 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                                                     size="sm"
                                                                                                     variant="link"
                                                                                                     className='text-danger'
-                                                                                                  
+                                                                                                    onClick={() => handleDeleteBillItem(item.id)}
+
                                                                                                 >
-                                                                                                    <Trash2 size={18}   onClick={() => handleDeleteBillItem(item.id)} />
+                                                                                                    <Trash2 size={18} />
                                                                                                 </Button>
                                                                                             </>
                                                                                         )}
@@ -911,7 +908,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                                     (newItems[purchase.id]?.item_quantity || 1)
                                                                                 )}
                                                                             </td>
-                                                                         
+
                                                                             <td>
                                                                                 <div className="d-flex gap-1">
                                                                                     <Button
@@ -1118,7 +1115,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                                             </>
                                                                                         ) : (
                                                                                             <>
-                                                                                              
+
                                                                                             </>
                                                                                         )}
                                                                                     </div>
@@ -1276,11 +1273,9 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                         <Table hover responsive className="mb-0">
                             <thead className="table-success">
                                 <tr>
-                                    <th>#</th>
                                     <th>Date</th>
                                     <th>Amount</th>
                                     <th>Description</th>
-                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1289,7 +1284,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
 
                                     return (
                                         <tr key={payment.id}>
-                                            <td>{index + 1}</td>
                                             <td>
                                                 {isEditing ? (
                                                     <Form.Control
@@ -1360,28 +1354,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline-success"
-                                                                onClick={() => {
-                                                                    setEditingPaymentId(payment.id);
-                                                                    setEditedPayments(prev => ({
-                                                                        ...prev,
-                                                                        [payment.id]: {
-                                                                            ...payment
-                                                                        }
-                                                                    }));
-                                                                }}
-                                                            >
-                                                                <Edit size={12} />
-                                                            </Button>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline-danger"
-                                                                onClick={() => handleDeleteReturn(payment.id)}
-                                                            >
-                                                                <Trash2 size={12} />
-                                                            </Button>
+                                                       
                                                         </>
                                                     )}
                                                 </div>

@@ -162,7 +162,7 @@ const ViewChallans = ({ client, company_profile, bankAccount, bills }) => {
                 <BreadCrumbHeader breadcrumbs={breadcrumbs} />
 
                 {/* Client Information Card */}
-                <Row className="mb-4 gap-2">
+                <Row className="mb-4 g-3 ">
                     <Col md={6}>
                         <ClientInfoCard client={client} />
                     </Col>

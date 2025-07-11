@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('vendor_id')->constrained('vendors')->onDelete('cascade');
             $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
+            $table->foreignId('purchase_list_id')->nullable()->constrained('purchase_lists')->onDelete('cascade');
             $table->integer('amount');
             $table->string('narration');
             $table->date('transaction_date');

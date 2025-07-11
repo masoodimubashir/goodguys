@@ -20,6 +20,7 @@ export const PurchaseListModal = ({
     const [isNewDescription, setIsNewDescription] = useState(false);
     const [formSubmitted, setFormSubmitted] = useState(false);
     const [items, setItems] = useState([]);
+    const [autoCalculateTotal, setAutoCalculateTotal] = useState(true);
     const vendorInputRef = useRef(null);
     const fileInputRef = useRef(null);
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -48,6 +49,14 @@ export const PurchaseListModal = ({
         items: []
     });
 
+    // Calculate total from items whenever items change
+    useEffect(() => {
+        if (autoCalculateTotal && items.length > 0) {
+            const calculatedTotal = items.reduce((sum, item) => sum + item.total, 0);
+            setData('bill_total', calculatedTotal);
+        }
+    }, [items, autoCalculateTotal]);
+
     // Filter vendors based on search term
     useEffect(() => {
         if (vendorSearchTerm) {
@@ -67,6 +76,7 @@ export const PurchaseListModal = ({
             const hasErrors = Object.keys(errors).length > 0;
             setFormSubmitted(false);
             setItems([]);
+            setAutoCalculateTotal(true);
 
             // Only reset the form and search if there are no validation errors
             if (!hasErrors) {
@@ -169,6 +179,11 @@ export const PurchaseListModal = ({
             return;
         }
 
+        // Validate bill total
+        if (!isNewDescription && (!data.bill_total || isNaN(data.bill_total))) {
+            return;
+        }
+
         // Ensure description is synced with vendorSearchTerm when using custom entry
         if (isNewDescription) {
             const trimmedDescription = vendorSearchTerm.trim();
@@ -200,7 +215,6 @@ export const PurchaseListModal = ({
                 onHide();
                 reset();
                 ShowMessage('success', page.props.message);
-                
             },
         });
     };
@@ -218,6 +232,15 @@ export const PurchaseListModal = ({
         if (!previewUrl && !data.bill_url) return null;
         const fileName = previewUrl ? fileInputRef.current?.files[0]?.name : data.bill_url;
         return <Eye size={18} title="View" />;
+    };
+
+    const toggleAutoCalculate = () => {
+        setAutoCalculateTotal(!autoCalculateTotal);
+        if (!autoCalculateTotal && items.length > 0) {
+            // When switching back to auto-calculate, update the bill total
+            const calculatedTotal = items.reduce((sum, item) => sum + item.total, 0);
+            setData('bill_total', calculatedTotal);
+        }
     };
 
     return (
@@ -311,43 +334,42 @@ export const PurchaseListModal = ({
                                 <Row className="mb-3">
                                     <Col md={5}>
                                         <Form.Group>
-                                            <Form.Label>Item Description</Form.Label>
                                             <Form.Control
                                                 type="text"
                                                 value={data.item_description}
                                                 onChange={(e) => setData('item_description', e.target.value)}
                                                 isInvalid={!!errors.item_description}
+                                                placeholder='Item Description'
                                             />
                                         </Form.Group>
                                     </Col>
                                     <Col md={2}>
                                         <Form.Group>
-                                            <Form.Label>Qty</Form.Label>
                                             <Form.Control
                                                 type="number"
                                                 min="1"
                                                 value={data.item_quantity}
                                                 onChange={(e) => setData('item_quantity', e.target.value)}
+                                                placeholder='quantity'
                                             />
                                         </Form.Group>
                                     </Col>
                                     <Col md={3}>
                                         <Form.Group>
-                                            <Form.Label>Price</Form.Label>
                                             <Form.Control
                                                 type="number"
                                                 min="0"
-                                                step="0.01"
                                                 value={data.item_price}
                                                 onChange={(e) => setData('item_price', e.target.value)}
+                                                placeholder='price'
                                             />
                                         </Form.Group>
                                     </Col>
-                                    <Col md={2} className="d-flex align-items-end">
+                                    <Col md={2} className="d-flex align-items-end justify-content-center">
                                         <Button 
-                                            variant="primary" 
+                                            variant="link" 
                                             onClick={addItem}
-                                            className="mb-3"
+                                            className="mb-3 text-danger"
                                             disabled={!data.item_description || !data.item_price}
                                         >
                                             <Plus size={16} />
@@ -372,11 +394,12 @@ export const PurchaseListModal = ({
                                                     <tr key={index}>
                                                         <td>{item.description}</td>
                                                         <td>{item.quantity}</td>
-                                                        <td>{item.price.toFixed(2)}</td>
-                                                        <td>{item.total.toFixed(2)}</td>
+                                                        <td>{item.price}</td>
+                                                        <td>{item.total}</td>
                                                         <td>
                                                             <Button 
-                                                                variant="danger" 
+                                                                variant="link" 
+                                                                className="text-danger"
                                                                 size="sm"
                                                                 onClick={() => removeItem(index)}
                                                             >
@@ -407,13 +430,26 @@ export const PurchaseListModal = ({
 
                                 <div className="col-md-6">
                                     <Form.Group className="mb-3">
-                                        <Form.Label>Bill Total</Form.Label>
+                                        <Form.Label>
+                                            Bill Total 
+                                            {items.length > 0 && (
+                                                <Form.Check 
+                                                    type="switch"
+                                                    id="auto-calculate-switch"
+                                                    label="Auto-calculate"
+                                                    checked={autoCalculateTotal}
+                                                    onChange={toggleAutoCalculate}
+                                                    className="d-inline-block ms-2"
+                                                />
+                                            )}
+                                        </Form.Label>
                                         <Form.Control
                                             type="number"
                                             min="0"
                                             value={data.bill_total}
                                             onChange={(e) => setData('bill_total', parseFloat(e.target.value) || 0)}
                                             isInvalid={!!errors.bill_total}
+                                            readOnly={autoCalculateTotal && items.length > 0}
                                         />
                                         <Form.Control.Feedback type="invalid">
                                             {errors.bill_total}

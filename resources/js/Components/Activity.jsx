@@ -90,37 +90,80 @@ const ActivityTab = ({ activities, client, setPurchaseItems, setFilteredItems, v
     };
 
 
-    const handleDeleteItem = (itemId) => {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText:
-                'Yes, delete it!',
-            cancelButtonText: 'No, cancel!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                router.delete(route('activity.destroy', itemId), {
-                    preserveScroll: true,
-                    onSuccess: (page) => {
-                        if (page.props.purchase_items) {
-                            setPurchaseItems(page.props.purchase_items);
-                            setFilteredItems(page.props.purchase_items);
-                        }
-                    },
-                    onError: (errors) => {
-                        const errorMsg = Object.values(errors).join('\n');
-                        ShowMessage('error', errorMsg || 'Failed to delete item');
+ const handleDeleteItem = (itemId) => {
+    Swal.fire({
+        title: 'Delete Confirmation',
+        html: `
+            <div class="text-left">
+                <p class="font-bold text-lg">Are you sure you want to delete this record?</p>
+                <div class="mt-2 p-2 bg-red-50 border-l-4 border-red-500">
+                    <p class="text-red-700 font-semibold">⚠️ Critical Warning:</p>
+                    <div class="list-disc list-inside text-red-600 mt-1">
+                        <br>This record will be permanently deleted</br>
+                        <br>All related payment data will be removed</br>
+                        <br>This action cannot be undone</br>
+                    </div>
+                </div>
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Delete Permanently',
+        cancelButtonText: 'Cancel',
+        focusCancel: true,
+        customClass: {
+            popup: 'swal-wide',  // Add this if you need wider dialog
+            htmlContainer: 'text-left'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading indicator during deletion
+            Swal.fire({
+                title: 'Deleting...',
+                html: 'Please wait while we remove the record',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                }
+            });
+
+            router.delete(route('activity.destroy', itemId), {
+                preserveScroll: true,
+                onSuccess: (page) => {
+                    Swal.fire({
+                        title: 'Deleted!',
+                        text: 'The record has been permanently deleted',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    if (page.props.purchase_items) {
+                        setPurchaseItems(page.props.purchase_items);
+                        setFilteredItems(page.props.purchase_items);
                     }
-
-                });
-            }
-        });
-    }
-
+                },
+                onError: (errors) => {
+                    Swal.fire({
+                        title: 'Deletion Failed!',
+                        html: `
+                            <div class="text-left">
+                                <p>Could not delete the record because:</p>
+                                <ul class="list-disc list-inside mt-2 text-red-600">
+                                    ${Object.values(errors).map(error => `<li>${error}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `,
+                        icon: 'error',
+                        confirmButtonColor: '#3085d6'
+                    });
+                }
+            });
+        }
+    });
+}
     const editItem = (id, type, activityData) => {
         setSelectedActivity(activityData);
         setShowEditModal(true);

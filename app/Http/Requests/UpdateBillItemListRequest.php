@@ -26,7 +26,7 @@ class UpdateBillItemListRequest extends FormRequest
             'purchase_list_id' => 'required|exists:purchase_lists,id',
             'item_description' => 'required|string',
             'item_quantity' => 'required|integer',
-            'item_price' => 'required|integer',
+            'item_price' => 'required|numeric',
         ];
     }
 }

@@ -297,49 +297,9 @@ const EditActivity = ({
                                             type="text"
                                             className="form-control"
                                             value={selectedVendorName || ''}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                setSelectedVendorName(value);
-                                                setSearchTerm(value);
-                                                setShowDropdown(true);
-                                            }}
-                                            onFocus={() => {
-                                                setShowDropdown(true);
-                                                setSearchTerm(''); // Clear search when focusing
-                                            }}
-                                            onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-                                            placeholder="Search vendor..."
+                                            disabled
                                         />
-                                        {showDropdown && (
-                                            <div className="dropdown-menu show w-100" style={{
-                                                position: 'absolute',
-                                                maxHeight: '200px',
-                                                overflowY: 'auto',
-                                                zIndex: 1000,
-                                                width: '100%'
-                                            }}>
-                                                {filteredVendors.length > 0 ? (
-                                                    filteredVendors.map((vendor) => (
-                                                        <button
-                                                            key={vendor.id}
-                                                            className={`dropdown-item ${selectedVendorName === vendor.vendor_name ? 'active' : ''}`}
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setSelectedVendorName(vendor.vendor_name);
-                                                                setData('description', vendor.id); // Store vendor_name
-                                                                setShowDropdown(false);
-                                                            }}
-                                                        >
-                                                            {vendor.vendor_name}
-                                                        </button>
-                                                    ))
-                                                ) : (
-                                                    <div className="dropdown-item text-muted">
-                                                        No vendors found
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
+                                   
                                     </div>
                                     {renderError('description')}
                                 </Form.Group>
@@ -451,49 +411,9 @@ const EditActivity = ({
                                         type="text"
                                         className="form-control"
                                         value={selectedVendorName || ''}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            setSelectedVendorName(value);
-                                            setSearchTerm(value);
-                                            setShowDropdown(true);
-                                        }}
-                                        onFocus={() => {
-                                            setShowDropdown(true);
-                                            setSearchTerm(''); // Clear search when focusing
-                                        }}
-                                        onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-                                        placeholder="Search vendor..."
+                                        disabled
                                     />
-                                    {showDropdown && (
-                                        <div className="dropdown-menu show w-100" style={{
-                                            position: 'absolute',
-                                            maxHeight: '200px',
-                                            overflowY: 'auto',
-                                            zIndex: 1000,
-                                            width: '100%'
-                                        }}>
-                                            {filteredVendors.length > 0 ? (
-                                                filteredVendors.map((vendor) => (
-                                                    <button
-                                                        key={vendor.id}
-                                                        className={`dropdown-item ${selectedVendorName === vendor.vendor_name ? 'active' : ''}`}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setSelectedVendorName(vendor.vendor_name);
-                                                            setData('description', vendor.id); // Store vendor_name
-                                                            setShowDropdown(false);
-                                                        }}
-                                                    >
-                                                        {vendor.vendor_name}
-                                                    </button>
-                                                ))
-                                            ) : (
-                                                <div className="dropdown-item text-muted">
-                                                    No vendors found
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
+                              
                                 </div>
                                 {renderError('description')}
                             </Form.Group>

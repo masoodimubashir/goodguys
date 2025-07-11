@@ -15,6 +15,7 @@ class PurchaseListPayment extends Model
     protected $fillable = [
         'vendor_id',
         'client_id',
+        'purchase_list_id',
         'amount',
         'narration',
         'transaction_date',

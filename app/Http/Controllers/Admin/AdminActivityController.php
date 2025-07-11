@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreActivityRequest;
 use App\Http\Requests\UpdateActivityRequest;
 use App\Models\Activity;
+use App\Models\BillItemList;
 use App\Models\ClientAccount;
+use App\Models\PaymentDeleteRefrence;
 use App\Models\PurchasedItem;
 use App\Models\PurchaseList;
 use App\Models\PurchaseListPayment;
@@ -140,6 +142,8 @@ class AdminActivityController extends Controller
                 $referenceId = $activity->paymentDeleteRefrence->refrence_id;
                 $purchasedItemId = $activity->paymentDeleteRefrence->purchased_item_id;
 
+                // dd($class, $referenceId, $purchasedItemId);
+
                 switch ($class) {
                     case ClientAccount::class:
                         ClientAccount::findOrFail($referenceId)->delete();
@@ -163,14 +167,105 @@ class AdminActivityController extends Controller
                         break;
 
                     case PurchaseList::class:
-                        $purchaseList = PurchaseList::findOrFail($referenceId);
-                        // Delete the bill file if it exists
+                        $purchaseList = PurchaseList::with(['returnLists', 'billItemLists'])->findOrFail($referenceId);
+
+                        // 1. Get all related IDs
+                        $returnListIds = $purchaseList->returnLists->pluck('id')->toArray();
+                        $billItemListIds = $purchaseList->billItemLists->pluck('id')->toArray();
+
+                        // 2. Get all related payments
+                        $purchaseListPayments = PurchaseListPayment::where([
+                            'client_id' => $purchaseList->client_id,
+                            'vendor_id' => $purchaseList->vendor_id,
+                        ])->get();
+                        $paymentIds = $purchaseListPayments->pluck('id')->toArray();
+
+                        // 3. Get all purchased item IDs from multiple sources
+                        $purchasedItemIds = collect()
+                            // From payment delete references
+                            ->merge(
+                                PaymentDeleteRefrence::whereIn(
+                                    'refrence_id',
+                                    array_merge([$referenceId], $returnListIds, $billItemListIds, $paymentIds)
+                                )
+                                    ->whereNotNull('purchased_item_id')
+                                    ->pluck('purchased_item_id')
+                            )
+                            // From the current reference
+                            ->when($purchasedItemId, fn($collection) => $collection->merge([$purchasedItemId]))
+                            // From purchase list payments
+                            ->merge($purchaseListPayments->pluck('purchased_item_id')->filter())
+                            // From return lists
+                            ->merge(
+                                $purchaseList->returnLists->pluck('purchased_item_id')->filter()
+                            )
+                            // From bill item lists
+                            ->merge(
+                                $purchaseList->billItemLists->pluck('purchased_item_id')->filter()
+                            )
+                            ->unique()
+                            ->values()
+                            ->toArray();
+
+                        // 4. Delete all purchased items
+                        if (!empty($purchasedItemIds)) {
+                            PurchasedItem::whereIn('id', $purchasedItemIds)->delete();
+                        }
+
+                        // 5. Continue with other deletions (same as before)
+                        // Delete ReturnList references and ReturnLists
+                        if (!empty($returnListIds)) {
+                            PaymentDeleteRefrence::where('refrence_type', ReturnList::class)
+                                ->whereIn('refrence_id', $returnListIds)
+                                ->delete();
+                            ReturnList::whereIn('id', $returnListIds)->delete();
+                        }
+
+                        // Delete BillItemList references and BillItemLists
+                        if (!empty($billItemListIds)) {
+                            PaymentDeleteRefrence::where('refrence_type', BillItemList::class)
+                                ->whereIn('refrence_id', $billItemListIds)
+                                ->delete();
+                            BillItemList::whereIn('id', $billItemListIds)->delete();
+                        }
+
+                        // Delete PurchaseListPayment references and payments
+                        if (!empty($paymentIds)) {
+                            PaymentDeleteRefrence::where('refrence_type', PurchaseListPayment::class)
+                                ->whereIn('refrence_id', $paymentIds)
+                                ->delete();
+                            PurchaseListPayment::whereIn('id', $paymentIds)->delete();
+                        }
+
+                        // Delete associated bill file
                         if ($purchaseList->bill && Storage::disk('public')->exists($purchaseList->bill)) {
                             Storage::disk('public')->delete($purchaseList->bill);
                         }
+
+                        // Get and delete all related activities
+                        $relatedActivityIds = PaymentDeleteRefrence::whereIn(
+                            'refrence_id',
+                            array_merge(
+                                [$purchaseList->id],  // This is the same as $referenceId
+                                $returnListIds,
+                                $billItemListIds,
+                                $paymentIds
+                            )
+                        )
+                            ->pluck('activity_id')
+                            ->toArray();
+
+
+                        if (!empty($relatedActivityIds)) {
+                            Activity::whereIn('id', $relatedActivityIds)->delete();
+                        }
+
+                        // Delete the payment reference record
+                        $activity->paymentDeleteRefrence()->delete();
+
+                        // Finally delete the purchase list itself
                         $purchaseList->delete();
                         break;
-
                     case PurchasedItem::class:
                         PurchasedItem::findOrFail($referenceId)->delete();
                         break;

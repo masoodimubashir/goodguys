@@ -46,6 +46,8 @@ class AdminPurchaseListPaymentController extends Controller
 
             $data = $request->validated();
 
+            dd($data);
+
             $vendor = Vendor::find($data['vendor_id']);
 
             $purchase_list_payment = PurchaseListPayment::create([
@@ -130,12 +132,11 @@ class AdminPurchaseListPaymentController extends Controller
 
             $validated = $request->validated();
 
-            $vendor = Vendor::where('id', $validated['description'])->first();
+            dd($validated);
 
             $activity = Activity::find($id);
 
             $activity->update([
-                'description' => $vendor->vendor_name,
                 'narration' => $validated['narration'],
                 'price' => $validated['amount'],
                 'total' => $validated['amount'],
@@ -149,8 +150,8 @@ class AdminPurchaseListPaymentController extends Controller
                 ->where('refrence_type', PurchaseListPayment::class)
                 ->first();
 
+
             PurchaseListPayment::find($paymentRef->refrence_id)->update([
-                'vendor_id' => $vendor->id,
                 'amount' => $validated['amount'],
                 'narration' => $validated['narration'],
                 'transaction_date' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
@@ -159,7 +160,6 @@ class AdminPurchaseListPaymentController extends Controller
             ]);
 
             PurchasedItem::find($paymentRef->purchased_item_id)->update([
-                'description' => $vendor->vendor_name,
                 'price' => $validated['amount'],
                 'total' => $validated['amount'],
                 'created_at' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
