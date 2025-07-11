@@ -24,7 +24,7 @@ class UpdatePurchaseListPaymentForm extends FormRequest
         return [
             'description' => 'required|string|max:255',
             'amount' => 'required|integer',
-            'narration' => 'required|string|max:255',
+            'narration' => 'nullable|string|max:255',
             'created_at' => 'required|date',
         ];
     }

@@ -272,7 +272,6 @@ class AdminPurchaseListController extends Controller
                 'total' => $validated['total'],
                 'model_type' => PurchaseList::class,
                 'updated_by' => auth()->id(),
-                'payment_flow' => false,
                 'created_at' => Carbon::parse($validated['created_at'])->setTimeFromTimeString(now()->format('H:i:s')),
             ]);
 

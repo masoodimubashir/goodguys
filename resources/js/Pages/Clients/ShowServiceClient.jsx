@@ -174,7 +174,7 @@ export default function ShowServiceClient({
     const analytics = calculateAnalytics();
 
     const expenditure = activities
-        .filter(activity => activity.payment_flow === 0)
+        .filter(activity => activity.is_credited === 0)
         .reduce((sum, activity) => sum + activity.total, 0);
 
     // Handler functions

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
             $table->foreignId('purchase_list_id')->nullable()->constrained('purchase_lists')->onDelete('cascade');
             $table->integer('amount');
-            $table->string('narration');
+            $table->string('narration')->nullable();
             $table->date('transaction_date');
             $table->tinyInteger('created_by')->nullable();
             $table->tinyInteger('updated_by')->nullable();

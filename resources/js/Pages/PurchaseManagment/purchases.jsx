@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
     Plus, ChevronDown, ChevronRight,
@@ -21,6 +22,21 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
 
     const client = Client || {};
     const purchases = purchaseLists.data || [];
+    purchaseListPayments = purchaseListPayments || [];
+
+    // Calculate combined bill total (bill_total + sum of items - returns)
+    const calculateCombinedBillTotal = (purchase) => {
+        const billTotal = Number(purchase.bill_total || 0);
+        const itemsTotal = (purchase.bill_item_lists || []).reduce(
+            (sum, item) => sum + (Number(item.item_price || 0) * Number(item.item_quantity || 1)),
+            0
+        );
+        const returnsTotal = (purchase.return_lists || []).reduce(
+            (sum, ret) => sum + Number(ret.price || 0),
+            0
+        );
+        return (billTotal + itemsTotal) - returnsTotal;
+    };
 
     // State management
     const [expandedPurchases, setExpandedPurchases] = useState([]);
@@ -36,33 +52,32 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
     const [editedPayments, setEditedPayments] = useState({});
     const [newPayment, setNewPayment] = useState(null);
 
-    const totalPurchases = purchases.reduce((sum, p) => sum + parseFloat(p.bill_total || 0), 0);
+    // Calculate totals
+    const totalPurchases = purchases.reduce((sum, p) => sum + calculateCombinedBillTotal(p), 0);
+    const totalBillItems = purchases.reduce((sum, p) => sum + (p.bill_item_lists || []).length, 0);
     const totalReturns = purchases.reduce((sum, p) =>
-        sum + (p.return_lists || []).reduce((rSum, r) => rSum + parseFloat(r.price || 0), 0), 0);
-
-    // Calculate payment totals
-    const totalPayments = purchaseListPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-    const payableAmount = totalPurchases - totalReturns;
+        sum + (p.return_lists || []).reduce((rSum, r) => rSum + Number(r.price || 0), 0),
+        0);
+    const totalPayments = purchaseListPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const payableAmount = totalPurchases;
     const remainingBalance = payableAmount - totalPayments;
-
-    const paymentProgress = payableAmount > 0 ?
-        (totalPayments / payableAmount) * 100 :
-        payableAmount === 0 ? 100 : 0;
+    const paymentProgress = payableAmount > 0 ? (totalPayments / payableAmount) * 100 : 0;
 
     const getRemainingBudget = (purchase) => {
-        const returned = (purchase.return_lists || []).reduce((sum, r) => sum + parseFloat(r.price || 0), 0);
-        return parseFloat(purchase.bill_total || 0) - returned;
+        const combinedTotal = calculateCombinedBillTotal(purchase);
+        const paymentsForPurchase = purchaseListPayments
+            .filter(p => p.purchase_list_id === purchase.id)
+            .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+        return combinedTotal - paymentsForPurchase;
     };
 
     const analytics = {
         totalPurchases,
         totalReturns,
         totalPayments,
+        totalBillItems,
         remainingBalance,
         paymentProgress,
-        averagePurchaseAmount: purchases.length > 0 ? totalPurchases / purchases.length : 0,
-        averageReturnAmount: purchases.reduce((sum, p) => sum + (p.return_lists?.length || 0), 0) > 0
-            ? totalReturns / purchases.reduce((sum, p) => sum + (p.return_lists?.length || 0), 0) : 0,
         completedPurchases: purchases.filter(p => getRemainingBudget(p) <= 0).length,
         pendingPurchases: purchases.filter(p => getRemainingBudget(p) > 0).length,
         overPaidPurchases: purchases.filter(p => getRemainingBudget(p) < 0).length,
@@ -72,7 +87,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
             .filter(p => getRemainingBudget(p) > 0)
             .map(p => Math.floor((new Date() - new Date(p.purchase_date)) / (1000 * 60 * 60 * 24)))) : 0
     };
-
     // Animation CSS classes
     const animationClasses = {
         fadeIn: 'animate__animated animate__fadeIn',
@@ -420,15 +434,19 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
         { href: `/clients/${client.id} `, label: 'Back', active: true }
     ];
 
+
     return (
         <AuthenticatedLayout>
             <div>
+
+
                 <BreadCrumbHeader breadcrumbs={[
                     { href: '/clients', label: 'Clients', active: false },
                     { href: `/clients/${client.id}`, label: client.client_name, active: false },
                     { href: `/client-vendor/${vendor.id}`, label: vendor.vendor_name, active: false },
                     { href: `/clients/${client.id}`, label: 'Back', active: true },
                 ]} />
+
 
                 {/* Enhanced Header with Analytics Toggle */}
                 <div className="d-flex justify-content-between align-items-center mb-4">
@@ -537,6 +555,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                     </div>
                 )}
 
+
                 {/* Enhanced Purchases Table */}
                 <div className={`border-0 ${animationClasses.slideInUp} mb-5`}>
                     <h5>Purchase Section</h5>
@@ -568,12 +587,23 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
 
                         <tbody>
                             {purchases.map((purchase, index) => {
-                                const remaining = getRemainingBudget(purchase);
+
+
                                 const isExpanded = expandedPurchases.includes(purchase.id);
                                 const returns = purchase.return_lists || [];
                                 const billItems = purchase.bill_item_lists || [];
-                                const purchaseProgress = purchase.bill_total > 0 ?
-                                    ((parseFloat(purchase.bill_total) - remaining) / parseFloat(purchase.bill_total)) * 100 : 0;
+
+
+                                const itemsTotal = (purchase.bill_item_lists || []).reduce(
+                                    (sum, item) => sum + (Number(item.item_price || 0) * Number(item.item_quantity || 1)),
+                                    0
+                                );
+                                const returnsTotal = (purchase.return_lists || []).reduce(
+                                    (sum, ret) => sum + Number(ret.price || 0),
+                                    0
+                                );
+
+                                const combinedTotal = (purchase.bill_total + itemsTotal) - returnsTotal;
 
                                 return (
                                     <React.Fragment key={purchase.id}>
@@ -588,10 +618,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                             : [...prev, purchase.id]
                                                     )}
                                                 >
-                                                    {isExpanded
-                                                        ? <ChevronDown size={16} className="" />
-                                                        : <ChevronRight size={16} />
-                                                    }
+                                                    {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                                                 </Button>
                                             </td>
                                             <td>
@@ -599,7 +626,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                     <span className="fw-bold">{purchase.list_name}</span>
                                                     <br />
                                                     <small className="text-muted">
-                                                        ID: #{purchase.id}
+                                                        ID: #{purchase.id} • {billItems.length} items
                                                     </small>
                                                 </div>
                                             </td>
@@ -616,19 +643,23 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                             </td>
                                             <td>
                                                 <div>
-                                                    <span className="fw-bold text-primary">
-                                                        {formatCurrency(purchase.bill_total)}
-                                                    </span>
-                                                    <br />
+
                                                     <small className="text-muted">
-                                                        Remaining: {formatCurrency(remaining)}
+                                                        Bill: {formatCurrency(purchase.bill_total || 0)}
                                                     </small>
                                                     <br />
-                                                    <small>
-                                                        Total Returns {formatCurrency(
-                                                            returns.reduce((sum, r) => sum + parseFloat(r.price || 0), 0)
-                                                        )}
+                                                    <small className="text-info">
+                                                        Items: {formatCurrency(itemsTotal)}
                                                     </small>
+                                                    <br />
+                                                    <small className="text-warning">
+                                                        Returns: {formatCurrency(returnsTotal)}
+                                                    </small>
+                                                    <br />
+                                                    <span className="fw-bold text-primary">
+                                                        {formatCurrency(combinedTotal)}
+                                                    </span>
+
                                                 </div>
                                             </td>
                                             <td>
@@ -714,7 +745,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                         </div>
 
                                                         <Card className="border-0 shadow-sm mb-4">
-                                                            <Table hover responsive className="mb-0">
+                                                            <Table responsive className="mb-0">
                                                                 <thead className="table-primary">
                                                                     <tr>
                                                                         <th>#</th>
@@ -768,7 +799,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                                             )}
                                                                                         />
                                                                                     ) : (
-                                                                                        <div className="fw-bold">{item.item_price}</div>
+                                                                                        <div className="fw-bold">{formatCurrency(item.item_price)}</div>
                                                                                     )}
                                                                                 </td>
                                                                                 <td>
@@ -790,9 +821,8 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                                     )}
                                                                                 </td>
                                                                                 <td className="fw-bold text-primary">
-                                                                                    {(itemTotal)}
+                                                                                    {formatCurrency(itemTotal)}
                                                                                 </td>
-
                                                                                 <td>
                                                                                     <div className="d-flex gap-1">
                                                                                         {isEditing ? (
@@ -845,7 +875,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                                                     variant="link"
                                                                                                     className='text-danger'
                                                                                                     onClick={() => handleDeleteBillItem(item.id)}
-
                                                                                                 >
                                                                                                     <Trash2 size={18} />
                                                                                                 </Button>
@@ -856,6 +885,18 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                             </tr>
                                                                         );
                                                                     })}
+
+                                                                    {billItems.length > 0 && (
+                                                                        <tr className="table-active">
+                                                                            <td colSpan={4} className="text-end fw-bold">Total:</td>
+                                                                            <td className="fw-bold text-primary">
+                                                                                {formatCurrency(
+                                                                                    billItems.reduce((sum, item) => sum + (item.item_price * item.item_quantity), 0)
+                                                                                )}
+                                                                            </td>
+                                                                            <td></td>
+                                                                        </tr>
+                                                                    )}
 
                                                                     {/* New Item Row */}
                                                                     {newItems[purchase.id] && (
@@ -908,7 +949,6 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                                                     (newItems[purchase.id]?.item_quantity || 1)
                                                                                 )}
                                                                             </td>
-
                                                                             <td>
                                                                                 <div className="d-flex gap-1">
                                                                                     <Button
@@ -985,7 +1025,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                         </div>
 
                                                         <Card className="border-0 shadow-sm">
-                                                            <Table hover responsive className="mb-0">
+                                                            <Table responsive className="mb-0">
                                                                 <thead className="table-warning">
                                                                     <tr>
                                                                         <th>Date</th>
@@ -1229,41 +1269,8 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                     </React.Fragment>
                                 );
                             })}
-
-                            {/* Empty State for Purchases */}
-                            {purchases.length === 0 && (
-                                <tr>
-                                    <td colSpan={7} className="text-center py-5">
-                                        <div className="text-muted">
-                                            <ShoppingCart size={48} className="mb-3 opacity-50" />
-                                            <h5 className="mb-2">No Purchase List Found</h5>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )}
                         </tbody>
                     </Table>
-
-                    <div className="card-footer mt-2 d-flex justify-content-end align-items-center">
-                        <ul className="pagination justify-content-center">
-                            {purchaseLists.links.map((link, index) => {
-                                if (link.label === 'Previous' || link.label === 'Next') return null;
-                                return (
-                                    <li
-                                        key={index}
-                                        className={`page-item ${link.active ? 'active' : ''} ${!link.url ? 'disabled' : ''}`}
-                                    >
-                                        <Link
-                                            className="page-link"
-                                            href={link.url || '#'}
-                                            preserveScroll
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
-                                        />
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    </div>
                 </div>
 
                 {/* Payments Table Section */}
@@ -1354,7 +1361,7 @@ const Purchases = ({ vendor, purchaseLists, Client, purchaseListPayments }) => {
                                                         </>
                                                     ) : (
                                                         <>
-                                                       
+
                                                         </>
                                                     )}
                                                 </div>

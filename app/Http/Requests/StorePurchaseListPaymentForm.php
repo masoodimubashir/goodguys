@@ -25,7 +25,7 @@ class StorePurchaseListPaymentForm extends FormRequest
             'vendor_id' => 'required|exists:vendors,id',
             'client_id' => 'required|exists:clients,id',
             'amount' => 'required|integer',
-            'narration' => 'required|string|max:255',
+            'narration' => 'nullable|string|max:255',
             'created_at' => 'required|date',
         ];
     }

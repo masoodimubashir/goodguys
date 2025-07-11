@@ -193,7 +193,7 @@ export default function ShowClient({ client, purchase_items, vendors = [], compa
 
     const activity_total = () => {
         const total = activities
-            .filter(activity => activity.payment_flow === 0)
+            .filter(activity => activity.is_credited === 0)
             .reduce((sum, activity) => sum + activity.total, 0);
 
         return total;

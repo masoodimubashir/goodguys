@@ -7,7 +7,6 @@ use App\Http\Requests\UpdateBillItemListRequest;
 use App\Models\BillItemList;
 use App\Models\PurchaseList;
 use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -40,13 +39,7 @@ class BillItemListController extends Controller
 
             $validatedData = $request->validated();
 
-            $bill_item = BillItemList::create($validatedData);
-
-            $purchase_list = PurchaseList::find($validatedData['purchase_list_id']);
-
-            $purchase_list->update([
-                'bill_total' => $purchase_list->bill_total + ($bill_item->item_price * $bill_item->item_quantity)
-            ]);
+            BillItemList::create($validatedData);
 
             DB::commit();
 
@@ -91,17 +84,7 @@ class BillItemListController extends Controller
 
             $validatedData = $request->validated();
 
-            // Update the item
             $item->update($validatedData);
-
-            // Calculate the new bill_total (sum of price * quantity for all items)
-            $bill_total = BillItemList::where('purchase_list_id', $validatedData['purchase_list_id'])
-                ->selectRaw('SUM(item_price * item_quantity) as total')
-                ->value('total');
-
-            // Update the purchase_list's bill_total
-            PurchaseList::where('id', $validatedData['purchase_list_id'])
-                ->update(['bill_total' => $bill_total]);
 
             DB::commit();
 
