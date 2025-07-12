@@ -44,6 +44,7 @@ class AdminChallanController extends Controller
 
         $validated = $request->validated();
 
+
         DB::beginTransaction();
 
         try {
