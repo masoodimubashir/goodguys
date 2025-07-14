@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('list_name');
             $table->date('purchase_date');
             $table->string('bill')->nullable();
-            $table->decimal('bill_total');
+            $table->bigInteger('bill_total');
             $table->text('bill_description')->nullable();
             $table->tinyInteger('created_by')->nullable();
             $table->tinyInteger('updated_by')->nullable();

@@ -109,7 +109,7 @@ class AdminActivityController extends Controller
                 'is_credited' => false,
                 'multiplier' => $data['multiplier'],
                 'updated_by' => auth()->user()->id,
-                'payment_flow' => false,
+                'payment_flow' => true,
                 'model_type' => Activity::class,
             ]);
 

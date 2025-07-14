@@ -96,14 +96,7 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
             isValid = false;
         }
 
-        // Validate narration
-        if (!paymentData.narration || paymentData.narration.trim() === '') {
-            newErrors.narration = 'Description is required';
-            isValid = false;
-        } else if (paymentData.narration.length > 200) {
-            newErrors.narration = 'Description must be less than 200 characters';
-            isValid = false;
-        }
+    
 
         setErrors(newErrors);
         return isValid;

@@ -72,7 +72,6 @@ const EditActivity = ({
 
 
     const [searchTerm, setSearchTerm] = useState('');
-    const [showDropdown, setShowDropdown] = useState(false);
     const [selectedVendorName, setSelectedVendorName] = useState('');
     const [filteredVendors, setFilteredVendors] = useState(vendors);
 
@@ -701,13 +700,6 @@ const EditActivity = ({
 
     return (
         <Modal show={show} onHide={onHide} size="lg" backdrop="static" keyboard={false}>
-            <Modal.Header closeButton>
-                <Modal.Title>
-                    <h5 className="text-primary">
-                        Edit {activity?.model_type?.split('\\').pop() || 'Activity'}
-                    </h5>
-                </Modal.Title>
-            </Modal.Header>
             <Modal.Body>
                 <Form onSubmit={handleSubmit} encType="multipart/form-data">
                     {renderModelSpecificFields()}

@@ -16,12 +16,12 @@ return new class extends Migration {
             $table->string('unit_type')->nullable();
             $table->text('description')->nullable();
             $table->integer('qty')->default(1);
-            $table->integer('price');
-            $table->integer('total');
+            $table->bigInteger('price');
+            $table->bigInteger('total');
             $table->integer('multiplier');
             $table->boolean('payment_flow')->nullable()->comment('1=in,0=out');
             $table->boolean('is_credited')->default(true);
-            $table->string('model_type');
+            $table->string('model_type')->nullable();
             $table->text('narration')->nullable();
             $table->tinyInteger('created_by')->nullable();
             $table->tinyInteger('updated_by')->nullable();

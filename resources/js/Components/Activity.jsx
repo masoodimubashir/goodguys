@@ -10,7 +10,6 @@ import EditActivity from './EditActivity';
 
 const ActivityTab = ({ activities, client, setPurchaseItems, setFilteredItems, vendors }) => {
 
-
     const { user } = usePage().props.auth;
 
     const [showEditModal, setShowEditModal] = useState(false);
@@ -42,7 +41,6 @@ const ActivityTab = ({ activities, client, setPurchaseItems, setFilteredItems, v
         total: 0,
         created_at: new Date().toISOString().split('T')[0]
     });
-
 
 
     // Filter activities whenever search term, date range, or original activities change
