@@ -68,8 +68,6 @@ Login / Register / Forgot Password
 
 Error and Maintenance Pages
 
-User Dashboard
-
 Purchase List, Vendor Management
 
 Payment Summary and History
