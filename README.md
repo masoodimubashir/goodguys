@@ -1,13 +1,13 @@
 GoodGuys is a web-based platform built to manage and streamline data flow between clients and vendors for design-based services. This system allows both parties to collaborate efficiently through tools like purchase tracking, challan generation, activity logging, and payment management.
 
 🚀 Project Overview
-The GoodGuys website acts as a central hub for:
+The GoodGuys website serves as a centralized platform for seamless collaboration between clients and vendors in design-based services.
 
-Clients to submit design requirements, view proposals, and monitor project progress.
+Clients can submit design requirements, view proposals, monitor project progress, and generate challans, invoices, and proformas. The system maintains a complete transactional history of purchases, sales, and payments involving both vendors and clients.
 
-Vendors to manage their tasks, receive feedback, and deliver design assets effectively.
+All financial activities and exchanges are managed transparently by the GoodGuys team. At any point, a detailed account summary PDF can be generated, providing a comprehensive view of all project-related data—enabling smooth communication and decision-making for further processing.
 
-Built with Laravel and React (Inertia.js), the platform enables a smooth workflow with transparency and accountability for both parties.
+
 
 ⚙️ Installation
 To install and run the project locally, follow these steps:
@@ -20,6 +20,16 @@ composer install
 
 # Step 2: Generate application key
 php artisan key:generate
+
+# Step 4: Seed The Database
+
+the following command will seed the database with dummy user.
+username: admin@admin.com
+password: @Admin123
+
+php artisan db:seed
+
+
 
 # Step 3: Install Node.js dependencies
 npm install
