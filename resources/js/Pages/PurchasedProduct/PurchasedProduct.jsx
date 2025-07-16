@@ -466,7 +466,7 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
                                 <option value="">Select a client</option>
                                 {clientSummaries.map(({ client, balance }) => (
                                     <option key={client.id} value={client.id}>
-                                        {client.client_name} (₹{balance.toLocaleString('en-IN')})
+                                        {client.client_name} -  (₹{balance.toLocaleString('en-IN')})
                                     </option>
                                 ))}
                             </Form.Select>

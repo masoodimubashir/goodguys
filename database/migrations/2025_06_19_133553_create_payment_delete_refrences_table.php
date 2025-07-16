@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('payment_delete_refrences', function (Blueprint $table) {
             $table->id();
             $table->foreignId('purchased_item_id')->nullable()->constrained('purchased_items')->cascadeOnDelete();
-            $table->foreignId('activity_id')->constrained('activities')->cascadeOnDelete();
+            $table->foreignId('activity_id')->nullable()->constrained('activities')->cascadeOnDelete();
             $table->morphs('refrence');
             $table->timestamps();
         });
