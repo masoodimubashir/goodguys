@@ -8,6 +8,7 @@ import { ShowMessage } from '@/Components/ShowMessage';
 import { Button, Modal } from 'react-bootstrap';
 import Tooltip from '@/Components/Tooltip';
 
+
 export default function PurchasedProduct({ vendor, clientAccounts }) {
     const { flash, errors: serverErrors } = usePage().props;
 
@@ -96,7 +97,7 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
             isValid = false;
         }
 
-    
+
 
         setErrors(newErrors);
         return isValid;
@@ -444,7 +445,6 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
 
             {/* Payment Modal */}
             <Modal show={showModal} onHide={handleCloseModal} backdrop="static" centered>
-                
                 <Modal.Header closeButton>
                     <Modal.Title>
                         <CreditCard size={20} className="me-2" />
@@ -456,25 +456,54 @@ export default function PurchasedProduct({ vendor, clientAccounts }) {
                     <Modal.Body>
                         <Form.Group className="mb-3">
                             <Form.Label>Select Client</Form.Label>
-                            <Form.Select
-                                name="client_id"
-                                value={paymentData.client_id}
-                                onChange={handlePaymentChange}
-                                isInvalid={!!errors.client_id}
-                                required
-                            >
-                                <option value="">Select a client</option>
-                                {clientSummaries.map(({ client, balance }) => (
-                                    <option key={client.id} value={client.id}>
-                                        {client.client_name} -  (₹{balance.toLocaleString('en-IN')})
-                                    </option>
-                                ))}
-                            </Form.Select>
-                            <Form.Control.Feedback type="invalid">
-                                {errors.client_id}
-                            </Form.Control.Feedback>
+                            <div className={`tags-select-container ${errors.client_id ? 'is-invalid' : ''}`}>
+                                {/* Selected tag display */}
+                                {paymentData.client_id && (
+                                    <div className="selected-tag mb-2">
+                                        <Badge pill bg="primary" className="d-inline-flex align-items-center">
+                                            {clientSummaries.find(c => c.client.id === parseInt(paymentData.client_id))?.client.client_name}
+                                            <button
+                                                type="button"
+                                                className="btn-close btn-close-white ms-2"
+                                                style={{ fontSize: '0.5rem' }}
+                                                onClick={() => {
+                                                    setPaymentData(prev => ({ ...prev, client_id: '' }));
+                                                    setErrors(prev => ({ ...prev, client_id: '' }));
+                                                }}
+                                            />
+                                        </Badge>
+                                    </div>
+                                )}
+
+                                {/* Select input */}
+                                <Form.Select
+                                    name="client_id"
+                                    value={paymentData.client_id}
+                                    onChange={handlePaymentChange}
+                                    className="tags-select-input"
+                                    isInvalid={!!errors.client_id}
+                                    required
+                                >
+                                    <option value="">Select a client...</option>
+                                    {clientSummaries.map(({ client, balance }) => (
+                                        <option
+                                            key={client.id}
+                                            value={client.id}
+                                            data-balance={balance}
+                                        >
+                                            {client.client_name} - (₹{balance.toLocaleString('en-IN')})
+                                        </option>
+                                    ))}
+                                </Form.Select>
+                            </div>
+                            {errors.client_id && (
+                                <div className="invalid-feedback" style={{ display: 'block' }}>
+                                    {errors.client_id}
+                                </div>
+                            )}
                         </Form.Group>
 
+                        {/* Rest of your form fields remain the same */}
                         <Form.Group className="mb-3">
                             <Form.Label>Amount (₹)</Form.Label>
                             <Form.Control

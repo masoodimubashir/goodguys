@@ -13,13 +13,13 @@
     @viteReactRefresh   
 
 
-    {{-- <script type="module" src="{{ asset('build/assets/app-BAG-bvi1.js') }}"></script> --}}
-    {{-- <link rel="stylesheet" href="{{ asset('build/assets/app-Dvf4vD2e.css') }}"> --}}
+    <script type="module" src="{{ asset('build/assets/app-C8TCoHd-.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('build/assets/app-Dvf4vD2e.css') }}">
 
 
     {{-- <link rel="stylesheet" href="{{ asset('build/assets/app-P2nxT-ty.js') }}"> --}}
 
-    @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"]) 
+    {{-- @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])  --}}
 
     @inertiaHead
 
